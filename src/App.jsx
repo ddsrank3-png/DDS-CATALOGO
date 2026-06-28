@@ -3,20 +3,20 @@ import { supabase } from './supabase.js'
 
 const WA_NUMBER = '51902216717'
 
-function waMensaje(producto) {
+function waMensaje(producto, talla) {
+  const precio = talla ? `S/ ${talla.precio} (${talla.ml}ml)` : `S/ ${Number(producto.precio).toFixed(2)}`
   return encodeURIComponent(
     `Hola! 🌸 Me interesa este producto de DDS Parfums:\n\n` +
     `*${producto.nombre}*\n` +
-    `Precio: S/ ${Number(producto.precio).toFixed(2)}\n\n` +
+    `Precio: ${precio}\n\n` +
     `¿Está disponible? ¿Cómo puedo pedirlo?`
   )
 }
 
-function waLink(producto) {
-  return `https://wa.me/${WA_NUMBER}?text=${waMensaje(producto)}`
+function waLink(producto, talla) {
+  return `https://wa.me/${WA_NUMBER}?text=${waMensaje(producto, talla)}`
 }
 
-// Icono flor SVG como logo
 function LogoFlor() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -33,164 +33,140 @@ function LogoFlor() {
   )
 }
 
-// Placeholder elegante cuando no hay foto
-function FotoPlaceholder({ nombre, categoria }) {
+function FotoPlaceholder({ categoria, genero }) {
   return (
     <div style={{
       width: '100%', height: '100%',
-      background: 'linear-gradient(135deg, #e8e0d5 0%, #f0ebe2 50%, #e0d8cc 100%)',
+      background: genero === 'Mujer'
+        ? 'linear-gradient(135deg, #f0e0e8 0%, #f8eef2 50%, #e8d5de 100%)'
+        : genero === 'Nicho'
+        ? 'linear-gradient(135deg, #1a1410 0%, #2a1f10 50%, #1a1410 100%)'
+        : 'linear-gradient(135deg, #e8e0d5 0%, #f0ebe2 50%, #e0d8cc 100%)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px',
     }}>
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-        <ellipse cx="24" cy="18" rx="8" ry="14" stroke="#b8923a" strokeWidth="1.5" fill="none" opacity="0.5"/>
-        <path d="M24 32 L24 44" stroke="#b8923a" strokeWidth="1.5" opacity="0.5"/>
+      <svg width="44" height="44" viewBox="0 0 48 48" fill="none">
+        <ellipse cx="24" cy="18" rx="8" ry="14" stroke={genero === 'Nicho' ? '#b8923a' : '#b8923a'} strokeWidth="1.5" fill="none" opacity="0.6"/>
+        <path d="M24 32 L24 42" stroke="#b8923a" strokeWidth="1.5" opacity="0.5"/>
         <path d="M18 38 L30 38" stroke="#b8923a" strokeWidth="1.5" opacity="0.5"/>
-        <circle cx="24" cy="18" r="4" fill="#b8923a" opacity="0.2"/>
+        <circle cx="24" cy="18" r="4" fill="#b8923a" opacity="0.15"/>
         <path d="M16 16 C14 12 16 6 20 8" stroke="#b8923a" strokeWidth="1" fill="none" opacity="0.4"/>
         <path d="M32 16 C34 12 32 6 28 8" stroke="#b8923a" strokeWidth="1" fill="none" opacity="0.4"/>
       </svg>
-      <span style={{ fontSize: '11px', color: '#9a9088', letterSpacing: '0.1em', textTransform: 'uppercase', textAlign: 'center', padding: '0 12px' }}>
+      <span style={{ fontSize: '10px', color: genero === 'Nicho' ? '#b8923a' : '#9a9088', letterSpacing: '0.1em', textTransform: 'uppercase', textAlign: 'center', padding: '0 12px' }}>
         {categoria}
       </span>
     </div>
   )
 }
 
-// Modal de detalle del producto
+function getTallas(producto) {
+  const tallas = []
+  if (producto.precio_3ml) tallas.push({ ml: 3, precio: producto.precio_3ml })
+  if (producto.precio_5ml) tallas.push({ ml: 5, precio: producto.precio_5ml })
+  if (producto.precio_10ml) tallas.push({ ml: 10, precio: producto.precio_10ml })
+  if (producto.precio_30ml) tallas.push({ ml: 30, precio: producto.precio_30ml })
+  return tallas
+}
+
 function ProductoModal({ producto, onClose }) {
+  const [tallaSeleccionada, setTallaSeleccionada] = useState(null)
+  const tallas = getTallas(producto)
+
   useEffect(() => {
     document.body.style.overflow = 'hidden'
+    if (tallas.length > 0) setTallaSeleccionada(tallas[0])
     return () => { document.body.style.overflow = '' }
   }, [])
 
+  const esNicho = producto.categoria === 'Nicho'
+
   return (
-    <div
-      onClick={e => e.target === e.currentTarget && onClose()}
-      style={{
-        position: 'fixed', inset: 0,
-        background: 'rgba(15,14,12,0.7)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 1000,
-        display: 'flex', alignItems: 'flex-end',
-        padding: '0',
-      }}
-    >
-      <div
-        className="fade-in"
-        style={{
-          background: 'var(--ivory)',
-          borderRadius: '20px 20px 0 0',
-          width: '100%',
-          maxWidth: '560px',
-          margin: '0 auto',
-          maxHeight: '92vh',
-          overflowY: 'auto',
-        }}
-      >
+    <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(15,14,12,0.75)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', padding: 0 }}>
+      <div className="fade-in" style={{ background: 'var(--ivory)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: '560px', margin: '0 auto', maxHeight: '92vh', overflowY: 'auto' }}>
         {/* Foto */}
-        <div style={{ width: '100%', height: '280px', position: 'relative', flexShrink: 0 }}>
+        <div style={{ width: '100%', height: '260px', position: 'relative', flexShrink: 0 }}>
           {producto.foto_url ? (
             <img src={producto.foto_url} alt={producto.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
-            <FotoPlaceholder nombre={producto.nombre} categoria={producto.categoria} />
+            <FotoPlaceholder categoria={producto.categoria} genero={producto.genero} />
           )}
-          <button
-            onClick={onClose}
-            style={{
-              position: 'absolute', top: '14px', right: '14px',
-              width: '32px', height: '32px',
-              background: 'rgba(15,14,12,0.5)',
-              borderRadius: '50%',
-              color: 'white',
-              fontSize: '18px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            ×
-          </button>
-          <div style={{
-            position: 'absolute', bottom: '14px', left: '14px',
-            background: 'var(--gold)',
-            color: 'white',
-            padding: '4px 12px',
-            borderRadius: '20px',
-            fontSize: '11px',
-            fontWeight: 600,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-          }}>
-            {producto.categoria}
+          <button onClick={onClose} style={{ position: 'absolute', top: '14px', right: '14px', width: '32px', height: '32px', background: 'rgba(15,14,12,0.5)', borderRadius: '50%', color: 'white', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          <div style={{ position: 'absolute', bottom: '14px', left: '14px', display: 'flex', gap: '6px' }}>
+            <span style={{ background: esNicho ? 'var(--gold)' : 'white', color: esNicho ? 'white' : 'var(--gold)', padding: '3px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{producto.categoria}</span>
+            {producto.genero && <span style={{ background: 'rgba(0,0,0,0.5)', color: 'white', padding: '3px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 500, letterSpacing: '0.04em' }}>{producto.genero}</span>}
           </div>
         </div>
 
-        {/* Contenido */}
-        <div style={{ padding: '24px 24px 32px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 400, lineHeight: 1.2, flex: 1, paddingRight: '12px' }}>
-              {producto.nombre}
-            </h2>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: 500, color: 'var(--gold)', whiteSpace: 'nowrap' }}>
-              S/ {Number(producto.precio).toFixed(2)}
-            </div>
+        <div style={{ padding: '22px 22px 32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: 400, lineHeight: 1.2, flex: 1, paddingRight: '10px' }}>{producto.nombre}</h2>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 500, color: 'var(--gold)', whiteSpace: 'nowrap' }}>S/ {Number(producto.precio).toFixed(0)}</div>
           </div>
 
-          {producto.descripcion && (
-            <p style={{ color: 'var(--text-soft)', fontSize: '14px', lineHeight: 1.7, marginBottom: '20px' }}>
-              {producto.descripcion}
-            </p>
-          )}
+          {producto.descripcion && <p style={{ color: 'var(--text-soft)', fontSize: '13px', lineHeight: 1.7, marginBottom: '18px' }}>{producto.descripcion}</p>}
 
-          {/* Ficha técnica */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+          {/* Ficha */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
             {producto.notas_aromaticas && (
-              <div style={{ background: 'var(--ivory-dark)', borderRadius: '10px', padding: '14px 16px' }}>
-                <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--gold)', fontWeight: 600, marginBottom: '5px' }}>
-                  🌸 Notas aromáticas
-                </div>
-                <div style={{ fontSize: '14px', color: 'var(--text)' }}>{producto.notas_aromaticas}</div>
+              <div style={{ background: 'var(--ivory-dark)', borderRadius: '10px', padding: '12px 14px' }}>
+                <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--gold)', fontWeight: 600, marginBottom: '4px' }}>🌸 Notas aromáticas</div>
+                <div style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.5 }}>{producto.notas_aromaticas}</div>
               </div>
             )}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {producto.ocasion && (
-                <div style={{ background: 'var(--ivory-dark)', borderRadius: '10px', padding: '14px 16px' }}>
-                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--gold)', fontWeight: 600, marginBottom: '5px' }}>✨ Ocasión</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text)' }}>{producto.ocasion}</div>
+                <div style={{ background: 'var(--ivory-dark)', borderRadius: '10px', padding: '12px 14px' }}>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--gold)', fontWeight: 600, marginBottom: '4px' }}>✨ Ocasión</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text)' }}>{producto.ocasion}</div>
                 </div>
               )}
               {producto.duracion && (
-                <div style={{ background: 'var(--ivory-dark)', borderRadius: '10px', padding: '14px 16px' }}>
-                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--gold)', fontWeight: 600, marginBottom: '5px' }}>⏱ Duración</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text)' }}>{producto.duracion}</div>
+                <div style={{ background: 'var(--ivory-dark)', borderRadius: '10px', padding: '12px 14px' }}>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--gold)', fontWeight: 600, marginBottom: '4px' }}>⏱ Duración</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text)' }}>{producto.duracion}</div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Botón WhatsApp */}
-          <a
-            href={waLink(producto)}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              width: '100%',
-              padding: '16px',
-              background: '#25D366',
-              color: 'white',
-              borderRadius: '14px',
-              fontSize: '15px',
-              fontWeight: 600,
-              textDecoration: 'none',
-              letterSpacing: '0.02em',
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            Pedir por WhatsApp
+          {/* Selector de talla / decant */}
+          {tallas.length > 0 && (
+            <div style={{ marginBottom: '18px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--warm-gray)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px', fontWeight: 600 }}>Elige tu talla</div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {tallas.map(t => (
+                  <button
+                    key={t.ml}
+                    onClick={() => setTallaSeleccionada(t)}
+                    style={{
+                      padding: '8px 14px', borderRadius: '50px', fontSize: '13px', fontWeight: 600,
+                      background: tallaSeleccionada?.ml === t.ml ? 'var(--gold)' : 'white',
+                      color: tallaSeleccionada?.ml === t.ml ? 'white' : 'var(--text-soft)',
+                      border: `1.5px solid ${tallaSeleccionada?.ml === t.ml ? 'var(--gold)' : 'var(--stone)'}`,
+                    }}
+                  >
+                    {t.ml}ml — S/ {t.precio}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setTallaSeleccionada(null)}
+                  style={{
+                    padding: '8px 14px', borderRadius: '50px', fontSize: '13px', fontWeight: 600,
+                    background: !tallaSeleccionada ? 'var(--gold)' : 'white',
+                    color: !tallaSeleccionada ? 'white' : 'var(--text-soft)',
+                    border: `1.5px solid ${!tallaSeleccionada ? 'var(--gold)' : 'var(--stone)'}`,
+                  }}
+                >
+                  Sellado — S/ {Number(producto.precio).toFixed(0)}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* WhatsApp */}
+          <a href={waLink(producto, tallaSeleccionada)} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', padding: '15px', background: '#25D366', color: 'white', borderRadius: '14px', fontSize: '15px', fontWeight: 600, textDecoration: 'none', letterSpacing: '0.02em' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Pedir por WhatsApp{tallaSeleccionada ? ` — ${tallaSeleccionada.ml}ml` : ' — Sellado'}
           </a>
         </div>
       </div>
@@ -198,60 +174,36 @@ function ProductoModal({ producto, onClose }) {
   )
 }
 
-// Tarjeta de producto
 function ProductoCard({ producto, onClick }) {
+  const tallas = getTallas(producto)
+  const precioDesde = tallas.length > 0 ? Math.min(...tallas.map(t => t.precio)) : Number(producto.precio)
+  const esNicho = producto.categoria === 'Nicho'
+
   return (
-    <div
-      onClick={onClick}
-      style={{
-        background: 'white',
-        borderRadius: 'var(--radius)',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        boxShadow: '0 2px 12px rgba(26,23,20,0.06)',
-      }}
+    <div onClick={onClick} style={{ background: 'white', borderRadius: 'var(--radius)', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: esNicho ? '0 2px 16px rgba(184,146,58,0.15)' : '0 2px 12px rgba(26,23,20,0.06)', border: esNicho ? '1px solid rgba(184,146,58,0.3)' : 'none' }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(26,23,20,0.12)' }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(26,23,20,0.06)' }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = esNicho ? '0 2px 16px rgba(184,146,58,0.15)' : '0 2px 12px rgba(26,23,20,0.06)' }}
     >
-      {/* Foto */}
       <div style={{ width: '100%', aspectRatio: '4/3', position: 'relative' }}>
         {producto.foto_url ? (
           <img src={producto.foto_url} alt={producto.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <FotoPlaceholder nombre={producto.nombre} categoria={producto.categoria} />
+          <FotoPlaceholder categoria={producto.categoria} genero={producto.genero} />
         )}
-        <div style={{
-          position: 'absolute', top: '10px', left: '10px',
-          background: 'rgba(255,255,255,0.92)',
-          backdropFilter: 'blur(4px)',
-          padding: '3px 10px',
-          borderRadius: '20px',
-          fontSize: '10px',
-          fontWeight: 600,
-          color: 'var(--gold)',
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-        }}>
-          {producto.categoria}
+        <div style={{ position: 'absolute', top: '8px', left: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+          <span style={{ background: esNicho ? 'var(--gold)' : 'rgba(255,255,255,0.92)', backdropFilter: 'blur(4px)', padding: '2px 8px', borderRadius: '20px', fontSize: '9px', fontWeight: 600, color: esNicho ? 'white' : 'var(--gold)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{producto.categoria}</span>
+          {producto.subcategoria && <span style={{ background: 'rgba(0,0,0,0.45)', padding: '2px 8px', borderRadius: '20px', fontSize: '9px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.04em' }}>{producto.subcategoria}</span>}
         </div>
       </div>
-
-      {/* Info */}
-      <div style={{ padding: '14px 16px 16px' }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 500, lineHeight: 1.3, marginBottom: '6px' }}>
-          {producto.nombre}
-        </h3>
-        {producto.ocasion && (
-          <p style={{ fontSize: '12px', color: 'var(--warm-gray)', marginBottom: '10px', lineHeight: 1.4 }}>
-            {producto.ocasion}
-          </p>
-        )}
+      <div style={{ padding: '12px 14px 14px' }}>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 500, lineHeight: 1.3, marginBottom: '4px' }}>{producto.nombre}</h3>
+        {producto.ocasion && <p style={{ fontSize: '11px', color: 'var(--warm-gray)', marginBottom: '8px', lineHeight: 1.4 }}>{producto.ocasion.split(',')[0]}</p>}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 500, color: 'var(--gold)' }}>
-            S/ {Number(producto.precio).toFixed(2)}
-          </span>
-          <span style={{ fontSize: '12px', color: 'var(--warm-gray)', textDecoration: 'underline' }}>Ver detalles</span>
+          <div>
+            {tallas.length > 0 && <div style={{ fontSize: '10px', color: 'var(--warm-gray)' }}>Desde</div>}
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '19px', fontWeight: 500, color: 'var(--gold)' }}>S/ {precioDesde}</span>
+          </div>
+          <span style={{ fontSize: '11px', color: 'var(--warm-gray)', textDecoration: 'underline' }}>Ver más</span>
         </div>
       </div>
     </div>
@@ -261,164 +213,121 @@ function ProductoCard({ producto, onClick }) {
 export default function App() {
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
-  const [filtro, setFiltro] = useState('Todos')
+  const [generoFiltro, setGeneroFiltro] = useState('Todos')
+  const [categoriaFiltro, setCategoriaFiltro] = useState('Todas')
+  const [busqueda, setBusqueda] = useState('')
   const [seleccionado, setSeleccionado] = useState(null)
 
-  useEffect(() => {
-    cargarProductos()
-  }, [])
+  useEffect(() => { cargarProductos() }, [])
 
   async function cargarProductos() {
-    const { data } = await supabase
-      .from('catalogo_productos')
-      .select('*')
-      .eq('disponible', true)
-      .order('orden')
-      .order('nombre')
+    const { data } = await supabase.from('catalogo_productos').select('*').eq('disponible', true).order('orden').order('nombre')
     setProductos(data || [])
     setCargando(false)
   }
 
-  const categorias = ['Todos', ...new Set(productos.map(p => p.categoria))]
-  const productosFiltrados = filtro === 'Todos' ? productos : productos.filter(p => p.categoria === filtro)
+  const generos = ['Todos', 'Hombre', 'Mujer']
+  const categorias = ['Todas', ...new Set(productos.map(p => p.categoria).filter(Boolean))]
+
+  const productosFiltrados = productos.filter(p => {
+    const matchGenero = generoFiltro === 'Todos' || p.genero === generoFiltro
+    const matchCat = categoriaFiltro === 'Todas' || p.categoria === categoriaFiltro
+    const matchBusqueda = !busqueda || p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    return matchGenero && matchCat && matchBusqueda
+  })
 
   return (
     <div style={{ minHeight: '100vh' }}>
       {/* Header */}
-      <header style={{
-        background: 'white',
-        borderBottom: '1px solid var(--stone)',
-        padding: '0 24px',
-        position: 'sticky', top: 0, zIndex: 100,
-      }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <header style={{ background: 'white', borderBottom: '1px solid var(--stone)', padding: '0 20px', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <LogoFlor />
             <div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 500, letterSpacing: '0.04em', lineHeight: 1 }}>
-                DDS <span style={{ color: 'var(--gold)' }}>Parfums</span>
-              </div>
-              <div style={{ fontSize: '10px', color: 'var(--warm-gray)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                Día de Suerte · Ica
-              </div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 500, letterSpacing: '0.04em', lineHeight: 1 }}>DDS <span style={{ color: 'var(--gold)' }}>Parfums</span></div>
+              <div style={{ fontSize: '9px', color: 'var(--warm-gray)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Día de Suerte · Ica</div>
             </div>
           </div>
-          <a
-            href={`https://wa.me/${WA_NUMBER}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              background: '#25D366', color: 'white',
-              padding: '8px 16px', borderRadius: '50px',
-              fontSize: '13px', fontWeight: 600,
-              textDecoration: 'none',
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
+          <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#25D366', color: 'white', padding: '8px 14px', borderRadius: '50px', fontSize: '12px', fontWeight: 600, textDecoration: 'none' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             Escríbenos
           </a>
         </div>
       </header>
 
       {/* Hero */}
-      <div style={{
-        background: 'linear-gradient(135deg, var(--black) 0%, #2a1f10 100%)',
-        color: 'white',
-        textAlign: 'center',
-        padding: '60px 24px 50px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'radial-gradient(circle at 30% 50%, #b8923a 0%, transparent 60%), radial-gradient(circle at 70% 50%, #b8923a 0%, transparent 60%)' }} />
-        <div style={{ position: 'relative', maxWidth: '560px', margin: '0 auto' }}>
-          <div style={{ fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold-light)', marginBottom: '16px' }}>
-            Colección exclusiva
-          </div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 8vw, 58px)', fontWeight: 300, lineHeight: 1.15, marginBottom: '16px', letterSpacing: '-0.01em' }}>
-            Fragancias que<br /><em style={{ fontStyle: 'italic', color: 'var(--gold-light)' }}>te definen</em>
+      <div style={{ background: 'linear-gradient(135deg, #0f0e0c 0%, #2a1f10 100%)', color: 'white', textAlign: 'center', padding: '50px 20px 40px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.05, backgroundImage: 'radial-gradient(circle at 30% 50%, #b8923a 0%, transparent 60%), radial-gradient(circle at 70% 50%, #b8923a 0%, transparent 60%)' }} />
+        <div style={{ position: 'relative', maxWidth: '540px', margin: '0 auto' }}>
+          <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#d4aa5a', marginBottom: '14px' }}>Colección exclusiva</div>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 8vw, 54px)', fontWeight: 300, lineHeight: 1.15, marginBottom: '14px' }}>
+            Fragancias que<br /><em style={{ fontStyle: 'italic', color: '#d4aa5a' }}>te definen</em>
           </h1>
-          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: '28px' }}>
-            Perfumes y decants de marcas de lujo al alcance de todos.<br />
-            Envíos en Ica y pedidos por WhatsApp.
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: '24px' }}>
+            Perfumes sellados y decants de marcas árabes, de diseñador y nicho.<br />Ica, Perú · Pedidos por WhatsApp
           </p>
-          <a
-            href={`https://wa.me/${WA_NUMBER}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '8px',
-              background: 'var(--gold)', color: 'var(--black)',
-              padding: '13px 28px', borderRadius: '50px',
-              fontSize: '13px', fontWeight: 600,
-              textDecoration: 'none', letterSpacing: '0.04em',
-            }}
-          >
+          <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--gold)', color: '#0f0e0c', padding: '12px 26px', borderRadius: '50px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', letterSpacing: '0.04em' }}>
             Hacer un pedido
           </a>
         </div>
       </div>
 
-      {/* Catálogo */}
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px 60px' }}>
-        {/* Filtros */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', flexWrap: 'wrap' }}>
-          {categorias.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFiltro(cat)}
-              style={{
-                padding: '8px 20px',
-                borderRadius: '50px',
-                fontSize: '13px',
-                fontWeight: 500,
-                background: filtro === cat ? 'var(--gold)' : 'white',
-                color: filtro === cat ? 'white' : 'var(--text-soft)',
-                border: `1.5px solid ${filtro === cat ? 'var(--gold)' : 'var(--stone)'}`,
-                letterSpacing: '0.02em',
-              }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Grid */}
-        {cargando ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--warm-gray)' }}>
-            Cargando catálogo...
-          </div>
-        ) : productosFiltrados.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--warm-gray)' }}>
-            Sin productos disponibles
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
-            {productosFiltrados.map(p => (
-              <ProductoCard key={p.id} producto={p} onClick={() => setSeleccionado(p)} />
+      {/* Filtros */}
+      <div style={{ background: 'white', borderBottom: '1px solid var(--stone)', padding: '14px 20px', position: 'sticky', top: '58px', zIndex: 90 }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Búsqueda */}
+          <input
+            placeholder="🔍 Buscar perfume..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            style={{ padding: '7px 14px', borderRadius: '50px', border: '1.5px solid var(--stone)', fontSize: '13px', background: 'var(--ivory)', color: 'var(--text)', outline: 'none', minWidth: '160px', flex: '1' }}
+          />
+          {/* Género */}
+          <div style={{ display: 'flex', gap: '5px' }}>
+            {generos.map(g => (
+              <button key={g} onClick={() => setGeneroFiltro(g)} style={{ padding: '7px 14px', borderRadius: '50px', fontSize: '12px', fontWeight: 500, background: generoFiltro === g ? '#0f0e0c' : 'white', color: generoFiltro === g ? 'white' : 'var(--text-soft)', border: `1.5px solid ${generoFiltro === g ? '#0f0e0c' : 'var(--stone)'}` }}>
+                {g}
+              </button>
             ))}
+          </div>
+          {/* Categoría */}
+          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+            {categorias.map(c => (
+              <button key={c} onClick={() => setCategoriaFiltro(c)} style={{ padding: '7px 14px', borderRadius: '50px', fontSize: '12px', fontWeight: 500, background: categoriaFiltro === c ? 'var(--gold)' : 'white', color: categoriaFiltro === c ? 'white' : 'var(--text-soft)', border: `1.5px solid ${categoriaFiltro === c ? 'var(--gold)' : 'var(--stone)'}` }}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Catálogo */}
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '28px 16px 60px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--warm-gray)', marginBottom: '16px' }}>
+          {productosFiltrados.length} producto{productosFiltrados.length !== 1 ? 's' : ''} encontrado{productosFiltrados.length !== 1 ? 's' : ''}
+        </div>
+        {cargando ? (
+          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--warm-gray)' }}>Cargando catálogo...</div>
+        ) : productosFiltrados.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--warm-gray)' }}>Sin productos para esta búsqueda</div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+            {productosFiltrados.map(p => <ProductoCard key={p.id} producto={p} onClick={() => setSeleccionado(p)} />)}
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <footer style={{ background: 'var(--black)', color: 'rgba(255,255,255,0.5)', textAlign: 'center', padding: '28px 20px' }}>
+      <footer style={{ background: '#0f0e0c', color: 'rgba(255,255,255,0.5)', textAlign: 'center', padding: '28px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
           <LogoFlor />
           <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', color: 'rgba(255,255,255,0.8)' }}>DDS Parfums</span>
         </div>
         <p style={{ fontSize: '12px', marginBottom: '4px' }}>Día de Suerte · Ica, Perú</p>
-        <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#25D366', textDecoration: 'none' }}>
-          +51 902 216 717
-        </a>
+        <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#25D366', textDecoration: 'none' }}>+51 902 216 717</a>
       </footer>
 
-      {/* Modal */}
-      {seleccionado && (
-        <ProductoModal producto={seleccionado} onClose={() => setSeleccionado(null)} />
-      )}
+      {seleccionado && <ProductoModal producto={seleccionado} onClose={() => setSeleccionado(null)} />}
     </div>
   )
 }

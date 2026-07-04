@@ -348,9 +348,13 @@ export default function App() {
     return matchGenero && matchCat && matchBusqueda
   })
 
+  if (mostrarAdmin) {
+    return <Admin onSalir={() => setMostrarAdmin(false)} />
+  }
+
   return (
     <div style={{ minHeight: '100vh' }}>
-      {mostrarAdmin ? <Admin onSalir={() => setMostrarAdmin(false)} /> : <>
+      <>
       {/* Header */}
       <header style={{ background: 'white', borderBottom: '1px solid var(--stone)', padding: '0 20px', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -462,10 +466,7 @@ export default function App() {
         </div>
       )}
 
-      <style>{`
-        .fade-in { animation: fadeIn 0.3s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
+      <style dangerouslySetInnerHTML={{__html: '.fade-in{animation:fadeIn 0.3s ease forwards}@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}'}} />
     </>
     </div>
   )

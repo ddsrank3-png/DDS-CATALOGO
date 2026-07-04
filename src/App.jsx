@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase.js'
 import { calcularPromos, waMensajeCarritoConPromo } from './promos.js'
+import Admin from './Admin.jsx'
+
+const ADMIN_PASSWORD = '071221'
+const TOQUES_REQUERIDOS = 5
 
 const WA_NUMBER = '51902216717'
 
@@ -273,6 +277,12 @@ function ProductoCard({ producto, onClick, enCarrito }) {
 
 export default function App() {
   const [productos, setProductos] = useState([])
+  const [mostrarAdmin, setMostrarAdmin] = useState(false)
+  const [mostrarPasswordAdmin, setMostrarPasswordAdmin] = useState(false)
+  const [passwordInput, setPasswordInput] = useState('')
+  const [passwordError, setPasswordError] = useState(false)
+  const toquesRef = useRef(0)
+  const timerRef = useRef(null)
   const [cargando, setCargando] = useState(true)
   const [generoFiltro, setGeneroFiltro] = useState('Todos')
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todas')
@@ -282,6 +292,28 @@ export default function App() {
   const [mostrarCarrito, setMostrarCarrito] = useState(false)
 
   useEffect(() => { cargarProductos() }, [])
+
+  function handleLogoToque() {
+    toquesRef.current += 1
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => { toquesRef.current = 0 }, 2000)
+    if (toquesRef.current >= TOQUES_REQUERIDOS) {
+      toquesRef.current = 0
+      setMostrarPasswordAdmin(true)
+      setPasswordInput('')
+      setPasswordError(false)
+    }
+  }
+
+  function verificarPassword() {
+    if (passwordInput === ADMIN_PASSWORD) {
+      setMostrarPasswordAdmin(false)
+      setMostrarAdmin(true)
+    } else {
+      setPasswordError(true)
+      setPasswordInput('')
+    }
+  }
 
   async function cargarProductos() {
     const { data } = await supabase.from('catalogo_productos').select('*').eq('disponible', true).order('orden').order('nombre')
@@ -318,10 +350,11 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
+      {mostrarAdmin ? <Admin onSalir={() => setMostrarAdmin(false)} /> : <>
       {/* Header */}
       <header style={{ background: 'white', borderBottom: '1px solid var(--stone)', padding: '0 20px', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', cursor: 'default' }} onClick={handleLogoToque}>
             <LogoFlor />
             <div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 500, letterSpacing: '0.04em', lineHeight: 1 }}>DDS <span style={{ color: 'var(--gold)' }}>Parfums</span></div>
@@ -417,11 +450,23 @@ export default function App() {
 
       {seleccionado && <ProductoModal producto={seleccionado} onClose={() => setSeleccionado(null)} onAgregarCarrito={agregarCarrito} enCarrito={estaEnCarrito(seleccionado)} />}
       {mostrarCarrito && <CarritoPanel carrito={carrito} onEliminar={eliminarDelCarrito} onClose={() => setMostrarCarrito(false)} />}
+      {mostrarPasswordAdmin && (
+        <div onClick={e => e.target === e.currentTarget && setMostrarPasswordAdmin(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#1a1a1f', border: '1px solid #c9a84c44', borderRadius: '14px', padding: '28px 24px', width: '280px', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'Georgia,serif', fontSize: '22px', color: '#c9a84c', marginBottom: '6px' }}>DDS</div>
+            <div style={{ fontSize: '12px', color: '#5a5560', marginBottom: '20px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Acceso admin</div>
+            <input type="password" placeholder="Contraseña" value={passwordInput} onChange={e => { setPasswordInput(e.target.value); setPasswordError(false) }} onKeyDown={e => e.key === 'Enter' && verificarPassword()} style={{ width: '100%', padding: '10px 12px', background: '#0d0d0f', border: `1px solid ${passwordError ? '#e05c5c' : '#3a3a42'}`, borderRadius: '8px', color: '#f0ede8', fontSize: '14px', outline: 'none', textAlign: 'center', marginBottom: '8px' }} autoFocus />
+            {passwordError && <div style={{ fontSize: '12px', color: '#e05c5c', marginBottom: '8px' }}>Contraseña incorrecta</div>}
+            <button onClick={verificarPassword} style={{ width: '100%', padding: '10px', background: '#c9a84c', color: '#0d0d0f', borderRadius: '8px', fontWeight: 700, fontSize: '13px' }}>Entrar</button>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .fade-in { animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
+    </>
     </div>
   )
 }

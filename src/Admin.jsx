@@ -9,9 +9,9 @@ const MARCAS = ['Afnan', 'Lattafa', 'Armaf', 'Rasasi', 'Maison Alhambra', 'Al Ha
 
 const FORM_VACIO = {
   nombre: '', marca: '', descripcion: '',
-  categoria: '', genero: '', momento: '',
+  categoria: '', genero: '', momento: '', duracion: '',
   foto_url: '',
-  tallas: { '3ml': { activa: false, precio: '' }, '5ml': { activa: true, precio: '' }, '10ml': { activa: true, precio: '' }, '30ml': { activa: false, precio: '' }, 'Sellado': { activa: false, precio: '' } },
+  tallas: { '3ml': { activa: false, precio: '', precio_original: '' }, '5ml': { activa: true, precio: '', precio_original: '' }, '10ml': { activa: true, precio: '', precio_original: '' }, '30ml': { activa: false, precio: '', precio_original: '' }, 'Sellado': { activa: false, precio: '', precio_original: '' } },
   destacado: false, disponible: true,
 }
 
@@ -90,6 +90,7 @@ export default function Admin({ onSalir }) {
       categoria: p.categoria || '',
       genero: p.genero || '',
       momento: p.ocasion || '',
+      duracion: p.duracion || '',
       foto_url: p.foto_url || '',
       tallas,
       destacado: false,
@@ -118,6 +119,7 @@ export default function Admin({ onSalir }) {
           categoria: form.categoria,
           genero: form.genero,
           ocasion: form.momento,
+          duracion: form.duracion || null,
           foto_url: form.foto_url || null,
           disponible: form.disponible,
           precio_3ml: form.tallas['3ml'].activa && form.tallas['3ml'].precio ? parseFloat(form.tallas['3ml'].precio) : null,
@@ -125,6 +127,7 @@ export default function Admin({ onSalir }) {
           precio_10ml: form.tallas['10ml'].activa && form.tallas['10ml'].precio ? parseFloat(form.tallas['10ml'].precio) : null,
           precio_30ml: form.tallas['30ml'].activa && form.tallas['30ml'].precio ? parseFloat(form.tallas['30ml'].precio) : null,
           precio: parseFloat(form.tallas[talla].precio),
+          precio_original: form.tallas[talla].precio_original ? parseFloat(form.tallas[talla].precio_original) : null,
           tipo: talla === 'Sellado' ? 'Sellado' : `Decant ${talla}`,
         }).eq('id', editandoId)
         if (error) throw error
@@ -137,9 +140,11 @@ export default function Admin({ onSalir }) {
           categoria: form.categoria,
           genero: form.genero,
           ocasion: form.momento,
+          duracion: form.duracion || null,
           foto_url: form.foto_url || null,
           disponible: form.disponible,
           precio: parseFloat(form.tallas[talla].precio),
+          precio_original: form.tallas[talla].precio_original ? parseFloat(form.tallas[talla].precio_original) : null,
           tipo: talla === 'Sellado' ? 'Sellado' : `Decant ${talla}`,
           precio_3ml: form.tallas['3ml'].activa && form.tallas['3ml'].precio ? parseFloat(form.tallas['3ml'].precio) : null,
           precio_5ml: form.tallas['5ml'].activa && form.tallas['5ml'].precio ? parseFloat(form.tallas['5ml'].precio) : null,
@@ -240,17 +245,22 @@ export default function Admin({ onSalir }) {
           {MOMENTOS.map(m => <option key={m}>{m}</option>)}
         </select>
 
+        {/* Duración */}
+        <label style={s.label}>Duración en piel</label>
+        <input style={s.input} value={form.duracion} onChange={e => setForm(f => ({ ...f, duracion: e.target.value }))} placeholder="Ej. 6-8 horas" />
+
         {/* Tallas y precios */}
         <label style={s.label}>Presentaciones y precios</label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginBottom: '4px' }}>
-          <span style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase' }}>Mostrar talla</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', gap: '6px', marginBottom: '4px' }}>
+          <span style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase' }}>Talla</span>
           <span style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase' }}>Precio</span>
+          <span style={{ fontSize: '10px', color: '#c9a84c', textTransform: 'uppercase' }}>Precio tachado</span>
         </div>
         {TALLAS.map(talla => (
-          <div key={talla} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <input type="checkbox" checked={form.tallas[talla].activa} onChange={() => toggleTalla(talla)} style={{ width: '15px', height: '15px', accentColor: '#c9a84c' }} />
-              <span style={{ fontSize: '13px' }}>{talla}</span>
+          <div key={talla} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={form.tallas[talla].activa} onChange={() => toggleTalla(talla)} style={{ width: '14px', height: '14px', accentColor: '#c9a84c' }} />
+              <span style={{ fontSize: '12px' }}>{talla}</span>
             </label>
             <input
               type="number"
@@ -258,6 +268,14 @@ export default function Admin({ onSalir }) {
               value={form.tallas[talla].precio}
               onChange={e => setPrecioTalla(talla, e.target.value)}
               style={{ ...s.input, marginBottom: 0, padding: '6px 8px', opacity: form.tallas[talla].activa ? 1 : 0.4 }}
+              disabled={!form.tallas[talla].activa}
+            />
+            <input
+              type="number"
+              placeholder="Antes S/ —"
+              value={form.tallas[talla].precio_original || ''}
+              onChange={e => setForm(f => ({ ...f, tallas: { ...f.tallas, [talla]: { ...f.tallas[talla], precio_original: e.target.value } } }))}
+              style={{ ...s.input, marginBottom: 0, padding: '6px 8px', opacity: form.tallas[talla].activa ? 1 : 0.3, borderColor: form.tallas[talla].precio_original ? '#c9a84c44' : '#333' }}
               disabled={!form.tallas[talla].activa}
             />
           </div>
@@ -413,4 +431,3 @@ export default function Admin({ onSalir }) {
     </div>
   )
 }
-

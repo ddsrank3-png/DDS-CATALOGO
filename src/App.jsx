@@ -20,10 +20,10 @@ function waMensajeUnico(producto, talla) {
 
 function getTallas(producto) {
   const tallas = []
-  if (producto.precio_3ml) tallas.push({ ml: 3, precio: producto.precio_3ml })
-  if (producto.precio_5ml) tallas.push({ ml: 5, precio: producto.precio_5ml })
-  if (producto.precio_10ml) tallas.push({ ml: 10, precio: producto.precio_10ml })
-  if (producto.precio_30ml) tallas.push({ ml: 30, precio: producto.precio_30ml })
+  if (producto.precio_3ml) tallas.push({ ml: 3, precio: producto.precio_3ml, precio_original: producto.precio_original_3ml || null })
+  if (producto.precio_5ml) tallas.push({ ml: 5, precio: producto.precio_5ml, precio_original: producto.precio_original_5ml || null })
+  if (producto.precio_10ml) tallas.push({ ml: 10, precio: producto.precio_10ml, precio_original: producto.precio_original_10ml || null })
+  if (producto.precio_30ml) tallas.push({ ml: 30, precio: producto.precio_30ml, precio_original: producto.precio_original_30ml || null })
   return tallas
 }
 
@@ -115,15 +115,24 @@ function ProductoModal({ producto, onClose, onAgregarCarrito, enCarrito }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: 400, lineHeight: 1.2, flex: 1, paddingRight: '10px' }}>{producto.nombre}</h2>
             <div style={{ textAlign: 'right' }}>
-              {producto.precio_original && Number(producto.precio_original) > Number(producto.precio) && (
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '16px', color: 'var(--warm-gray)', textDecoration: 'line-through' }}>S/ {Number(producto.precio_original).toFixed(0)}</div>
-              )}
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 500, color: 'var(--gold)', whiteSpace: 'nowrap' }}>S/ {Number(producto.precio).toFixed(0)}</div>
-              {producto.precio_original && Number(producto.precio_original) > Number(producto.precio) && (
-                <div style={{ fontSize: '11px', background: '#e05c5c', color: 'white', borderRadius: '4px', padding: '1px 6px', marginTop: '2px' }}>
-                  -{Math.round((1 - Number(producto.precio)/Number(producto.precio_original))*100)}% OFF
-                </div>
-              )}
+              {(() => {
+                const precioActual = tallaSeleccionada ? Number(tallaSeleccionada.precio) : Number(producto.precio)
+                const precioOrig = tallaSeleccionada ? (tallaSeleccionada.precio_original ? Number(tallaSeleccionada.precio_original) : null) : (producto.precio_original_sellado ? Number(producto.precio_original_sellado) : null)
+                const tieneDescuento = precioOrig && precioOrig > precioActual
+                return (
+                  <>
+                    {tieneDescuento && (
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '16px', color: 'var(--warm-gray)', textDecoration: 'line-through' }}>S/ {precioOrig.toFixed(0)}</div>
+                    )}
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 500, color: 'var(--gold)', whiteSpace: 'nowrap' }}>S/ {precioActual.toFixed(0)}</div>
+                    {tieneDescuento && (
+                      <div style={{ fontSize: '11px', background: '#e05c5c', color: 'white', borderRadius: '4px', padding: '1px 6px', marginTop: '2px' }}>
+                        -{Math.round((1 - precioActual/precioOrig)*100)}% OFF
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </div>
           </div>
 
@@ -281,11 +290,15 @@ function ProductoCard({ producto, onClick, enCarrito }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             {tallas.length > 0 && <div style={{ fontSize: '10px', color: 'var(--warm-gray)' }}>Desde</div>}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: '19px', fontWeight: 500, color: 'var(--gold)' }}>S/ {precioDesde}</span>
-              {producto.precio_original && Number(producto.precio_original) > Number(precioDesde) && (
-                <span style={{ fontSize: '12px', color: 'var(--warm-gray)', textDecoration: 'line-through' }}>S/ {Number(producto.precio_original).toFixed(0)}</span>
-              )}
+              {(() => {
+                const tallaMin = tallas.find(t => t.precio === precioDesde) || tallas[0]
+                const orig = tallaMin?.precio_original || (producto.precio_original_sellado && !tallas.length ? producto.precio_original_sellado : null)
+                return orig && Number(orig) > Number(precioDesde) ? (
+                  <span style={{ fontSize: '12px', color: 'var(--warm-gray)', textDecoration: 'line-through' }}>S/ {Number(orig).toFixed(0)}</span>
+                ) : null
+              })()}
             </div>
           </div>
           <span style={{ fontSize: '11px', color: 'var(--warm-gray)', textDecoration: 'underline' }}>Ver más</span>

@@ -76,12 +76,18 @@ export default function Admin({ onSalir }) {
 
   function cargarProductoEnForm(p) {
     // Reconstruir tallas desde subcategoria y precio
-    const tallas = { '3ml': { activa: false, precio: '' }, '5ml': { activa: false, precio: '' }, '10ml': { activa: false, precio: '' }, '30ml': { activa: false, precio: '' }, 'Sellado': { activa: false, precio: '' } }
+    const tallas = { '3ml': { activa: false, precio: '', precio_original: '' }, '5ml': { activa: false, precio: '', precio_original: '' }, '10ml': { activa: false, precio: '', precio_original: '' }, '30ml': { activa: false, precio: '', precio_original: '' }, 'Sellado': { activa: false, precio: '', precio_original: '' } }
     if (p.precio_3ml) tallas['3ml'] = { activa: true, precio: String(p.precio_3ml), precio_original: p.precio_original_3ml ? String(p.precio_original_3ml) : '' }
     if (p.precio_5ml) tallas['5ml'] = { activa: true, precio: String(p.precio_5ml), precio_original: p.precio_original_5ml ? String(p.precio_original_5ml) : '' }
     if (p.precio_10ml) tallas['10ml'] = { activa: true, precio: String(p.precio_10ml), precio_original: p.precio_original_10ml ? String(p.precio_original_10ml) : '' }
     if (p.precio_30ml) tallas['30ml'] = { activa: true, precio: String(p.precio_30ml), precio_original: p.precio_original_30ml ? String(p.precio_original_30ml) : '' }
-    if (p.precio && p.tipo === 'Sellado') tallas['Sellado'] = { activa: true, precio: String(p.precio), precio_original: p.precio_original_sellado ? String(p.precio_original_sellado) : '' }
+    // Cargar sellado - puede venir del producto actual si es tipo Sellado
+    // o desde los campos precio_sellado si existen
+    if (p.tipo === 'Sellado') {
+      tallas['Sellado'] = { activa: true, precio: String(p.precio), precio_original: p.precio_original_sellado ? String(p.precio_original_sellado) : '' }
+    } else if (p.precio_sellado) {
+      tallas['Sellado'] = { activa: true, precio: String(p.precio_sellado), precio_original: p.precio_original_sellado ? String(p.precio_original_sellado) : '' }
+    }
 
     setForm({
       nombre: p.nombre || '',
@@ -133,6 +139,7 @@ export default function Admin({ onSalir }) {
           precio_original_10ml: form.tallas['10ml'].precio_original ? parseFloat(form.tallas['10ml'].precio_original) : null,
           precio_original_30ml: form.tallas['30ml'].precio_original ? parseFloat(form.tallas['30ml'].precio_original) : null,
           precio_original_sellado: form.tallas['Sellado'].precio_original ? parseFloat(form.tallas['Sellado'].precio_original) : null,
+          precio_sellado: form.tallas['Sellado'].activa && form.tallas['Sellado'].precio ? parseFloat(form.tallas['Sellado'].precio) : null,
           tipo: talla === 'Sellado' ? 'Sellado' : `Decant ${talla}`,
         }).eq('id', editandoId)
         if (error) throw error
@@ -155,6 +162,7 @@ export default function Admin({ onSalir }) {
           precio_original_10ml: form.tallas['10ml'].precio_original ? parseFloat(form.tallas['10ml'].precio_original) : null,
           precio_original_30ml: form.tallas['30ml'].precio_original ? parseFloat(form.tallas['30ml'].precio_original) : null,
           precio_original_sellado: form.tallas['Sellado'].precio_original ? parseFloat(form.tallas['Sellado'].precio_original) : null,
+          precio_sellado: form.tallas['Sellado'].activa && form.tallas['Sellado'].precio ? parseFloat(form.tallas['Sellado'].precio) : null,
           tipo: talla === 'Sellado' ? 'Sellado' : `Decant ${talla}`,
           precio_3ml: form.tallas['3ml'].activa && form.tallas['3ml'].precio ? parseFloat(form.tallas['3ml'].precio) : null,
           precio_5ml: form.tallas['5ml'].activa && form.tallas['5ml'].precio ? parseFloat(form.tallas['5ml'].precio) : null,

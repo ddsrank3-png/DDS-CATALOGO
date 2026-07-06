@@ -24,6 +24,9 @@ function getTallas(producto) {
   if (producto.precio_5ml) tallas.push({ ml: 5, precio: producto.precio_5ml, precio_original: producto.precio_original_5ml || null })
   if (producto.precio_10ml) tallas.push({ ml: 10, precio: producto.precio_10ml, precio_original: producto.precio_original_10ml || null })
   if (producto.precio_30ml) tallas.push({ ml: 30, precio: producto.precio_30ml, precio_original: producto.precio_original_30ml || null })
+  // Sellado: usar precio_sellado si existe, o el precio del producto si tipo es Sellado
+  const precioSellado = producto.precio_sellado || (producto.tipo === 'Sellado' ? producto.precio : null)
+  if (precioSellado) tallas.push({ ml: 'Sellado', precio: precioSellado, precio_original: producto.precio_original_sellado || null })
   return tallas
 }
 
@@ -161,14 +164,21 @@ function ProductoModal({ producto, onClose, onAgregarCarrito, enCarrito }) {
             <div style={{ marginBottom: '18px' }}>
               <div style={{ fontSize: '11px', color: 'var(--warm-gray)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px', fontWeight: 600 }}>Elige tu talla</div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {tallas.map(t => (
+                {tallas.filter(t => t.ml !== 'Sellado').map(t => (
                   <button key={t.ml} onClick={() => setTallaSeleccionada(t)} style={{ padding: '8px 14px', borderRadius: '50px', fontSize: '13px', fontWeight: 600, background: tallaSeleccionada?.ml === t.ml ? 'var(--gold)' : 'white', color: tallaSeleccionada?.ml === t.ml ? 'white' : 'var(--text-soft)', border: `1.5px solid ${tallaSeleccionada?.ml === t.ml ? 'var(--gold)' : 'var(--stone)'}` }}>
                     {t.ml}ml — S/ {t.precio}
                   </button>
                 ))}
-                <button onClick={() => setTallaSeleccionada(null)} style={{ padding: '8px 14px', borderRadius: '50px', fontSize: '13px', fontWeight: 600, background: !tallaSeleccionada ? 'var(--gold)' : 'white', color: !tallaSeleccionada ? 'white' : 'var(--text-soft)', border: `1.5px solid ${!tallaSeleccionada ? 'var(--gold)' : 'var(--stone)'}` }}>
-                  Sellado — S/ {Number(producto.precio).toFixed(0)}
-                </button>
+                {(() => {
+                  const tallaSellado = tallas.find(t => t.ml === 'Sellado')
+                  const precioS = tallaSellado ? tallaSellado.precio : producto.precio
+                  const isSel = !tallaSeleccionada || tallaSeleccionada?.ml === 'Sellado'
+                  return (
+                    <button onClick={() => setTallaSeleccionada(tallaSellado || null)} style={{ padding: '8px 14px', borderRadius: '50px', fontSize: '13px', fontWeight: 600, background: isSel ? 'var(--gold)' : 'white', color: isSel ? 'white' : 'var(--text-soft)', border: `1.5px solid ${isSel ? 'var(--gold)' : 'var(--stone)'}` }}>
+                      Sellado — S/ {Number(precioS).toFixed(0)}
+                    </button>
+                  )
+                })()}
               </div>
             </div>
           )}

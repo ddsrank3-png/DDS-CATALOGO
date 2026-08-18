@@ -415,6 +415,72 @@ header::after{background:var(--line); opacity:1}
 .stepper input.qv::-webkit-outer-spin-button,.stepper input.qv::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
 .qty input.qv{width:46px; text-align:center; background:#fff; border:1px solid var(--line); border-radius:7px; color:var(--cream); font-size:.92rem; padding:4px 3px; font-family:inherit; -moz-appearance:textfield}
 .qty input.qv::-webkit-outer-spin-button,.qty input.qv::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+
+/* ===================== INICIO (estilo LOOVI) ===================== */
+.inicio{max-width:1200px; margin:0 auto; padding:0 20px 40px}
+.ini-sec{margin-top:44px}
+.ini-h{font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:600; margin-bottom:18px}
+.ini-h.center{text-align:center}
+.ini-h.serif{font-size:2.4rem; letter-spacing:.02em}
+.ini-800{color:var(--accent); font-weight:700}
+
+/* Hero destacado */
+.ini-hero{display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:center; background:linear-gradient(135deg,var(--panel),var(--bg-2)); border:1px solid var(--line); border-radius:20px; padding:34px; margin-top:20px; overflow:hidden}
+.ini-hero-copy{display:flex; flex-direction:column; gap:10px; align-items:flex-start}
+.tag-vendido{display:inline-flex; align-items:center; gap:6px; background:#12b76a; color:#fff; font-weight:700; font-size:.72rem; letter-spacing:.08em; padding:7px 14px; border-radius:999px}
+.ini-hero-title{font-family:'Cormorant Garamond',serif; font-size:clamp(2.2rem,6vw,3.6rem); font-weight:700; line-height:1; color:var(--cream)}
+.ini-hero-inc{color:var(--muted); font-size:.9rem; font-weight:500}
+.ini-hero-price{font-family:'Cormorant Garamond',serif; font-size:clamp(2.6rem,7vw,4rem); font-weight:700; color:var(--cream); display:flex; align-items:center; gap:12px; line-height:1}
+.ini-off{background:#111; color:#fff; font-family:var(--fb,inherit); font-size:.9rem; font-weight:700; padding:5px 12px; border-radius:8px}
+.ini-hero-antes{color:var(--muted-2); text-decoration:line-through; font-size:1.2rem; margin-top:-6px}
+.ini-cta{margin-top:10px; background:var(--gold-grad); color:#fff; border-radius:999px; padding:14px 30px; font-weight:600; font-size:.95rem; cursor:pointer}
+.ini-cta.dark{background:#111}
+.ini-hero-img{display:grid; place-items:center; min-height:220px}
+.ini-hero-img img{max-width:100%; max-height:340px; object-fit:contain}
+.ini-hero-img .ph{font-family:'Cormorant Garamond',serif; font-size:5rem; color:var(--gold-deep)}
+
+/* Carrusel Más Vendidos */
+.ini-carousel{display:flex; gap:14px; overflow-x:auto; padding:4px 2px 12px; scroll-snap-type:x mandatory}
+.ini-carousel::-webkit-scrollbar{height:6px}
+.ini-ccard{flex:0 0 200px; scroll-snap-align:start; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:0 0 12px; cursor:pointer; text-align:left; position:relative; overflow:hidden; transition:transform .15s, box-shadow .15s}
+.ini-ccard:hover{transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.08)}
+.ini-cimg{width:100%; aspect-ratio:1/1; background:var(--panel-2); display:grid; place-items:center; overflow:hidden}
+.ini-cimg img{width:100%; height:100%; object-fit:cover}
+.ini-cimg .ph{font-family:'Cormorant Garamond',serif; font-size:2.4rem; color:var(--gold-deep)}
+.ini-cname{font-weight:600; font-size:.86rem; padding:10px 12px 2px; color:var(--cream); text-transform:uppercase; letter-spacing:.02em}
+.ini-cprice{padding:0 12px; font-weight:700; color:var(--cream)}
+.ini-cprice .antes{color:var(--muted-2); text-decoration:line-through; font-weight:500; font-size:.82rem; margin-left:6px}
+.badge-oferta{position:absolute; top:10px; left:10px; z-index:2; background:var(--accent); color:#111; font-weight:700; font-size:.66rem; padding:4px 10px; border-radius:999px}
+
+/* Banner arma tu combo */
+.ini-armabanner{margin-top:40px; background:linear-gradient(135deg,#15130f,#2a2013); border-radius:20px; padding:30px 34px; color:#fff}
+.ini-armacopy h3{font-family:'Cormorant Garamond',serif; font-size:1.8rem; margin-bottom:12px}
+.ini-armacopy ul{list-style:none; display:flex; flex-direction:column; gap:6px; margin-bottom:16px}
+.ini-armacopy li{color:rgba(255,255,255,.85); font-size:.92rem}
+
+/* Testimonios */
+.ini-testis{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px}
+.ini-testi{background:var(--panel); border:1px solid var(--line); border-radius:14px; overflow:hidden}
+.ini-testi-img{aspect-ratio:4/3; background:#161616; display:grid; place-items:center}
+.ini-testi-img img{width:100%; height:100%; object-fit:cover}
+.ini-testi-ph{color:var(--accent); font-size:1.4rem; letter-spacing:2px}
+.ini-testi-body{padding:14px}
+.ini-stars{color:var(--accent); font-size:.9rem; letter-spacing:2px; margin-bottom:6px}
+.ini-testi-body p{font-size:.86rem; color:var(--muted); font-style:italic; line-height:1.5}
+.ini-testi-name{margin-top:8px; font-weight:600; font-size:.84rem; color:var(--cream)}
+
+/* Mosaico de categorías */
+.ini-tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px}
+.ini-tile{position:relative; aspect-ratio:3/4; border-radius:14px; overflow:hidden; cursor:pointer; border:none; background:linear-gradient(160deg,#1a1a1a,#000); background-size:cover; background-position:center; display:flex; align-items:flex-start; justify-content:flex-start; padding:16px; transition:transform .15s}
+.ini-tile:hover{transform:translateY(-3px)}
+.ini-tile.has-img::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.6))}
+.ini-tile-label{position:relative; z-index:2; color:#fff; font-family:'Cormorant Garamond',serif; font-weight:700; font-size:1.5rem; letter-spacing:.04em; text-shadow:0 2px 10px rgba(0,0,0,.5)}
+
+@media(max-width:760px){
+  .ini-hero{grid-template-columns:1fr; text-align:center; padding:24px}
+  .ini-hero-copy{align-items:center}
+  .ini-hero-img{order:-1}
+}
 </style>
 </head>
 <body>
@@ -455,7 +521,8 @@ header::after{background:var(--line); opacity:1}
 <div class="divider"><span></span>◆<span></span></div>
 
 <div class="viewtabs" id="viewtabs" style="display:none">
-  <button class="vtab active" data-view="catalogo">Catálogo</button>
+  <button class="vtab active" data-view="inicio">Inicio</button>
+  <button class="vtab" data-view="catalogo">Catálogo</button>
   <button class="vtab" data-view="mayor" id="tabMayor" style="display:none">Precio por mayor<span class="fire">📦</span></button>
   <button class="vtab" data-view="promos" id="tabPromos" style="display:none">Promociones<span class="fire">🔥</span></button>
   <button class="vtab" data-view="preorden" id="tabPre" style="display:none">Preorden<span class="fire">✈️</span></button>
@@ -463,6 +530,8 @@ header::after{background:var(--line); opacity:1}
 </div>
 
 <div class="status-bar" id="statusBar" style="display:none"><button id="btnEstado">🔎 Consultar mi preorden / consolidado</button></div>
+
+<div class="inicio" id="inicioView" style="display:none"></div>
 
 <div class="filters" id="filters"></div>
 <div class="grid" id="grid"><div class="state"><div class="spinner"></div>Cargando catálogo...</div></div>
@@ -567,7 +636,7 @@ const ICONS = {
 
 /* ================= Estado ================= */
 let PRODUCTS=[], NOTAS_BY_PROD={}, PROMOS=[], PROD_BY_ID={};
-let COMBOS=[], currentView='catalogo';
+let COMBOS=[], currentView='inicio';
 let PREORDENES=[], CONSOLIDADOS=[];
 let GIFT_STATUS=[];
 let filterCat='Todos', filterGen='Todos', query='';
@@ -641,22 +710,24 @@ async function load(){
   const ra = await sb.from('ajustes').select('*').eq('id','principal').maybeSingle();
   if(!ra.error && ra.data && ra.data.hero_sub) $('#heroSub').textContent = ra.data.hero_sub;
 
-  renderFilters(); render(); renderCombos(); renderPre(); renderCon();
+  renderFilters(); renderCombos(); renderPre(); renderCon();
 
-  // Mostrar/ocultar pestañas según lo que haya cargado + config.js (SECCIONES)
+  // El menú ahora SIEMPRE se ve (Inicio y Catálogo son fijos)
   const SEC = (window.CONFIG && CONFIG.SECCIONES) || {};
   const secOn = k => SEC[k] !== false;                 // default: activa
   const mayorHay = MAYOR_MIN>0;
   const promosOn = secOn('promos') && COMBOS.length;
   const preOn    = secOn('preorden') && PREORDENES.length;
   const conOn    = secOn('consolidado') && CONSOLIDADOS.length;
-  const anyTab = mayorHay || promosOn || preOn || conOn;
-  const vt=$('#viewtabs'); if(vt) vt.style.display = anyTab ? 'flex' : 'none';
+  const vt=$('#viewtabs'); if(vt) vt.style.display = 'flex';
   const tm=$('#tabMayor'); if(tm) tm.style.display = mayorHay ? 'inline-flex' : 'none';
   const tp=$('#tabPromos'); if(tp) tp.style.display = promosOn ? 'inline-flex' : 'none';
   const tpr=$('#tabPre'); if(tpr) tpr.style.display = preOn ? 'inline-flex' : 'none';
   const tc=$('#tabCon'); if(tc) tc.style.display = conOn ? 'inline-flex' : 'none';
   const sbBar=$('#statusBar'); if(sbBar) sbBar.style.display = (preOn||conOn) ? 'flex' : 'none';
+
+  // Arrancar en la vista Inicio (hero + más vendidos + testimonios + categorías)
+  setView('inicio');
 
   // Modo diagnóstico: abre el catálogo con  ?debug  al final de la URL
   if(/[?&]debug/i.test(location.search)){
@@ -687,17 +758,101 @@ function comboAntesDesde(c){ const t=tallasActivas(c); if(!t.length) return null
 function setView(v){
   currentView=v;
   document.querySelectorAll('#viewtabs .vtab').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  const inInicio = v==='inicio';
+  const iv=$('#inicioView'); if(iv) iv.style.display = inInicio ? 'block' : 'none';
+  // En Inicio ocultamos el hero genérico (el Inicio trae su propio hero destacado)
+  const heroEl=document.querySelector('.hero'); if(heroEl) heroEl.style.display = inInicio ? 'none' : '';
+  const divEl=document.querySelector('.divider'); if(divEl) divEl.style.display = inInicio ? 'none' : '';
   $('#filters').style.display     = v==='catalogo' ? 'flex' : 'none';
   $('#grid').style.display        = v==='catalogo' ? 'grid' : 'none';
   $('#mayorGrid').style.display   = v==='mayor'    ? 'grid' : 'none';
   $('#combosGrid').style.display  = v==='promos'   ? 'grid' : 'none';
   $('#preGrid').style.display     = v==='preorden' ? 'grid' : 'none';
   $('#conGrid').style.display     = v==='consolidado' ? 'grid' : 'none';
-  if(v==='mayor') renderMayor();
+  if(inInicio) renderInicio();
+  else if(v==='mayor') renderMayor();
   else if(v==='promos') renderCombos();
   else if(v==='preorden') renderPre();
   else if(v==='consolidado') renderCon();
   else render();
+}
+
+/* ================= INICIO (hero + más vendidos + testimonios + categorías) ================= */
+function renderInicio(){
+  const cont=$('#inicioView'); if(!cont) return;
+  const combos = COMBOS.filter(c=>c.visible!==false);
+  const destacado = combos.find(c=>c.destacado) || combos[0];
+
+  // 1) Hero con el combo destacado (o el primero)
+  let heroHtml='';
+  if(destacado){
+    const img=imgsOf(destacado)[0]; const desde=comboDesde(destacado); const antes=comboAntesDesde(destacado);
+    const off=(antes&&desde)?Math.round((1-desde/antes)*100):0;
+    const incluye=Array.isArray(destacado.incluye)?destacado.incluye.slice(0,3).join(' | '):'';
+    heroHtml=`<div class="ini-hero">
+      <div class="ini-hero-copy">
+        <span class="tag-vendido">★ MÁS VENDIDO</span>
+        <h2 class="ini-hero-title">${esc(destacado.nombre)}</h2>
+        ${incluye?`<div class="ini-hero-inc">${esc(incluye)}</div>`:''}
+        <div class="ini-hero-price">${desde!=null?fmt(desde):''}${off?`<span class="ini-off">-${off}%</span>`:''}</div>
+        ${antes?`<div class="ini-hero-antes">${fmt(antes)}</div>`:''}
+        <button class="ini-cta" data-combo="${destacado.id}">Comprar ahora</button>
+      </div>
+      <div class="ini-hero-img">${img?`<img src="${esc(img)}" alt="${esc(destacado.nombre)}">`:`<span class="ph">${esc((destacado.nombre||'?')[0])}</span>`}</div>
+    </div>`;
+  } else {
+    heroHtml=`<div class="ini-hero"><div class="ini-hero-copy"><span class="tag-vendido">★ NOVEDADES</span><h2 class="ini-hero-title">${esc(CONFIG.TIENDA_NOMBRE||'')}</h2><div class="ini-hero-inc">${esc(CONFIG.HERO_SUB||'')}</div><button class="ini-cta" data-view="catalogo">Ver catálogo</button></div><div class="ini-hero-img"><span class="ph">◆</span></div></div>`;
+  }
+
+  // 2) Carrusel Más Vendidos (combos)
+  let carHtml='';
+  if(combos.length){
+    carHtml=`<div class="ini-sec"><h3 class="ini-h">Más Vendidos</h3><div class="ini-carousel">${combos.map(c=>{
+      const img=imgsOf(c)[0]; const d=comboDesde(c); const a=comboAntesDesde(c);
+      return `<button class="ini-ccard" data-combo="${c.id}"><span class="badge-oferta">Oferta</span>
+        <div class="ini-cimg">${img?`<img src="${esc(img)}" loading="lazy">`:`<span class="ph">${esc((c.nombre||'?')[0])}</span>`}</div>
+        <div class="ini-cname">${esc(c.nombre)}</div>
+        <div class="ini-cprice">${d!=null?fmt(d):''}${a?`<span class="antes">${fmt(a)}</span>`:''}</div></button>`;
+    }).join('')}</div></div>`;
+  }
+
+  // 3) Banner Arma tu combo
+  const ctaHtml=`<div class="ini-armabanner"><div class="ini-armacopy">
+    <h3>Descubre tu perfume favorito.</h3>
+    <ul><li>✓ Elige entre tus perfumes favoritos</li><li>✓ Descuentos por cada decant adicional</li></ul>
+    <button class="ini-cta dark" data-view="armar">ARMA TU COMBO</button>
+  </div></div>`;
+
+  // 4) Testimonios (desde config.js: CONFIG.TESTIMONIOS)
+  const tst=Array.isArray(CONFIG.TESTIMONIOS)?CONFIG.TESTIMONIOS:[];
+  let testiHtml='';
+  if(tst.length){
+    testiHtml=`<div class="ini-sec"><h3 class="ini-h center"><span class="ini-800">+${esc(CONFIG.CLIENTES_TEXTO||'800')}</span> CLIENTES SATISFECHOS</h3>
+      <div class="ini-testis">${tst.map(t=>`<div class="ini-testi">
+        <div class="ini-testi-img">${t.foto?`<img src="${esc(t.foto)}">`:'<div class="ini-testi-ph">★★★★★</div>'}</div>
+        <div class="ini-testi-body"><div class="ini-stars">★★★★★</div><p>"${esc(t.texto||'')}"</p><div class="ini-testi-name">✓ ${esc(t.nombre||'')}</div></div>
+      </div>`).join('')}</div></div>`;
+  }
+
+  // 5) Mosaico de categorías
+  const cats=CONFIG.CATEGORIAS||[]; const imgs=CONFIG.CATEGORIA_IMAGENES||{};
+  const tiles=[{n:'PROMOS',v:'promos',cat:''}].concat(cats.map(c=>({n:(c==='Árabe'?'ÁRABES':String(c).toUpperCase()),v:'catalogo',cat:c})));
+  const tilesHtml=`<div class="ini-sec"><h3 class="ini-h center serif">CATÁLOGO</h3><div class="ini-tiles">${tiles.map(t=>{
+    const bg=t.cat&&imgs[t.cat]?` style="background-image:url('${esc(imgs[t.cat])}')"`:'';
+    return `<button class="ini-tile${bg?' has-img':''}"${bg} data-view="${t.v}" data-cat="${esc(t.cat)}"><span class="ini-tile-label">${esc(t.n)}</span></button>`;
+  }).join('')}</div></div>`;
+
+  cont.innerHTML = heroHtml + carHtml + ctaHtml + testiHtml + tilesHtml;
+
+  // Eventos
+  cont.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>openCombo(b.dataset.combo));
+  cont.querySelectorAll('.ini-tile').forEach(b=>b.onclick=()=>{
+    if(b.dataset.view==='promos'){ setView('promos'); }
+    else { filterCat=b.dataset.cat||'Todos'; setView('catalogo'); if(typeof renderFilters==='function') renderFilters(); }
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+  cont.querySelectorAll('[data-view="catalogo"]:not(.ini-tile)').forEach(b=>b.onclick=()=>setView('catalogo'));
+  cont.querySelectorAll('[data-view="armar"]').forEach(b=>b.onclick=()=>{ setView('promos'); window.scrollTo({top:0,behavior:'smooth'}); });
 }
 
 /* ================= Precio por mayor (vista) ================= */

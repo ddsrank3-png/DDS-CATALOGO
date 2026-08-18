@@ -1,16 +1,1972 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="DDS Día de Suerte Parfums — Catálogo de perfumes y decants en Ica, Perú" />
-    <title>DDS Parfums — Catálogo</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo — Decants de Perfumes</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mi Catálogo">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#ffffff; --bg-2:#f2f2f4; --panel:#f7f7f8; --panel-2:#ededf0;
+  --line:#e4e4e8; --line-soft:#ededf0;
+  --gold-1:#141416; --gold-2:#141416; --gold-3:#3b3b40; --gold-deep:#d6d6da;
+  --gold-grad:#141416;
+  --cream:#141416; --muted:#6c6c74; --muted-2:#a0a0a8;
+  --accent:#f5c518; --accent-deep:#e2ad00;
+  --ok:#12904a; --danger:#c0392b; --wa:#25D366; --yape:#7c3aed;
+  --radius:12px; --radius-lg:18px; --shadow:0 18px 50px rgba(20,20,25,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);
+  color:var(--cream); font-family:'Jost',system-ui,sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased;}
+img{display:block; max-width:100%}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+input{font-family:inherit}
+::selection{background:var(--gold-3); color:#0a0a0d}
+.gold-text{background:var(--gold-grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;}
+
+/* Pantalla de carga */
+#loader{position:fixed; inset:0; z-index:9999; background:var(--bg); display:flex; align-items:center; justify-content:center; transition:opacity .7s ease, visibility .7s}
+#loader.hide{opacity:0; visibility:hidden}
+#loader img{width:250px; max-width:70vw; animation:pulse 2s ease-in-out infinite}
+#loader .word{font-family:'Cinzel',serif; font-size:1.8rem; letter-spacing:.14em; color:var(--gold-1); animation:pulse 2s ease-in-out infinite}
+#loader .brandmark{text-align:center; color:var(--gold-1); animation:pulse 2s ease-in-out infinite; padding:0 18px}
+#loader .brandmark .l1{font-family:'Cinzel',serif; font-weight:700; font-size:clamp(2.6rem,12vw,4.4rem); letter-spacing:.10em; line-height:1}
+#loader .brandmark .l2{font-family:'Cinzel',serif; font-weight:500; font-size:clamp(1rem,4.5vw,1.5rem); letter-spacing:.44em; margin-top:.4em; padding-left:.44em; color:var(--muted)}
+#loader .brandmark .rule{width:56px; height:2px; background:var(--accent); margin:.85em auto 0; border-radius:2px}
+@keyframes pulse{0%,100%{opacity:.55; transform:scale(.98)} 50%{opacity:1; transform:scale(1)}}
+
+/* Stock en tarjeta */
+.stk{font-size:.74rem; margin-top:2px}
+.stk.out{color:var(--danger)} .stk.low{color:var(--gold-2)} .stk.ok{color:var(--muted)}
+.card.agotado{opacity:.6} .card.agotado .imgwrap img{filter:grayscale(.6)}
+.stock-modal{display:inline-block; margin-top:8px; font-size:.82rem; padding:5px 11px; border-radius:999px; border:1px solid var(--line)}
+.stock-modal.out{color:var(--danger); border-color:var(--danger)}
+.stock-modal.low{color:var(--gold-1); border-color:var(--gold-deep); background:rgba(184,137,58,.1)}
+.stock-modal.ok{color:var(--muted)}
+
+/* Datos del cliente en el carrito */
+.cliente-box{background:var(--panel-2); border:1px solid var(--line-soft); border-radius:12px; padding:12px; margin-bottom:12px; display:flex; flex-direction:column; gap:8px}
+.cliente-box .cliente-t{font-size:.82rem; color:var(--gold-2)} .cliente-box .cliente-t span{color:var(--muted-2); font-size:.72rem}
+.cliente-box input{width:100%; background:var(--panel); border:1px solid var(--line); border-radius:8px; color:var(--cream); padding:9px 11px; font-size:.86rem; outline:none; font-family:inherit}
+.cliente-box input:focus{border-color:var(--gold-3)}
+
+/* Header */
+header{position:sticky; top:0; z-index:40; background:color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter:blur(16px); border-bottom:1px solid var(--line-soft);}
+header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1px; background:linear-gradient(90deg,transparent 6%,var(--gold-deep) 50%,transparent 94%); opacity:.7}
+.nav{max-width:1200px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:18px}
+.brand{display:flex; align-items:center; gap:10px; text-decoration:none; margin-right:auto}
+.brand img{height:46px; width:auto; border-radius:8px}
+.brand .word{font-family:'Cinzel',serif; font-weight:600; font-size:1.4rem; letter-spacing:.06em; line-height:1}
+.search{flex:1; min-width:0; max-width:340px; display:flex; align-items:center; gap:9px; background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:9px 15px; transition:border-color .2s;}
+.search:focus-within{border-color:var(--gold-3)}
+.search input{flex:1; min-width:0; background:none; border:none; outline:none; color:var(--cream); font-size:.92rem}
+.search input::placeholder{color:var(--muted-2)}
+.search svg{width:17px; height:17px; stroke:var(--muted); flex:0 0 auto}
+.cart-btn{position:relative; width:44px; height:44px; border-radius:12px; border:1px solid var(--line); background:var(--panel); display:grid; place-items:center; transition:.2s}
+.cart-btn:hover{border-color:var(--gold-3); background:var(--panel-2)}
+.cart-btn svg{width:20px; height:20px; stroke:var(--gold-2)}
+.cart-count{position:absolute; top:-6px; right:-6px; min-width:20px; height:20px; padding:0 5px; border-radius:999px; background:var(--gold-grad); color:#0a0a0d; font-size:.72rem; font-weight:600; display:grid; place-items:center; box-shadow:0 2px 8px rgba(0,0,0,.4)}
+
+/* Hero */
+.hero{max-width:1200px; margin:0 auto; padding:58px 20px 22px; position:relative; display:grid; grid-template-columns:1.55fr 1fr; gap:34px; align-items:center}
+.hero-copy{text-align:left}
+.eyebrow{display:flex; align-items:center; gap:12px; font-size:.72rem; letter-spacing:.34em; text-transform:uppercase; color:var(--gold-2); font-weight:500}
+.eyebrow::before{content:""; width:40px; height:1px; background:linear-gradient(90deg,var(--gold-3),transparent)}
+.hero h1{font-family:'Cormorant Garamond',serif; font-weight:600; font-size:clamp(2.4rem,6.5vw,4rem); line-height:1.02; margin:16px 0 12px; letter-spacing:.01em}
+.hero p{color:var(--muted); font-weight:300; max-width:440px; margin:0; font-size:1.04rem; line-height:1.65}
+.hero-ornament{justify-self:center; width:min(290px,74vw); aspect-ratio:1/1; border-radius:50%; display:grid; place-items:center; position:relative; background:radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--gold-2) 12%, transparent), transparent 62%); border:1px solid var(--line-soft)}
+.hero-ornament::before{content:""; position:absolute; inset:16px; border-radius:50%; border:1px solid var(--gold-deep); opacity:.4}
+.hero-ornament::after{content:""; position:absolute; inset:30px; border-radius:50%; border:1px solid var(--line-soft)}
+.hero-ornament .mono{font-family:'Cinzel',serif; font-size:clamp(2.4rem,7vw,3.6rem); letter-spacing:.08em}
+.hero-ornament img{width:66%; height:auto; max-height:70%; object-fit:contain; filter:drop-shadow(0 10px 22px rgba(0,0,0,.55))}
+.divider{max-width:1200px; margin:6px auto 2px; padding:0 20px; display:flex; align-items:center; gap:16px; color:var(--gold-3); font-size:.62rem}
+.divider span{flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--line),transparent)}
+@media(max-width:760px){ .hero{grid-template-columns:1fr; text-align:center; padding-top:38px; gap:22px} .hero-copy{text-align:center} .eyebrow{justify-content:center} .hero p{margin:0 auto} .hero-ornament{width:min(200px,58vw)} }
+
+/* Filtros */
+.filters{max-width:1200px; margin:0 auto; padding:18px 20px 6px; display:flex; gap:9px; flex-wrap:wrap; align-items:center; justify-content:center}
+.flabel{font-size:.64rem; letter-spacing:.26em; text-transform:uppercase; color:var(--gold-3); margin-right:4px}
+.chip{padding:8px 17px; border-radius:3px; border:1px solid var(--line); background:transparent; color:var(--muted); font-size:.8rem; letter-spacing:.05em; transition:.2s}
+.chip:hover{color:var(--gold-1); border-color:var(--gold-deep)}
+.chip.active{color:var(--bg); background:var(--gold-grad); border-color:transparent; font-weight:600}
+.filters .count{flex-basis:100%; text-align:center; color:var(--muted-2); font-size:.78rem; margin-top:6px}
+
+/* Grid */
+.grid{max-width:1200px; margin:0 auto; padding:22px 20px 70px; display:grid; grid-template-columns:repeat(auto-fill,minmax(238px,1fr)); gap:22px}
+.card{position:relative; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border:1px solid rgba(168,132,63,.30); border-radius:20px 4px 20px 4px; overflow:hidden; text-align:left; transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s,border-color .28s; display:flex; flex-direction:column}
+.card:hover{transform:translateY(-5px); border-color:var(--gold-2); box-shadow:0 26px 54px rgba(0,0,0,.55)}
+.card .imgwrap{aspect-ratio:1/1; background:radial-gradient(140px 140px at 50% 40%, var(--panel) 0%, transparent 72%), var(--bg-2); display:grid; place-items:center; padding:22px; overflow:hidden}
+.card .imgwrap img{max-height:100%; object-fit:contain; filter:drop-shadow(0 16px 24px rgba(0,0,0,.55)); transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.card:hover .imgwrap img{transform:scale(1.06)}
+.card .ph{font-family:'Cormorant Garamond',serif; font-size:2.4rem; color:var(--gold-deep)}
+.card .body{padding:14px 16px 16px; display:flex; flex-direction:column; gap:5px; flex:1; border-top:1px solid var(--line-soft)}
+.card .marca{font-size:.66rem; letter-spacing:.22em; text-transform:uppercase; color:var(--gold-3)}
+.card .nombre{font-family:'Cormorant Garamond',serif; font-size:1.24rem; font-weight:600; line-height:1.12; color:var(--cream)}
+.card .foot{margin-top:auto; padding-top:11px; display:flex; align-items:flex-end; justify-content:space-between; gap:8px}
+.card .precio{display:flex; flex-direction:column; line-height:1.1}
+.card .precio small{color:var(--muted); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; margin-bottom:3px}
+.card .precio b{font-family:'Cormorant Garamond',serif; font-weight:600; font-size:1.18rem; color:var(--gold-1)}
+.card .ver{width:34px; height:34px; border-radius:50%; border:1px solid var(--gold-deep); color:var(--gold-1); display:grid; place-items:center; font-size:1.05rem; transition:.22s; flex:0 0 auto}
+.card:hover .ver{background:var(--gold-grad); color:var(--bg); border-color:transparent}
+.badge-dest{position:absolute; top:11px; left:11px; z-index:2; font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; padding:5px 9px; border-radius:999px; background:color-mix(in srgb, var(--bg) 82%, transparent); border:1px solid var(--gold-deep); color:var(--gold-2)}
+.badge-off{position:absolute; top:11px; right:11px; z-index:2; font-size:.68rem; font-weight:700; padding:5px 9px; border-radius:999px; background:var(--danger); color:#fff}
+
+.state{grid-column:1/-1; text-align:center; color:var(--muted); padding:70px 20px}
+.spinner{width:34px; height:34px; margin:0 auto 14px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--gold-2); animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Modal producto */
+.overlay{position:fixed; inset:0; z-index:60; background:rgba(4,4,6,.72); backdrop-filter:blur(6px); display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:24px 16px}
+.overlay.open{display:flex}
+.sheet{width:100%; max-width:560px; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow); overflow:hidden; animation:rise .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:0; transform:translateY(24px)}to{opacity:1; transform:none}}
+.sheet .hd{position:relative; background:radial-gradient(220px 180px at 50% 35%,var(--panel) 0%,transparent 70%), var(--bg-2); padding:34px 24px; display:grid; place-items:center}
+.sheet .hd img{max-height:290px; object-fit:contain; filter:drop-shadow(0 22px 30px rgba(0,0,0,.6))}
+.sheet .close{position:absolute; top:14px; right:14px; width:38px; height:38px; border-radius:10px; background:rgba(0,0,0,.4); display:grid; place-items:center}
+.sheet .close svg{width:18px; height:18px; stroke:var(--cream)}
+.gallery{display:flex; gap:9px; justify-content:center; flex-wrap:wrap; padding:14px 20px 4px; background:var(--bg-2)}
+.gthumb{width:54px; height:54px; border-radius:10px; overflow:hidden; border:1px solid var(--line); opacity:.6; transition:.2s}
+.gthumb.active{opacity:1; border-color:var(--gold-3)}
+.gthumb img{width:100%; height:100%; object-fit:cover}
+.sheet .bd{padding:22px 24px 26px}
+.sheet .marca{font-size:.7rem; letter-spacing:.24em; text-transform:uppercase; color:var(--gold-3)}
+.sheet h2{font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:600; margin:4px 0 6px}
+.sheet .genero{color:var(--muted); font-size:.9rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.catchip{padding:3px 10px; border-radius:999px; border:1px solid var(--gold-deep); color:var(--gold-2); font-size:.7rem; letter-spacing:.06em}
+.section-t{font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; color:var(--gold-3); margin:20px 0 10px; font-weight:500}
+.notas-img{display:flex; gap:12px; flex-wrap:wrap}
+.nota{display:flex; flex-direction:column; align-items:center; gap:6px; width:62px}
+.nota .ph{width:56px; height:56px; border-radius:50%; overflow:hidden; background:var(--panel-2); border:1px solid var(--line); display:grid; place-items:center; color:var(--gold-deep); font-family:'Cormorant Garamond',serif; font-size:1.3rem}
+.nota .ph img{width:100%; height:100%; object-fit:cover}
+.nota span{font-size:.68rem; color:var(--muted); text-align:center; line-height:1.2}
+.piramide, .perfil{display:flex; flex-direction:column; gap:6px}
+.piramide .row, .perfil .p{display:flex; gap:12px; background:var(--panel-2); border:1px solid var(--line-soft); border-radius:10px; padding:9px 13px}
+.piramide .k, .perfil .k{color:var(--gold-2); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; min-width:70px}
+.piramide .v, .perfil .v{color:var(--cream); font-size:.86rem}
+.perfil{flex-direction:row; gap:10px}
+.perfil .p{flex:1; flex-direction:column; gap:3px}
+.tallas{display:flex; gap:9px; flex-wrap:wrap}
+.talla{position:relative; min-width:88px; padding:12px 14px; border-radius:12px; border:1.5px solid var(--line); background:var(--panel-2); text-align:center; transition:.18s}
+.talla:hover{border-color:var(--gold-deep)}
+.talla.sel{border-color:var(--gold-2); background:linear-gradient(180deg,var(--panel-2),var(--bg-2))}
+.talla.oferta{border-color:var(--danger)}
+.talla .off{position:absolute; top:-9px; right:-6px; background:var(--danger); color:#fff; font-size:.62rem; font-weight:700; padding:2px 6px; border-radius:999px}
+.talla .ml{font-size:.82rem; color:var(--gold-1); font-weight:500}
+.talla .pr{font-size:.9rem; margin-top:3px}
+.talla .antes{color:var(--muted-2); text-decoration:line-through; font-size:.72rem; margin-right:5px}
+.envio{display:flex; align-items:center; gap:9px; margin:16px 0 4px; color:var(--muted); font-size:.8rem}
+.envio svg{width:20px; height:20px; stroke:var(--gold-3); fill:none}
+.add-cta{width:100%; margin-top:16px; padding:14px; border-radius:14px; background:var(--gold-grad); color:#0a0a0d; font-weight:600; font-size:.95rem; transition:.2s}
+.add-cta:disabled{opacity:.5; cursor:not-allowed; background:var(--panel-2); color:var(--muted)}
+
+/* Carrito drawer */
+.drawer{position:fixed; top:0; right:0; height:100%; width:100%; max-width:420px; z-index:70; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border-left:1px solid var(--line); transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column}
+.drawer.open{transform:none}
+.drawer .top{display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--line-soft)}
+.drawer .top h3{font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:600}
+.drawer .top button svg{width:20px; height:20px; stroke:var(--cream)}
+.cart-list{flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:12px}
+.cart-empty{text-align:center; color:var(--muted); padding:60px 10px; line-height:1.7}
+.ci{display:flex; gap:12px; align-items:center; background:var(--panel-2); border:1px solid var(--line-soft); border-radius:12px; padding:10px}
+.ci .th{width:52px; height:52px; border-radius:9px; overflow:hidden; background:var(--bg-2); flex:0 0 auto; display:grid; place-items:center}
+.ci .th img{width:100%; height:100%; object-fit:cover}
+.ci .info{flex:1; min-width:0}
+.ci .n{font-size:.9rem; color:var(--cream); font-weight:500}
+.ci .m{font-size:.72rem; color:var(--muted)}
+.ci .pr{font-size:.86rem; color:var(--gold-1); margin-top:2px}
+.ci .qty{display:inline-flex; align-items:center; gap:10px; margin-top:5px; background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:2px 4px}
+.ci .qty button{width:22px; height:22px; color:var(--gold-2); font-size:1rem}
+.ci .rm{color:var(--danger); font-size:.72rem; align-self:flex-start}
+.promo-line{color:var(--ok); font-size:.8rem; padding:2px 0}
+.upsell{background:rgba(217,180,90,.1); border:1px dashed var(--gold-deep); color:var(--gold-1); border-radius:10px; padding:9px 12px; font-size:.8rem; margin-top:6px}
+.drawer .bot{border-top:1px solid var(--line-soft); padding:16px 20px 22px}
+.pay-toggle{display:flex; gap:8px; margin-bottom:12px}
+.pay-toggle button{flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--line); background:var(--panel-2); color:var(--muted); font-size:.82rem; font-weight:500}
+.pay-toggle button.on{border-color:var(--yape); color:#c9b6ff; background:rgba(124,58,237,.12)}
+.pay-toggle button.on.coord{border-color:var(--gold-3); color:var(--gold-1); background:rgba(184,137,58,.12)}
+.yape-box{background:rgba(124,58,237,.1); border:1px solid rgba(124,58,237,.4); border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:.82rem}
+.yape-box b{color:#c9b6ff}
+.yape-box input{width:100%; margin-top:8px; padding:9px 12px; border-radius:8px; border:1.5px solid var(--yape); background:var(--panel); color:var(--cream); text-align:center; letter-spacing:.12em; font-weight:600; outline:none}
+.tot{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px}
+.tot .k{color:var(--muted)}
+.tot.big .v{font-size:1.4rem; color:var(--gold-1); font-weight:600}
+.tot .tach{color:var(--muted-2); text-decoration:line-through; font-size:.82rem}
+.ahorro{color:var(--ok); font-size:.82rem; text-align:right; margin-bottom:10px}
+.wa{width:100%; margin-top:10px; padding:15px; border-radius:14px; background:var(--wa); color:#fff; font-weight:600; font-size:.95rem; display:flex; align-items:center; justify-content:center; gap:10px}
+.wa svg{width:20px; height:20px; fill:#fff}
+
+.social{max-width:1200px; margin:0 auto; padding:0 20px 40px; display:flex; gap:14px; justify-content:center}
+.social a{width:42px; height:42px; border-radius:12px; border:1px solid var(--line); background:var(--panel); display:grid; place-items:center}
+.social svg{width:20px; height:20px; fill:var(--gold-2)}
+
+.toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--panel-2); border:1px solid var(--gold-deep); color:var(--cream); padding:12px 20px; border-radius:999px; font-size:.86rem; opacity:0; pointer-events:none; transition:.3s; z-index:90}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+@media(max-width:560px){.brand .word{font-size:1.2rem}.sheet h2{font-size:1.6rem}}
+
+/* ===== Pestañas de vista: Catálogo / Promociones ===== */
+.viewtabs{max-width:1200px; margin:10px auto 0; padding:0 20px; display:flex; gap:8px; justify-content:center}
+.vtab{padding:10px 22px; border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--muted); font-size:.86rem; letter-spacing:.04em; transition:.2s}
+.vtab:hover{color:var(--gold-1); border-color:var(--gold-deep)}
+.vtab.active{color:var(--bg); background:var(--gold-grad); border-color:transparent; font-weight:600}
+.vtab .fire{margin-left:6px}
+
+/* ===== Tarjeta de combo ===== */
+.badge-oferta{position:absolute; top:11px; left:11px; z-index:2; font-size:.62rem; letter-spacing:.14em; text-transform:uppercase; padding:5px 11px; border-radius:999px; background:var(--gold-grad); color:var(--bg); font-weight:700}
+.card .precio .antes{color:var(--muted-2); text-decoration:line-through; font-size:.8rem; font-weight:400; margin-right:6px; -webkit-text-fill-color:var(--muted-2)}
+.combos-grid .imgwrap{padding:16px}
+
+/* ===== Modal combo: incluye + tallas con sprays + combínalo y ahorra ===== */
+.incluye{display:flex; flex-wrap:wrap; gap:7px; margin-top:4px}
+.incluye .it{font-size:.76rem; color:var(--cream); background:var(--panel-2); border:1px solid var(--line-soft); border-radius:999px; padding:4px 11px}
+.tallas .talla .spr{font-size:.66rem; color:var(--muted); margin-top:2px}
+.talla .best{position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:var(--bg); color:var(--gold-1); border:1px solid var(--gold-deep); font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap}
+.talla.best-on{border-color:var(--gold-2)}
+.combo-box{margin-top:18px; border:1px solid var(--line); border-radius:14px; overflow:hidden}
+.combo-box .cb-h{padding:11px 14px; background:var(--panel-2); font-size:.76rem; letter-spacing:.16em; text-transform:uppercase; color:var(--gold-2); border-bottom:1px solid var(--line-soft)}
+.addon{display:flex; align-items:center; gap:11px; padding:11px 14px; border-bottom:1px solid var(--line-soft); cursor:pointer; transition:background .15s}
+.addon:last-child{border-bottom:none}
+.addon:hover{background:var(--panel-2)}
+.addon input{width:20px; height:20px; accent-color:var(--gold-3); flex:0 0 auto}
+.addon .th{width:42px; height:42px; border-radius:9px; overflow:hidden; background:var(--bg-2); border:1px solid var(--line-soft); flex:0 0 auto; display:grid; place-items:center; color:var(--gold-deep); font-family:'Cormorant Garamond',serif}
+.addon .th img{width:100%; height:100%; object-fit:cover}
+.addon .info{flex:1; min-width:0}
+.addon .info .n{font-size:.88rem; color:var(--cream)}
+.addon .info .m{font-size:.72rem; color:var(--muted)}
+.addon .pr{text-align:right; white-space:nowrap}
+.addon .pr .antes{display:block; color:var(--muted-2); text-decoration:line-through; font-size:.72rem}
+.addon .pr b{color:var(--gold-1); font-size:.9rem; font-weight:600}
+.addon .best2{background:var(--bg); color:var(--gold-1); border:1px solid var(--gold-deep); font-size:.56rem; letter-spacing:.08em; text-transform:uppercase; font-weight:700; padding:2px 7px; border-radius:999px; margin-left:6px}
+.combo-qty{display:flex; align-items:center; gap:14px; margin-top:16px; justify-content:center}
+.combo-qty .lbl{color:var(--muted); font-size:.82rem}
+.combo-qty .stepper{display:inline-flex; align-items:center; gap:14px; background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:5px 8px}
+.combo-qty .stepper button{width:26px; height:26px; color:var(--gold-2); font-size:1.1rem}
+.combo-total{display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:14px; border-top:1px solid var(--line-soft)}
+.combo-total .k{color:var(--muted)}
+.combo-total .v{font-family:'Cormorant Garamond',serif; font-size:1.5rem; color:var(--gold-1); font-weight:600}
+
+/* ===== Regalo por compra ===== */
+.gift-box{background:rgba(217,180,90,.1); border:1px solid var(--gold-deep); border-radius:12px; padding:12px 14px; margin-top:10px}
+.gift-box .gift-h{color:var(--gold-1); font-size:.9rem; font-weight:600; margin-bottom:9px}
+.gift-row{display:flex; gap:8px}
+.gift-row select{flex:1; min-width:0; background:var(--panel); border:1px solid var(--gold-deep); color:var(--cream); border-radius:9px; padding:9px 11px; font-size:.86rem; outline:none}
+.gift-row button{flex:0 0 auto; background:var(--gold-grad); color:var(--bg); font-weight:600; border-radius:9px; padding:9px 16px; font-size:.85rem}
+.ci.gift{border-color:var(--gold-deep); background:rgba(217,180,90,.07)}
+.ci.gift .th{font-size:1.3rem}
+.gift-tag{font-size:.66rem; color:var(--bg); background:var(--gold-grad); border-radius:999px; padding:2px 8px; font-weight:700; margin-left:4px; letter-spacing:.04em}
+.ci.gift .m{color:var(--gold-2)}
+
+/* ===== Aviso "precio por mayor" en el carrito ===== */
+.mayor-note{margin:0 0 12px; padding:11px 13px; border-radius:12px; font-size:.82rem; font-weight:500; text-align:center; background:var(--panel-2); border:1px solid var(--line); color:var(--muted)}
+.mayor-note.on{background:rgba(123,216,143,.12); border-color:rgba(123,216,143,.5); color:var(--ok)}
+.mayor-note .bar{height:5px; border-radius:999px; background:rgba(255,255,255,.08); margin-top:9px; overflow:hidden}
+.mayor-note .bar i{display:block; height:100%; background:var(--gold-grad); transition:width .3s}
+.talla .may{display:block; font-size:.62rem; color:var(--gold-2); margin-top:3px; letter-spacing:.02em}
+.ci .may-tag{font-size:.64rem; color:var(--ok); margin-left:5px}
+
+/* ===== Secciones NUEVAS: Preorden y Consolidado ===== */
+.badge-pre{position:absolute; top:11px; left:11px; z-index:2; font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; padding:5px 10px; border-radius:999px; background:color-mix(in srgb, var(--bg) 82%, transparent); border:1px solid var(--gold-deep); color:var(--gold-1); font-weight:600}
+.badge-con{position:absolute; top:11px; left:11px; z-index:2; font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; padding:5px 10px; border-radius:999px; background:var(--gold-grad); color:var(--bg); font-weight:700}
+.cupo-line{font-size:.74rem; margin-top:2px}
+.cupo-line.full{color:var(--danger)} .cupo-line.left{color:var(--gold-2)}
+.escala-mini{font-size:.72rem; color:var(--ok); margin-top:2px}
+
+/* Escala de precios (consolidado) y barra de progreso */
+.escala{display:flex; flex-direction:column; gap:7px; margin-top:4px}
+.escala .er{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--panel-2); border:1px solid var(--line-soft); border-radius:10px; padding:9px 13px; font-size:.86rem; transition:.2s}
+.escala .er.active{border-color:var(--gold-2); background:linear-gradient(180deg,var(--panel-2),var(--bg-2))}
+.escala .er .q{color:var(--muted)} .escala .er.active .q{color:var(--gold-1)}
+.escala .er .pp{color:var(--cream); font-weight:600} .escala .er.active .pp{color:var(--gold-1)}
+.escala .er .now{font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; color:var(--bg); background:var(--gold-grad); padding:2px 8px; border-radius:999px; font-weight:700; margin-left:6px}
+.prog{margin-top:14px}
+.prog .lbl{display:flex; justify-content:space-between; font-size:.78rem; color:var(--muted); margin-bottom:7px}
+.prog .bar{height:8px; border-radius:999px; background:rgba(255,255,255,.07); overflow:hidden}
+.prog .bar i{display:block; height:100%; background:var(--gold-grad); transition:width .4s}
+.prog .next{color:var(--ok); font-size:.78rem; margin-top:8px; text-align:center}
+
+/* Subir comprobante de pago */
+.qty-pick{display:flex; align-items:center; gap:16px; margin:14px 0; justify-content:center}
+.qty-pick .stepper{display:inline-flex; align-items:center; gap:16px; background:var(--panel-2); border:1px solid var(--line); border-radius:999px; padding:6px 10px}
+.qty-pick .stepper button{width:28px; height:28px; color:var(--gold-2); font-size:1.15rem}
+.qty-pick .stepper span{min-width:26px; text-align:center; font-size:1.05rem}
+.pay-up{margin-top:6px; border:1px dashed var(--gold-deep); border-radius:12px; padding:14px; text-align:center; background:rgba(217,180,90,.06)}
+.pay-up label{display:block; font-size:.8rem; color:var(--gold-1); margin-bottom:8px; text-transform:none; letter-spacing:0}
+.pay-up input[type=file]{width:100%; font-size:.82rem; color:var(--muted)}
+.pay-thumbs{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; justify-content:center}
+.pay-thumbs .pt{position:relative; width:62px; height:62px; border-radius:9px; overflow:hidden; border:1px solid var(--line)}
+.pay-thumbs .pt img{width:100%; height:100%; object-fit:cover}
+.pay-thumbs .pt button{position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:6px; background:rgba(0,0,0,.65); color:#fff; font-size:.85rem; display:grid; place-items:center}
+.miniform{display:flex; flex-direction:column; gap:9px; margin-top:14px}
+.miniform input, .miniform textarea{width:100%; background:var(--panel-2); border:1px solid var(--line); border-radius:9px; color:var(--cream); padding:10px 12px; font-size:.88rem; outline:none; font-family:inherit}
+.miniform input:focus, .miniform textarea:focus{border-color:var(--gold-3)}
+.ok-screen{text-align:center; padding:14px 6px}
+.ok-screen .big{font-family:'Cormorant Garamond',serif; font-size:1.7rem; color:var(--ok); margin:6px 0 4px}
+.ok-screen .cod{display:inline-block; margin:12px 0; padding:10px 18px; border-radius:10px; border:1px dashed var(--gold-deep); font-family:'Cinzel',serif; letter-spacing:.14em; font-size:1.2rem; color:var(--gold-1)}
+.ok-screen p{color:var(--muted); font-size:.88rem; line-height:1.6}
+.status-bar{max-width:1200px; margin:0 auto; padding:2px 20px 0; display:flex; justify-content:center}
+.status-bar button{font-size:.8rem; color:var(--gold-2); border:1px solid var(--line); border-radius:999px; padding:8px 16px; background:var(--panel)}
+.status-bar button:hover{border-color:var(--gold-3)}
+.est-badge{display:inline-block; padding:4px 12px; border-radius:999px; font-size:.82rem; font-weight:600; margin-top:8px}
+.est-badge.pendiente{color:var(--gold-1); border:1px solid var(--gold-deep); background:rgba(184,137,58,.12)}
+.est-badge.confirmado,.est-badge.entregado{color:var(--ok); border:1px solid rgba(123,216,143,.5); background:rgba(123,216,143,.12)}
+.est-badge.rechazado{color:var(--danger); border:1px solid var(--danger); background:rgba(224,121,107,.1)}
+/* --- Consolidado por inversión --- */
+.con-table{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:8px 0}
+.con-table table{border-collapse:collapse;width:100%;font-size:.8rem}
+.con-table th,.con-table td{padding:8px 11px;border-bottom:1px solid var(--line-soft);white-space:nowrap;text-align:right}
+.con-table th:first-child,.con-table td:first-child{text-align:left;position:sticky;left:0;background:var(--panel);z-index:1}
+.con-table thead th{color:var(--gold-1);background:var(--panel-2);position:sticky;top:0}
+.con-table td.agot{color:#e77;font-weight:600}
+.con-row{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.con-row .cr-info{display:flex;flex-direction:column;min-width:0}
+.con-row .cr-info b{font-size:.92rem;color:var(--cream);white-space:normal}
+.con-row .cr-info span{font-size:.75rem;color:var(--muted)}
+.con-row .cr-precio{font-size:.86rem;color:var(--gold-1);min-width:58px;text-align:right}
+.con-row .cr-sub{font-size:.86rem;min-width:56px;text-align:right;color:var(--cream)}
+.con-row.agot{opacity:.5}
+.agot-tag{color:#e77;font-weight:700;font-size:.72rem}
+.stepper.sm{transform:scale(.92)}
+.con-sum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.con-sum .cell{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.con-sum .cell small{display:block;color:var(--muted);font-size:.7rem;margin-bottom:2px}
+.con-sum .cell b{font-size:1.02rem;color:var(--gold-1)}
+.grp-item{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px}
+.grp-item .gi-main{min-width:0}
+.grp-item .gi-main b{display:block;color:var(--cream)}
+.grp-item .gi-main span{font-size:.77rem;color:var(--muted)}
+.grp-item button{background:var(--gold-2);color:#06121d;border:0;border-radius:9px;padding:9px 13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.con-back{background:none;border:0;color:var(--gold-2);cursor:pointer;font-size:.9rem;padding:2px 0 6px;font-weight:600}
+.add-cta.ghost{background:var(--panel-2);color:var(--gold-1);border:1px solid var(--line)}
+/* =====================================================================
+   TEMA CLARO estilo LOOVI — ajustes sobre el diseño base
+   ===================================================================== */
+::selection{background:var(--accent); color:#141416}
+header{background:rgba(255,255,255,.9); border-bottom:1px solid var(--line)}
+header::after{background:var(--line); opacity:1}
+.brand .word{font-family:'Cinzel',serif; color:var(--cream); font-weight:700; letter-spacing:.12em}
+.cart-btn svg{stroke:var(--cream)}
+.cart-btn:hover{border-color:var(--cream)}
+.cart-count{background:var(--cream)!important; color:#fff!important}
+.search svg{stroke:var(--muted)}
+
+/* Banner de envíos (marquee) */
+.marquee{background:var(--cream); color:#fff; overflow:hidden; white-space:nowrap}
+.marquee .mq-track{display:inline-block; padding:11px 0; animation:mqscroll 26s linear infinite; font-size:.78rem; letter-spacing:.16em; font-weight:600; text-transform:uppercase; will-change:transform}
+.marquee .mq-track span{padding:0 30px}
+@keyframes mqscroll{from{transform:translateX(0)} to{transform:translateX(-50%)}}
+
+/* Nav de secciones estilo tienda */
+.viewtabs{border-bottom:1px solid var(--line); gap:26px; justify-content:center; padding:0 20px; margin-top:14px; flex-wrap:wrap}
+.vtab{background:none!important; border:none!important; border-radius:0!important; color:var(--muted); text-transform:uppercase; letter-spacing:.13em; font-size:.76rem; font-weight:500; padding:12px 2px; position:relative; transition:color .2s}
+.vtab:hover{color:var(--cream)}
+.vtab.active{color:var(--cream)!important; font-weight:700; background:none!important}
+.vtab.active::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--cream)}
+.vtab .fire{margin-left:6px}
+
+/* Chips de filtro */
+.chip{border-radius:999px}
+.chip:hover{color:var(--cream); border-color:var(--cream)}
+.chip.active{color:#fff; background:var(--cream); border-color:var(--cream)}
+
+/* Tarjetas de producto — tiles gris claro estilo LOOVI */
+.card{background:#fff!important; border:1px solid var(--line)!important; border-radius:10px!important; box-shadow:none!important}
+.card:hover{transform:translateY(-3px); box-shadow:0 12px 30px rgba(20,20,25,.10)!important; border-color:var(--line)!important}
+.card .imgwrap{background:var(--bg-2)!important}
+.card .ver{border-color:var(--line)}
+.card:hover .ver{background:var(--cream); color:#fff; border-color:var(--cream)}
+
+/* Badges */
+.badge-oferta{background:var(--accent)!important; color:#141416!important; border:none!important; font-weight:800; letter-spacing:.06em}
+.badge-con{background:var(--accent)!important; color:#141416!important; border:none!important; font-weight:800}
+.badge-dest{background:var(--cream)!important; color:#fff!important; border-color:var(--cream)!important}
+.badge-pre{background:var(--cream)!important; color:#fff!important; border-color:var(--cream)!important}
+.stock-modal.low{color:var(--cream); border-color:var(--accent-deep); background:rgba(245,197,24,.16)}
+
+/* Botones tipo pill negro */
+.add-cta{border-radius:999px!important; color:#fff!important}
+.add-cta.ghost{background:#fff!important; color:var(--cream)!important; border:1px solid var(--line)!important}
+.grp-item button{background:var(--cream)!important; color:#fff!important}
+.con-back{color:var(--cream)!important}
+
+/* Hero más sobrio */
+.hero h1{font-weight:700}
+.eyebrow{color:var(--muted)}
+.eyebrow::before{background:linear-gradient(90deg,var(--muted),transparent)}
+
+/* Tabla de precios del consolidado */
+.con-table td.agot,.agot-tag,.con-row .cr-precio,.con-sum .cell b,.con-table thead th{color:var(--cream)}
+.con-table td.agot,.agot-tag{color:var(--danger)}
+
+/* ===== Cantidad editable con números ===== */
+.stepper input.qv{width:52px; text-align:center; background:#fff; border:1px solid var(--line); border-radius:8px; color:var(--cream); font-size:1rem; padding:6px 4px; font-family:inherit; -moz-appearance:textfield}
+.stepper.sm input.qv{width:44px; font-size:.92rem; padding:5px 3px}
+.stepper input.qv::-webkit-outer-spin-button,.stepper input.qv::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.qty input.qv{width:46px; text-align:center; background:#fff; border:1px solid var(--line); border-radius:7px; color:var(--cream); font-size:.92rem; padding:4px 3px; font-family:inherit; -moz-appearance:textfield}
+.qty input.qv::-webkit-outer-spin-button,.qty input.qv::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+</style>
+</head>
+<body>
+
+<div id="loader"></div>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="#" id="brand"></a>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg>
+      <input id="q" placeholder="Buscar fragancia...">
+    </div>
+    <button class="cart-btn" id="installBtn" style="display:none" aria-label="Instalar app" title="Instalar app">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 3v11" stroke-linecap="round"/><path d="M7 10l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 20h14" stroke-linecap="round"/></svg>
+    </button>
+    <button class="cart-btn" id="loginBtn" aria-label="Ingresar" title="Ingresar a mi pedido">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.4 3.1-5.6 7-5.6s7 2.2 7 5.6" stroke-linecap="round"/></svg>
+    </button>
+    <button class="cart-btn" id="openCart" aria-label="Carrito">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M6 6h15l-1.5 9h-12z" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M6 6L5 3H3" stroke-linecap="round"/></svg>
+      <span class="cart-count" id="cartCount" style="display:none">0</span>
+    </button>
+  </div>
+</header>
+
+<div class="marquee" id="marquee"></div>
+
+<section class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow" id="tagline"></div>
+    <h1 class="gold-text" id="heroTitle"></h1>
+    <p id="heroSub">Decants y fragancias seleccionadas. Elige tu tamaño y pide por WhatsApp.</p>
+  </div>
+  <div class="hero-ornament" id="heroOrn"><div class="mono gold-text">◆</div></div>
+</section>
+
+<div class="divider"><span></span>◆<span></span></div>
+
+<div class="viewtabs" id="viewtabs" style="display:none">
+  <button class="vtab active" data-view="catalogo">Catálogo</button>
+  <button class="vtab" data-view="mayor" id="tabMayor" style="display:none">Precio por mayor<span class="fire">📦</span></button>
+  <button class="vtab" data-view="promos" id="tabPromos" style="display:none">Promociones<span class="fire">🔥</span></button>
+  <button class="vtab" data-view="preorden" id="tabPre" style="display:none">Preorden<span class="fire">✈️</span></button>
+  <button class="vtab" data-view="consolidado" id="tabCon" style="display:none">Consolidado<span class="fire">🤝</span></button>
+</div>
+
+<div class="status-bar" id="statusBar" style="display:none"><button id="btnEstado">🔎 Consultar mi preorden / consolidado</button></div>
+
+<div class="filters" id="filters"></div>
+<div class="grid" id="grid"><div class="state"><div class="spinner"></div>Cargando catálogo...</div></div>
+<div class="grid combos-grid" id="combosGrid" style="display:none"></div>
+<div class="grid" id="mayorGrid" style="display:none"></div>
+<div class="grid" id="preGrid" style="display:none"></div>
+<div class="grid" id="conGrid" style="display:none"></div>
+
+<div class="social" id="social"></div>
+
+<!-- Modal producto -->
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+
+<!-- Carrito -->
+<div class="drawer" id="drawer">
+  <div class="top">
+    <h3>Tu pedido</h3>
+    <button data-close-cart aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>
+  </div>
+  <div class="cart-list" id="cartList"></div>
+  <div class="bot" id="cartBot" style="display:none"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+/* Aplica los colores de CONFIG.TEMA sobre las variables del diseño */
+(function(){ if(!window.CONFIG||!CONFIG.TEMA) return; var t=CONFIG.TEMA, r=document.documentElement;
+  Object.keys(t).forEach(function(k){ if(t[k]) r.style.setProperty('--'+k, t[k]); });
+  // gold-grad: si el tema define uno, se usa; si no, se arma con los tonos (paletas doradas antiguas)
+  if(t['gold-grad']) r.style.setProperty('--gold-grad', t['gold-grad']);
+  else if(t['gold-1'] && t['gold-3'])
+    r.style.setProperty('--gold-grad','linear-gradient(135deg,'+t['gold-1']+' 0%,'+(t['gold-2']||t['gold-3'])+' 30%,'+t['gold-3']+' 60%,'+t['gold-1']+' 100%)');
+  var m=document.querySelector('meta[name="theme-color"]'); if(m&&t['bg']) m.setAttribute('content', t['bg']);
+})();
+</script>
+<script src="promos.js"></script>
+<script>
+/* ================= Inicialización ================= */
+const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+const fmt = n => CONFIG.MONEDA + ' ' + Number(n).toFixed(2);
+const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* Pantalla de carga: muestra el texto de CARGA_TEXTO (elegante). Si no hay, usa el logo o el nombre. */
+(function(){ const l=$('#loader'); if(!l) return;
+  const txt=(CONFIG.CARGA_TEXTO || '').trim();
+  if(txt){
+    const w=txt.split(/\s+/);
+    const l1=esc(w.shift()||'');
+    const l2=esc(w.join(' '));
+    l.innerHTML='<div class="brandmark"><div class="l1">'+l1+'</div>'
+      +(l2?'<div class="l2">'+l2+'</div>':'')
+      +'<div class="rule"></div></div>';
+  } else if(CONFIG.LOGO_CARGA){
+    l.innerHTML='<img alt="">'; l.querySelector('img').src=CONFIG.LOGO_CARGA;
+  } else {
+    l.innerHTML='<div class="word">'+esc(CONFIG.TIENDA_NOMBRE||'')+'</div>';
+  }
+})();
+
+/* Branding desde config */
+$('#brand').innerHTML = CONFIG.LOGO_URL ? `<img src="${CONFIG.LOGO_URL}" alt="${esc(CONFIG.TIENDA_NOMBRE)}" onerror="this.outerHTML='&lt;span class=\\'word gold-text\\'&gt;${esc(CONFIG.TIENDA_NOMBRE)}&lt;/span&gt;'">` : `<span class="word gold-text">${esc(CONFIG.TIENDA_NOMBRE)}</span>`;
+$('#tagline').textContent = CONFIG.TIENDA_TAGLINE || '';
+$('#heroTitle').textContent = CONFIG.TIENDA_NOMBRE;
+/* Banner de envíos (marquee): BANNER_ENVIO puede ser un texto o una lista de frases */
+(function(){ const m=$('#marquee'); if(!m) return;
+  let frases = CONFIG.BANNER_ENVIO;
+  if(Array.isArray(frases)) frases = frases.map(f=>String(f).trim()).filter(Boolean);
+  else { const t=String(frases||CONFIG.ENVIO_TEXTO||'').trim(); frases = t ? [t] : []; }
+  if(!frases.length){ m.style.display='none'; return; }
+  const seg = frases.map(f=>`<span>${esc(f)}</span><span>◆</span>`).join('');
+  const reps = Math.max(2, Math.ceil(8/frases.length));
+  m.innerHTML=`<div class="mq-track">${seg.repeat(reps)}</div>`;
+})();
+if(CONFIG.HERO_SUB) $('#heroSub').textContent = CONFIG.HERO_SUB;
+(function(){ const orn=$('#heroOrn'); if(!orn) return;
+  const w=(CONFIG.TIENDA_NOMBRE||'').trim().split(/\s+/).filter(Boolean);
+  let m=w.length?(w[0].length<=4?w[0]:w.map(x=>x[0]).join('')):'?';
+  const mono='<div class="mono gold-text">'+esc(m.toUpperCase().slice(0,4))+'</div>';
+  if(CONFIG.LOGO_URL){
+    orn.innerHTML='<img alt="'+esc(CONFIG.TIENDA_NOMBRE||'')+'">';
+    const im=orn.querySelector('img');
+    im.onerror=function(){ orn.innerHTML=mono; };
+    im.src=CONFIG.LOGO_URL;
+  } else { orn.innerHTML=mono; }
+})();
+document.title = CONFIG.TIENDA_NOMBRE + ' — Catálogo';
+
+/* Redes sociales */
+const ICONS = {
+  instagram:'<svg viewBox="0 0 24 24"><path d="M12 2c2.7 0 3 0 4.1.1 1 0 1.6.2 2 .4.5.2.9.5 1.3.9.4.4.7.8.9 1.3.2.4.3 1 .4 2C21 7.8 21 8.1 21 12s0 4.2-.1 5.3c0 1-.2 1.6-.4 2-.2.5-.5.9-.9 1.3-.4.4-.8.7-1.3.9-.4.2-1 .3-2 .4-1.1 0-1.4.1-4.3.1s-4.2 0-5.3-.1c-1 0-1.6-.2-2-.4-.5-.2-.9-.5-1.3-.9-.4-.4-.7-.8-.9-1.3-.2-.4-.3-1-.4-2C3 16.2 3 15.9 3 12s0-4.2.1-5.3c0-1 .2-1.6.4-2 .2-.5.5-.9.9-1.3.4-.4.8-.7 1.3-.9.4-.2 1-.3 2-.4C8.8 2 9.1 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10zm0 8.2a3.2 3.2 0 110-6.4 3.2 3.2 0 010 6.4zM17.8 5.9a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4z"/></svg>',
+  facebook:'<svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0022 12z"/></svg>',
+  tiktok:'<svg viewBox="0 0 24 24"><path d="M16 3c.3 2.1 1.5 3.4 3.6 3.6v2.5c-1.2.1-2.3-.2-3.6-.9v6.1c0 3.8-2.8 5.9-5.7 5.6-2.9-.3-4.5-2.6-4.3-5.1.2-2.6 2.4-4.3 5-4v2.6c-.4-.1-.8-.2-1.2-.1-1 .1-1.7.9-1.6 2 .1 1 .9 1.7 2 1.6 1.1-.1 1.6-1 1.6-2V3H16z"/></svg>',
+};
+(function(){
+  const r = CONFIG.REDES||{};
+  const html = Object.entries(r).filter(([k,v])=>v).map(([k,v])=>`<a href="${v}" target="_blank" rel="noopener" aria-label="${k}">${ICONS[k]||''}</a>`).join('');
+  $('#social').innerHTML = html;
+})();
+
+/* ================= Estado ================= */
+let PRODUCTS=[], NOTAS_BY_PROD={}, PROMOS=[], PROD_BY_ID={};
+let COMBOS=[], currentView='catalogo';
+let PREORDENES=[], CONSOLIDADOS=[];
+let GIFT_STATUS=[];
+let filterCat='Todos', filterGen='Todos', query='';
+let CART = JSON.parse(localStorage.getItem('cart_'+CONFIG.TIENDA_NOMBRE) || '[]');
+let payMethod='coordinar';
+let cliente={nombre:'',tel:'',dir:''};
+const MAYOR_MIN = Number(CONFIG.MAYOR_MIN)||0;   // 0 = no hay precio por mayor
+
+/* --- Precio por mayor (minorista/mayorista automático por cantidad) --- */
+function precioMayDe(x){ return Number(x&&x.precio_may)||0; }
+function hayMayorEnCarrito(){ return MAYOR_MIN>0 && CART.some(i=>precioMayDe(i)>0); }
+function unidadesCarrito(){ return CART.reduce((s,i)=>s+i.qty,0); }
+function mayorActivo(){ return MAYOR_MIN>0 && unidadesCarrito()>=MAYOR_MIN; }
+/* Base efectiva de un ítem según haya o no precio por mayor activo */
+function baseItem(i){ const may=precioMayDe(i); return (mayorActivo()&&may>0)?may:Number(i.precio); }
+/* Carrito con los precios base ya ajustados a mayorista, para el motor de promos */
+function pricedCart(){ return CART.map(i=>({ ...i, precio: baseItem(i) })); }
+
+/* Helpers de datos */
+function presActivas(p){ return (p.presentaciones||[]).filter(x=>x&&x.activo!==false&&Number(x.precio)>0).sort((a,b)=>Number(a.precio)-Number(b.precio)); }
+function imgsOf(p){ const a=Array.isArray(p.imagenes)?p.imagenes.filter(Boolean):[]; return a.length?a:(p.imagen_url?[p.imagen_url]:[]); }
+function mlLabel(ml){ return String(ml).toLowerCase()==='sellado' ? 'Sellado' : ml+'ml'; }
+function ofertaPct(x){ const a=Number(x.antes), pr=Number(x.precio); return (a&&pr&&a>pr)?Math.round((a-pr)/a*100):0; }
+function precioEfectivo(p, x){ const r=window.PROMOS_ENGINE.precioUnit(p, x.ml, Number(x.precio), PROMOS); return r.precio; }
+function precioDesde(p){ const v=presActivas(p).map(x=>precioEfectivo(p,x)); return v.length?Math.min(...v):null; }
+function maxOfertaCard(p){
+  let m=0;
+  presActivas(p).forEach(x=>{
+    const base=Number(x.precio), ef=precioEfectivo(p,x), antes=Number(x.antes)||base;
+    const ref=Math.max(antes, base);
+    if(ref>ef) m=Math.max(m, Math.round((ref-ef)/ref*100));
+  });
+  return m;
+}
+function catLabel(c){ return c==='Árabe'?'Perfume Árabe':(c||''); }
+/* --- Stock --- */
+function stockDe(p){ return (p.stock===null||p.stock===undefined||p.stock==='')?null:Number(p.stock); }
+function agotado(p){ const s=stockDe(p); return s!=null && s<=0; }
+function qtyEnCarrito(pid){ return CART.filter(i=>i.id===pid).reduce((s,i)=>s+i.qty,0); }
+function stockLine(p){ const s=stockDe(p); if(s==null) return '';
+  const low=CONFIG.STOCK_BAJO||5;
+  if(s<=0) return '<span class="stk out">Agotado</span>';
+  if(s<=low) return `<span class="stk low">¡Últimas ${s} unidades!</span>`;
+  return `<span class="stk ok">${s} disponibles</span>`;
+}
+
+/* ================= Carga ================= */
+async function load(){
+  const { data, error } = await sb.from('productos').select('*').eq('visible', true).order('orden').order('created_at');
+  if(error){ $('#grid').innerHTML = `<div class="state">No se pudo cargar el catálogo.<br><small style="color:var(--muted-2)">${esc(error.message)}</small><br><br>Revisa tus datos en config.js</div>`; return; }
+  PRODUCTS = (data||[]).filter(p=>presActivas(p).length>0);
+  PROD_BY_ID = {}; PRODUCTS.forEach(p=>PROD_BY_ID[p.id]=p);
+
+  const ids = PRODUCTS.map(p=>p.id);
+  if(ids.length){
+    const { data: rel } = await sb.from('producto_notas').select('producto_id, notas(nombre,imagen_url)').in('producto_id', ids);
+    (rel||[]).forEach(r => { if(r.notas) (NOTAS_BY_PROD[r.producto_id] ||= []).push(r.notas); });
+  }
+  const rp = await sb.from('promociones').select('*');
+  PROMOS = rp.error ? [] : (rp.data||[]);
+
+  const rc = await sb.from('combos').select('*').eq('visible', true).order('orden').order('created_at');
+  COMBOS = rc.error ? [] : (rc.data||[]).filter(c=>tallasActivas(c).length>0);
+
+  // NUEVO: Preorden y Consolidado (activos)
+  const rpre = await sb.from('preordenes').select('*').eq('activo', true).order('orden').order('created_at');
+  PREORDENES = rpre.error ? [] : (rpre.data||[]);
+  const rcon = await sb.from('consolidados').select('*').eq('activo', true).order('orden').order('created_at');
+  CONSOLIDADOS = rcon.error ? [] : (rcon.data||[]);
+
+  const ra = await sb.from('ajustes').select('*').eq('id','principal').maybeSingle();
+  if(!ra.error && ra.data && ra.data.hero_sub) $('#heroSub').textContent = ra.data.hero_sub;
+
+  renderFilters(); render(); renderCombos(); renderPre(); renderCon();
+
+  // Mostrar/ocultar pestañas según lo que haya cargado + config.js (SECCIONES)
+  const SEC = (window.CONFIG && CONFIG.SECCIONES) || {};
+  const secOn = k => SEC[k] !== false;                 // default: activa
+  const mayorHay = MAYOR_MIN>0;
+  const promosOn = secOn('promos') && COMBOS.length;
+  const preOn    = secOn('preorden') && PREORDENES.length;
+  const conOn    = secOn('consolidado') && CONSOLIDADOS.length;
+  const anyTab = mayorHay || promosOn || preOn || conOn;
+  const vt=$('#viewtabs'); if(vt) vt.style.display = anyTab ? 'flex' : 'none';
+  const tm=$('#tabMayor'); if(tm) tm.style.display = mayorHay ? 'inline-flex' : 'none';
+  const tp=$('#tabPromos'); if(tp) tp.style.display = promosOn ? 'inline-flex' : 'none';
+  const tpr=$('#tabPre'); if(tpr) tpr.style.display = preOn ? 'inline-flex' : 'none';
+  const tc=$('#tabCon'); if(tc) tc.style.display = conOn ? 'inline-flex' : 'none';
+  const sbBar=$('#statusBar'); if(sbBar) sbBar.style.display = (preOn||conOn) ? 'flex' : 'none';
+
+  // Modo diagnóstico: abre el catálogo con  ?debug  al final de la URL
+  if(/[?&]debug/i.test(location.search)){
+    const reg = PROMOS.filter(p=>p.tipo==='regalo');
+    let msg = 'DIAGNÓSTICO Aromelle\n\n'
+      + '✓ Versión NUEVA cargada (con regalos y combos)\n'
+      + 'Promociones cargadas: '+PROMOS.length+'\n'
+      + 'Promos de tipo regalo: '+reg.length+'\n'
+      + 'Combos: '+COMBOS.length+'\n';
+    reg.forEach((p,i)=>{ const c=p.config||{};
+      msg += '\nRegalo #'+(i+1)+': "'+p.nombre+'"'
+        + '\n  activa: '+(p.activo?'sí':'NO')
+        + '\n  N (min): '+(c.min||'—')
+        + '\n  tallas que cuentan: '+((c.mls&&c.mls.length)?c.mls.join(', '):'todas')
+        + '\n  talla del regalo: '+(c.regalo_ml||'—')
+        + '\n  perfumes de regalo: '+((c.regalo_productos&&c.regalo_productos.length)||0);
+    });
+    if(!reg.length) msg += '\n⚠ No hay ninguna promo de tipo "regalo" cargada.';
+    alert(msg);
+  }
+}
+
+/* ================= Combos / Promociones ================= */
+function tallasActivas(c){ return (c.tallas||[]).filter(t=>t&&t.activo!==false&&Number(t.precio)>0).sort((a,b)=>Number(a.precio)-Number(b.precio)); }
+function comboDesde(c){ const t=tallasActivas(c); return t.length?Number(t[0].precio):null; }
+function comboAntesDesde(c){ const t=tallasActivas(c); if(!t.length) return null; const a=Number(t[0].antes); return (a&&a>Number(t[0].precio))?a:null; }
+
+function setView(v){
+  currentView=v;
+  document.querySelectorAll('#viewtabs .vtab').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  $('#filters').style.display     = v==='catalogo' ? 'flex' : 'none';
+  $('#grid').style.display        = v==='catalogo' ? 'grid' : 'none';
+  $('#mayorGrid').style.display   = v==='mayor'    ? 'grid' : 'none';
+  $('#combosGrid').style.display  = v==='promos'   ? 'grid' : 'none';
+  $('#preGrid').style.display     = v==='preorden' ? 'grid' : 'none';
+  $('#conGrid').style.display     = v==='consolidado' ? 'grid' : 'none';
+  if(v==='mayor') renderMayor();
+  else if(v==='promos') renderCombos();
+  else if(v==='preorden') renderPre();
+  else if(v==='consolidado') renderCon();
+  else render();
+}
+
+/* ================= Precio por mayor (vista) ================= */
+function renderMayor(){
+  const cont=$('#mayorGrid'); if(!cont) return;
+  const banner = `<div class="state" style="grid-column:1/-1;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;line-height:1.6">
+    📦 <b>${esc(CONFIG.LABEL_MAYORISTA||'Precio por mayor')}</b> — Lleva <b>${MAYOR_MIN}</b> perfumes o más (sumando modelos, en un solo pedido) y el catálogo te cobra el precio por mayor <b>automáticamente</b>. Estos son los productos con precio especial.</div>`;
+  const withMay = PRODUCTS.filter(p => presActivas(p).some(x=>Number(x.precio_may)>0));
+  const list = withMay.filter(p => !query || ((p.nombre||'')+' '+(p.marca||'')).toLowerCase().includes(query));
+  if(!list.length){ cont.innerHTML = banner + `<div class="state">Aún no hay productos con precio por mayor.</div>`; return; }
+  cont.innerHTML = banner + list.map(p=>{
+    const main=imgsOf(p)[0]; const pres=presActivas(p);
+    const conMay=pres.filter(x=>Number(x.precio_may)>0);
+    const may=Math.min(...conMay.map(x=>Number(x.precio_may)));
+    const uni=Math.min(...pres.map(x=>Number(x.precio)));
+    return `<button class="card" data-id="${p.id}">
+      <span class="badge-pre" style="background:#2f80c9">Por mayor 📦</span>
+      <div class="imgwrap">${main?`<img src="${esc(main)}" alt="${esc(p.nombre)}" loading="lazy">`:`<span class="ph">${esc((p.nombre||'?')[0])}</span>`}</div>
+      <div class="body">
+        <span class="marca">${esc(p.marca||'')}</span>
+        <span class="nombre">${esc(p.nombre)}</span>
+        <span class="escala-mini">Unidad desde ${fmt(uni)}</span>
+        <div class="foot"><span class="precio"><small>Por mayor desde</small><b>${fmt(may)}</b></span><span class="ver">→</span></div>
+      </div></button>`;
+  }).join('');
+  cont.querySelectorAll('.card').forEach(c=>c.onclick=()=>openProduct(c.dataset.id));
+}
+
+function renderCombos(){
+  const list = COMBOS.filter(c => !query || (c.nombre||'').toLowerCase().includes(query));
+  if(!list.length){ $('#combosGrid').innerHTML = `<div class="state">No hay promociones disponibles por ahora.</div>`; return; }
+  $('#combosGrid').innerHTML = list.map(c => {
+    const desde = comboDesde(c), antes = comboAntesDesde(c);
+    const main = imgsOf(c)[0];
+    return `<button class="card" data-combo="${c.id}">
+      <span class="badge-oferta">Oferta</span>
+      ${c.destacado ? '<span class="badge-dest" style="left:auto;right:11px">Destacado</span>' : ''}
+      <div class="imgwrap">${main ? `<img src="${esc(main)}" alt="${esc(c.nombre)}" loading="lazy">` : `<span class="ph">${esc((c.nombre||'?')[0])}</span>`}</div>
+      <div class="body">
+        <span class="marca">Promoción</span>
+        <span class="nombre">${esc(c.nombre)}</span>
+        <div class="foot">
+          <span class="precio">${desde!=null?`<small>Desde</small><b>${antes?`<span class="antes">${fmt(antes)}</span>`:''}${fmt(desde)}</b>`:'<small>Precio</small><b>Consultar</b>'}</span>
+          <span class="ver">→</span>
+        </div>
+      </div>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('#combosGrid .card').forEach(c => c.onclick = () => openCombo(c.dataset.combo));
+}
+
+/* ============================================================
+   NUEVO — PREORDEN  (perfumes en preventa con cupo)
+   ============================================================ */
+const COMP_BUCKET = CONFIG.BUCKET_COMPROBANTES || 'comprobantes';
+function cupoRestante(p){ if(p.cupo==null||p.cupo==='') return null; return Math.max(0, Number(p.cupo)-Number(p.reservado||0)); }
+
+function renderPre(){
+  const list = PREORDENES.filter(p => !query || ((p.nombre||'')+' '+(p.marca||'')).toLowerCase().includes(query));
+  if(!list.length){ $('#preGrid').innerHTML = `<div class="state">No hay perfumes en preventa por ahora.</div>`; return; }
+  $('#preGrid').innerHTML = list.map(p => {
+    const main = imgsOf(p)[0]; const rest = cupoRestante(p);
+    const full = rest!=null && rest<=0;
+    return `<button class="card ${full?'agotado':''}" data-pre="${p.id}">
+      <span class="badge-pre">Preventa ✈️</span>
+      <div class="imgwrap">${main ? `<img src="${esc(main)}" alt="${esc(p.nombre)}" loading="lazy">` : `<span class="ph">${esc((p.marca||p.nombre||'?')[0])}</span>`}</div>
+      <div class="body">
+        <span class="marca">${esc(p.marca||'Preventa')}</span>
+        <span class="nombre">${esc(p.nombre)}</span>
+        ${rest!=null?`<span class="cupo-line ${full?'full':'left'}">${full?'Cupo lleno':'Quedan '+rest+' de '+p.cupo}</span>`:''}
+        ${p.fecha_estimada?`<span class="stk ok">Llega aprox: ${esc(p.fecha_estimada)}</span>`:''}
+        <div class="foot">
+          <span class="precio">${p.precio!=null&&p.precio!==''?`<small>Precio</small><b>${fmt(p.precio)}</b>`:'<small>Precio</small><b>Consultar</b>'}</span>
+          <span class="ver">→</span>
+        </div>
+      </div>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('#preGrid .card').forEach(c=>c.onclick=()=>openPre(c.dataset.pre));
+}
+
+function openPre(id){
+  const p = PREORDENES.find(x=>x.id===id); if(!p) return;
+  const imgs=imgsOf(p); const mainImg=imgs[0];
+  const rest=cupoRestante(p); const max = rest!=null?rest : 99;
+  let qty = max>0?1:0; let files=[];
+  const precio = Number(p.precio)||0;
+
+  function draw(){
+    $('#sheet').innerHTML = `
+      <div class="hd">
+        <button class="close" id="closeSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>
+        ${mainImg ? `<img src="${esc(mainImg)}" alt="${esc(p.nombre)}">` : `<div class="ph" style="font-size:4rem">${esc((p.marca||'?')[0])}</div>`}
+      </div>
+      <div class="bd">
+        <div class="marca">Preventa ✈️</div>
+        <h2>${esc(p.nombre)}</h2>
+        <div class="genero">${esc(p.marca||'')}${p.descripcion?' · '+esc(p.descripcion):''}</div>
+        ${p.fecha_estimada?`<div><span class="stock-modal ok">Llegada aprox: ${esc(p.fecha_estimada)}</span></div>`:''}
+        ${rest!=null?`<div><span class="stock-modal ${rest<=0?'out':'low'}">${rest<=0?'Cupo lleno':('Quedan '+rest+' cupos de '+p.cupo)}</span></div>`:''}
+
+        <div class="section-t">¿Cómo funciona?</div>
+        <div class="genero" style="line-height:1.6">Reservas tu perfume, adjuntas tu comprobante de pago y nosotros confirmamos tu preorden. Podrás consultar el estado con tu código.</div>
+
+        ${max>0?`
+        <div class="section-t">Cantidad</div>
+        <div class="qty-pick"><div class="stepper"><button id="qMinus">−</button><input class="qv" id="qVal" type="number" min="1" max="${max}" inputmode="numeric" value="${qty}"><button id="qPlus">+</button></div><span style="color:var(--muted);font-size:.85rem" id="qTot">${fmt(precio*qty)}</span></div>
+
+        <div class="section-t">Tu comprobante de pago</div>
+        <div class="pay-up">
+          <label>Sube la foto de tu pago / depósito (obligatorio)</label>
+          <input id="preFiles" type="file" accept="image/*" multiple>
+          <div class="pay-thumbs" id="preThumbs"></div>
+        </div>
+
+        <div class="section-t">Tus datos</div>
+        <div class="miniform">
+          <input id="preNombre" placeholder="Nombre completo *" value="${esc(cliente.nombre||'')}">
+          <input id="preTel" placeholder="Teléfono / WhatsApp *" inputmode="tel" value="${esc(cliente.tel||'')}">
+          <input id="preDir" placeholder="Dirección o referencia (opcional)" value="${esc(cliente.dir||'')}">
+          <textarea id="preNota" rows="2" placeholder="Nota (opcional)"></textarea>
+        </div>
+
+        <button class="add-cta" id="preSend">Reservar mi preorden · ${fmt(precio*qty)}</button>
+        `:`<div class="section-t">Preventa cerrada</div><div class="genero">Se agotaron los cupos de este perfume.</div>`}
+      </div>`;
+
+    $('#closeSheet').onclick = closeProduct;
+    if(max>0){
+      const qEl=$('#qVal');
+      const refresh=()=>{ if(qEl) qEl.value=qty; $('#qTot').textContent=fmt(precio*qty); $('#preSend').textContent=`Reservar mi preorden · ${fmt(precio*qty)}`; };
+      $('#qMinus').onclick=()=>{ qty=Math.max(1,qty-1); refresh(); };
+      $('#qPlus').onclick =()=>{ qty=Math.min(max,qty+1); if(qty===max) toast('Es el máximo de cupos disponibles'); refresh(); };
+      if(qEl){ qEl.oninput=()=>{ let v=parseInt((qEl.value||'').replace(/[^\d]/g,''),10); if(isNaN(v))v=0; if(v>max){ v=max; qEl.value=max; toast('Es el máximo de cupos disponibles'); } qty=Math.max(1,v||1); $('#qTot').textContent=fmt(precio*qty); $('#preSend').textContent=`Reservar mi preorden · ${fmt(precio*qty)}`; };
+        qEl.onblur=()=>{ qEl.value=qty; }; }
+      function drawThumbs(){ $('#preThumbs').innerHTML=files.map((u,i)=>`<div class="pt"><img src="${esc(u.url)}"><button data-rm="${i}">×</button></div>`).join('');
+        $('#preThumbs').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ files.splice(+b.dataset.rm,1); drawThumbs(); }); }
+      $('#preFiles').onchange = async e => { const fs=[...e.target.files]; if(!fs.length)return; toast('Subiendo comprobante...');
+        for(const f of fs){ const u=await subirComprobante(f); if(u) files.push({url:u}); } drawThumbs(); toast('Comprobante listo'); };
+      const cmap={preNombre:'nombre',preTel:'tel',preDir:'dir'}; Object.keys(cmap).forEach(idc=>{ const el=document.getElementById(idc); if(el) el.oninput=()=>cliente[cmap[idc]]=el.value; });
+      $('#preSend').onclick = enviarPre;
+    }
+  }
+
+  async function enviarPre(){
+    const nombre=($('#preNombre').value||'').trim(), tel=($('#preTel').value||'').trim();
+    const dir=($('#preDir').value||'').trim(), nota=($('#preNota').value||'').trim();
+    if(!nombre||!tel){ toast('Pon tu nombre y teléfono'); return; }
+    if(!files.length){ toast('Sube la foto de tu comprobante de pago'); return; }
+    const btn=$('#preSend'); btn.disabled=true; btn.textContent='Enviando...';
+    const items=[{ preorden_id:p.id, nombre:p.nombre, qty, precio }];
+    const { data, error } = await sb.rpc('crear_preorden', {
+      p_items:items, p_total:precio*qty, p_nombre:nombre, p_tel:tel, p_dir:dir||null, p_nota:nota||null,
+      p_comprobantes:files.map(f=>f.url)
+    });
+    if(error){ btn.disabled=false; btn.textContent='Reservar mi preorden'; toast(error.message&&error.message.includes('SIN_CUPO')?'Ya no hay cupos suficientes':'No se pudo enviar. Intenta de nuevo'); return; }
+    guardarCodigo(data);
+    okScreen('¡Preorden recibida!', data, 'Tu preorden quedó en revisión. Cuando confirmemos tu pago te avisaremos por WhatsApp. Guarda tu código para consultar el estado cuando quieras.');
+    // Avisar también por WhatsApp (opcional para el cliente)
+    const msg=`Hola ${enc(CONFIG.TIENDA_NOMBRE)}! Hice una *PREORDEN*:%0A• ${enc(p.nombre)} x${qty} = ${enc(fmt(precio*qty))}%0ACódigo: ${enc(data)}%0A%0A👤 ${enc(nombre)} · ${enc(tel)}`;
+    setTimeout(()=>{ if(confirm('¿Enviar también tu preorden por WhatsApp para confirmar más rápido?')) window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`,'_blank'); }, 300);
+    load();
+  }
+
+  draw();
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+
+/* ============================================================
+   NUEVO — CONSOLIDADO por INVERSIÓN (individual + grupo con aprobación)
+   La campaña tiene "brackets" de inversión; el precio de cada perfume
+   depende de cuánto invierte el cliente (o el grupo).
+   ============================================================ */
+function bracketsOrden(c){ return (Array.isArray(c.brackets)?c.brackets:[]).map(b=>({umbral:Number(b.umbral)||0, etiqueta:b.etiqueta||''})).sort((a,b)=>a.umbral-b.umbral); }
+function bracketIdxDe(c, monto){ const bs=bracketsOrden(c); if(!bs.length) return -1; let idx=0; bs.forEach((b,i)=>{ if((Number(monto)||0)>=b.umbral) idx=i; }); return idx; }
+function itemsDe(c){ return Array.isArray(c.items)?c.items:[]; }
+function itemAgotado(it){ return !!(it && (it.agotado || (it.stock!=null && Number(it.stock)<=0))); }
+function precioItem(c, itemIdx, bIdx){ const it=itemsDe(c)[itemIdx]; if(!it) return 0; const p=(it.precios||[])[bIdx]; return Number(p)||0; }
+
+function renderCon(){
+  const list = CONSOLIDADOS.filter(c => !query || ((c.nombre||'')+' '+(c.marca||'')).toLowerCase().includes(query));
+  if(!list.length){ $('#conGrid').innerHTML = `<div class="state">No hay consolidados abiertos por ahora.</div>`; return; }
+  $('#conGrid').innerHTML = list.map(c => {
+    const main=imgsOf(c)[0]; const bs=bracketsOrden(c); const its=itemsDe(c);
+    let best=null;
+    if(bs.length && its.length){ const bi=bs.length-1; its.forEach((it,i)=>{ if(itemAgotado(it))return; const p=precioItem(c,i,bi); if(p>0) best=(best==null?p:Math.min(best,p)); }); }
+    return `<button class="card" data-con="${c.id}">
+      <span class="badge-con">Consolidado 🤝</span>
+      <div class="imgwrap">${main ? `<img src="${esc(main)}" alt="${esc(c.nombre)}" loading="lazy">` : `<span class="ph">${esc((c.nombre||'?')[0])}</span>`}</div>
+      <div class="body">
+        <span class="marca">${esc(c.marca||'Campaña')}</span>
+        <span class="nombre">${esc(c.nombre)}</span>
+        <span class="stk ok">${its.length} perfumes · mín. ${c.min_modelos||1} modelos</span>
+        ${c.fecha_llegada?`<span class="escala-mini">Llegada: ${esc(c.fecha_llegada)}</span>`:''}
+        <div class="foot">
+          <span class="precio">${best!=null?`<small>Desde</small><b>${fmt(best)}</b>`:'<small>Precio</small><b>Según inversión</b>'}</span>
+          <span class="ver">→</span>
+        </div>
+      </div>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('#conGrid .card').forEach(c=>c.onclick=()=>openCon(c.dataset.con));
+}
+
+function openCon(id){
+  const c = CONSOLIDADOS.find(x=>x.id===id); if(!c) return;
+  const imgs=imgsOf(c); const mainImg=imgs[0];
+  const bs=bracketsOrden(c); const its=itemsDe(c);
+  const minMod=Number(c.min_modelos)||0;
+  const st={ pantalla:'inicio', modo:null, grupoSel:null, inversion:'', cart:{}, files:[], grupos:[], nuevo:{nombre:'',meta:Number(c.meta_grupo)||0,lnombre:'',ltel:''} };
+
+  function montoBaseGrupo(){ return (st.modo==='grupo' && st.grupoSel && st.grupoSel!=='nuevo') ? (Number(st.grupoSel.total)||0) : 0; }
+  function bIdxActual(){
+    let monto;
+    if(st.modo==='grupo'){
+      const base = montoBaseGrupo()+(Number(st.inversion)||0);
+      const meta = Number(st.grupoSel && st.grupoSel.meta)||0;
+      monto = Math.max(meta, base);
+    } else { monto = Number(st.inversion)||0; }
+    return bracketIdxDe(c, monto);
+  }
+  function resumen(){ let t=0, mods=0, unid=0; const bi=bIdxActual(); Object.keys(st.cart).forEach(k=>{ const q=st.cart[k]||0; if(q>0){ t+=precioItem(c,+k,bi)*q; mods++; unid+=q; } }); return {t,mods,unid}; }
+  function etiquetaActual(){ const bi=bIdxActual(); return bi>=0 && bs[bi] ? bs[bi].etiqueta : ''; }
+
+  const hd = () => `<div class="hd">
+      <button class="close" id="closeSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>
+      ${mainImg ? `<img src="${esc(mainImg)}" alt="${esc(c.nombre)}">` : `<div class="ph" style="font-size:4rem">${esc((c.nombre||'?')[0])}</div>`}
+    </div>`;
+
+  function tablaPrecios(){
+    if(!bs.length || !its.length) return '';
+    return `<div class="con-table"><table><thead><tr><th>Perfume</th><th>Stock</th>${bs.map(b=>`<th>${esc(b.etiqueta||fmt(b.umbral))}</th>`).join('')}</tr></thead>
+      <tbody>${its.map(it=>{ const ag=itemAgotado(it);
+        return `<tr><td>${esc(it.nombre||'')}<br><small style="color:var(--muted)">${esc(it.marca||'')}</small></td>
+          <td class="${ag?'agot':''}">${ag?'AGOTADO':(it.stock!=null?it.stock:'—')}</td>
+          ${bs.map((b,bi)=>`<td>${ag?'—':fmt(Number((it.precios||[])[bi])||0)}</td>`).join('')}</tr>`;
+      }).join('')}</tbody></table></div>`;
+  }
+
+  function filaPerfume(i){
+    const it=its[i]; const bi=bIdxActual(); const q=st.cart[i]||0; const precio=precioItem(c,i,bi); const ag=itemAgotado(it);
+    return `<div class="con-row ${ag?'agot':''}">
+      <div class="cr-info"><b>${esc(it.nombre||'')}</b><span>${esc(it.marca||'')}${(it.stock!=null&&!ag)?` · stock ${it.stock}`:''}</span></div>
+      <div class="cr-precio" data-price="${i}">${ag?'<span class="agot-tag">AGOTADO</span>':fmt(precio)}</div>
+      ${ag?'<div></div>':`<div class="stepper sm"><button data-cm="${i}">−</button><input class="qv" type="number" min="0" inputmode="numeric" data-cq="${i}" value="${q}"><button data-cp="${i}">+</button></div>`}
+      <div class="cr-sub" data-sub="${i}">${(q>0&&!ag)?fmt(precio*q):''}</div>
+    </div>`;
+  }
+
+  /* -------- Pantalla INICIO (elegir modo) -------- */
+  function screenInicio(){
+    $('#sheet').innerHTML = hd() + `<div class="bd">
+      <div class="marca">Consolidado 🤝</div>
+      <h2>${esc(c.nombre)}</h2>
+      <div class="genero">${esc(c.marca||'')}${c.descripcion?' · '+esc(c.descripcion):''}</div>
+      ${c.fecha_llegada?`<div><span class="stock-modal low">Llegada del contenedor: ${esc(c.fecha_llegada)}</span></div>`:''}
+      <div class="section-t">¿Cómo funciona?</div>
+      <div class="genero" style="line-height:1.6">Dices cuánto quieres <b>invertir</b> y armas tu pedido con los perfumes de la campaña (mínimo <b>${minMod}</b> modelos distintos). Mientras más inviertes —tú solo o junto a un <b>grupo</b>— más barato es cada perfume.</div>
+      <div class="section-t">Precios según inversión</div>
+      ${tablaPrecios()}
+      <div class="section-t">Elige cómo pedir</div>
+      <button class="add-cta" id="goInd">🙋 Pedir yo solo (individual)</button>
+      <button class="add-cta ghost" id="goGrp" style="margin-top:8px">👥 Unirme o crear un grupo</button>
+      <button class="add-cta ghost" id="goEdit" style="margin-top:8px">✏️ Ya tengo un pedido aquí (editarlo)</button>
+    </div>`;
+    $('#closeSheet').onclick=closeProduct;
+    $('#goInd').onclick=()=>{ st.modo='individual'; st.grupoSel=null; st.pantalla='pedido'; render(); };
+    $('#goGrp').onclick=()=>{ st.modo='grupo'; st.pantalla='grupos'; cargarGrupos(); };
+    $('#goEdit').onclick=()=>{ st.pantalla='editlogin'; render(); };
+  }
+
+  /* -------- Pantalla EDITAR: login del cliente -------- */
+  function screenEditLogin(){
+    $('#sheet').innerHTML = hd() + `<div class="bd">
+      <button class="con-back" id="back">← Volver</button>
+      <div class="marca">Editar mi pedido</div>
+      <h2>${esc(c.nombre)}</h2>
+      <div class="genero">Si ya hiciste un pedido en esta campaña, ingresa con tu nombre y la contraseña que te dimos para editarlo. Los cambios quedan pendientes hasta que los aprobemos.</div>
+      <div class="miniform" style="margin-top:12px"><input id="edcUser" placeholder="Tu nombre *" autocomplete="name"></div>
+      <div class="miniform" style="margin-top:10px"><input id="edcPass" type="password" placeholder="Contraseña *" autocomplete="current-password"></div>
+      <button class="add-cta" id="edcBtn" style="margin-top:14px">Buscar mi pedido</button>
+      <div id="edcResult" style="margin-top:12px"></div>
+    </div>`;
+    $('#closeSheet').onclick=closeProduct;
+    $('#back').onclick=()=>{ st.pantalla='inicio'; render(); };
+    $('#edcBtn').onclick=buscarMiPedidoCon;
+    $('#edcPass').addEventListener('keydown',e=>{ if(e.key==='Enter') buscarMiPedidoCon(); });
+  }
+  async function buscarMiPedidoCon(){
+    const uu=($('#edcUser').value||'').trim(), pp=($('#edcPass').value||'');
+    if(!uu||!pp){ toast('Escribe tu nombre y contraseña'); return; }
+    $('#edcResult').innerHTML='<div class="state" style="padding:14px"><div class="spinner"></div></div>';
+    const { data, error } = await sb.rpc('cliente_login', { p_usuario:uu, p_pass:pp });
+    if(error){ $('#edcResult').innerHTML='<div class="genero">Ocurrió un error. Intenta de nuevo.</div>'; return; }
+    const mis=(data||[]).filter(o=>o.tipo==='consolidado' && o.consolidado_id===c.id);
+    if(!mis.length){ $('#edcResult').innerHTML='<div class="genero">No encontramos un pedido tuyo en esta campaña, o tu acceso aún no está activo.</div>'; return; }
+    const ped=mis[0];
+    st.editId=ped.id; st.editUser=uu; st.editPass=pp; st.modo=ped.modo||'individual';
+    st.inversion=String(ped.inversion_declarada||'');
+    st.cart={}; (ped.items||[]).forEach(it=>{ if(it.idx!=null) st.cart[it.idx]=it.qty||0; });
+    st.pantalla='editpedido'; render();
+  }
+
+  /* -------- Pantalla EDITAR: ítems + monto -------- */
+  function screenEditPedido(){
+    const r=resumen();
+    $('#sheet').innerHTML = hd() + `<div class="bd">
+      <button class="con-back" id="back">← Volver</button>
+      <div class="marca">Editar mi pedido ✏️</div>
+      <h2>${esc(c.nombre)}</h2>
+      <div class="genero">Cambia cantidades, agrega o quita perfumes, o ajusta tu monto. Al enviar, tu cambio queda <b>pendiente de aprobación</b>.</div>
+      <div class="section-t">1) ¿Cuánto quieres invertir?</div>
+      <div class="miniform"><input id="inv" type="number" inputmode="numeric" placeholder="Monto en ${esc(CONFIG.MONEDA||'S/')}" value="${st.inversion}"></div>
+      <div class="section-t">2) Tus perfumes <span style="color:var(--muted);font-weight:400">(mín. ${minMod} modelos)</span></div>
+      <div id="perfList">${its.map((_,i)=>filaPerfume(i)).join('')}</div>
+      <div class="con-sum">
+        <div class="cell"><small>Tu total</small><b id="sumTotal">${fmt(r.t)}</b></div>
+        <div class="cell"><small>Inversión</small><b>${fmt(Number(st.inversion)||0)}</b></div>
+        <div class="cell"><small>Modelos</small><b id="sumMods" style="color:${r.mods>=minMod?'var(--gold-1)':'#e6a24b'}">${r.mods} / ${minMod}</b></div>
+        <div class="cell"><small>Diferencia</small><b id="sumDif">${fmt(r.t-(Number(st.inversion)||0))}</b></div>
+      </div>
+      <button class="add-cta" id="edcSend" style="margin-top:14px">Enviar cambios · ${fmt(r.t)}</button>
+      ${st.modo==='grupo'?'<div class="genero" style="margin-top:8px;font-size:.82rem">Tu pedido es de grupo: el precio final se ajusta según lo que junte el grupo.</div>':''}
+    </div>`;
+    $('#closeSheet').onclick=closeProduct;
+    $('#back').onclick=()=>{ st.pantalla='inicio'; render(); };
+    const inv=$('#inv'); if(inv){ inv.onchange=()=>{ st.inversion=inv.value; render(); }; }
+    function recompute(){
+      const bi=bIdxActual(); let t=0, mods=0;
+      its.forEach((it,i)=>{ if(itemAgotado(it)) return; const q=st.cart[i]||0; const precio=precioItem(c,i,bi);
+        const subEl=$('#perfList [data-sub="'+i+'"]'); if(subEl) subEl.textContent=(q>0)?fmt(precio*q):'';
+        const prEl=$('#perfList [data-price="'+i+'"]'); if(prEl) prEl.textContent=fmt(precio);
+        if(q>0){ t+=precio*q; mods++; } });
+      const inv2=Number(st.inversion)||0;
+      const stt=$('#sumTotal'); if(stt) stt.textContent=fmt(t);
+      const sm=$('#sumMods'); if(sm){ sm.textContent=mods+' / '+minMod; sm.style.color=(mods>=minMod?'var(--gold-1)':'#e6a24b'); }
+      const sd=$('#sumDif'); if(sd) sd.textContent=fmt(t-inv2);
+      const cs=$('#edcSend'); if(cs) cs.textContent='Enviar cambios · '+fmt(t);
+    }
+    document.querySelectorAll('#perfList [data-cp]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.cp; st.cart[i]=(st.cart[i]||0)+1; const inp=$('#perfList [data-cq="'+i+'"]'); if(inp) inp.value=st.cart[i]; recompute(); });
+    document.querySelectorAll('#perfList [data-cm]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.cm; st.cart[i]=Math.max(0,(st.cart[i]||0)-1); const inp=$('#perfList [data-cq="'+i+'"]'); if(inp) inp.value=st.cart[i]; recompute(); });
+    document.querySelectorAll('#perfList [data-cq]').forEach(inp=>{ inp.oninput=()=>{ const i=+inp.dataset.cq; let v=parseInt((inp.value||'').replace(/[^\d]/g,''),10); if(isNaN(v)||v<0)v=0; st.cart[i]=v; recompute(); }; });
+    $('#edcSend').onclick=enviarEdicionCon;
+  }
+  async function enviarEdicionCon(){
+    const inversion=Number(st.inversion)||0; const r=resumen();
+    if(!inversion){ toast('Escribe cuánto vas a invertir'); return; }
+    if(r.mods<minMod){ toast(`Elige al menos ${minMod} modelos distintos`); return; }
+    const items=Object.keys(st.cart).filter(k=>st.cart[k]>0).map(k=>({idx:Number(k), qty:st.cart[k]}));
+    if(!items.length){ toast('Tu pedido quedó vacío'); return; }
+    $('#edcSend').textContent='Enviando...'; $('#edcSend').disabled=true;
+    const { data, error } = await sb.rpc('cliente_editar_consolidado', { p_usuario:st.editUser, p_pass:st.editPass, p_id:st.editId, p_inversion:inversion, p_items:items });
+    if(error){ const m=(error.message||''); toast(m.includes('MIN_MODELOS')?`Elige al menos ${minMod} modelos`:m.includes('AGOTADO')?'Un perfume quedó agotado':m.includes('CREDENCIAL')?'Tu acceso no es válido':'No se pudo enviar'); $('#edcSend').disabled=false; render(); return; }
+    toast('Cambios enviados ✅ (pendientes de aprobación)');
+    const msg=encodeURIComponent(`Hola, edité mi pedido del consolidado "${c.nombre}". Nuevo total aprox: ${fmt((data&&data.total)||r.t)}. Por favor apruébalo. ¡Gracias!`);
+    setTimeout(()=>{ if(confirm('¿Avisar por WhatsApp que enviaste tus cambios?')) window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`,'_blank'); }, 250);
+    closeProduct();
+  }
+
+  /* -------- Pantalla GRUPOS -------- */
+  async function cargarGrupos(){
+    render(); // muestra "cargando"
+    const { data, error } = await sb.rpc('listar_grupos_consolidado', { p_cid:c.id });
+    st.grupos = error ? [] : (data||[]);
+    render();
+  }
+  function screenGrupos(){
+    const bi = bs.length-1; // mejor bracket (referencia)
+    $('#sheet').innerHTML = hd() + `<div class="bd">
+      <button class="con-back" id="back">← Volver</button>
+      <h2>Grupos de "${esc(c.nombre)}"</h2>
+      <div class="genero" style="line-height:1.6">Únanse varios para llegar juntos a una inversión mayor y pagar el precio más barato. Tú solicitas unirte y <b>el dueño aprueba</b> tu ingreso.</div>
+      <div class="section-t">Grupos abiertos</div>
+      <div id="grpList">${ st.grupos===null ? '<div class="state"><div class="spinner"></div>Cargando...</div>' :
+        (!st.grupos.length ? '<div class="genero">Todavía no hay grupos. ¡Crea el primero abajo!</div>' :
+        st.grupos.map((g,i)=>{ const et=bracketIdxDe(c, Number(g.total)||0); const lab=(et>=0&&bs[et])?bs[et].etiqueta:''; 
+          return `<div class="grp-item"><div class="gi-main"><b>${esc(g.nombre_grupo||'Grupo')}</b><span>Invertido: ${fmt(Number(g.total)||0)} · ${g.miembros} miembro(s)${lab?` · precio ${esc(lab)}`:''}${g.meta?` · meta ${fmt(g.meta)}`:''}</span></div><button data-join="${i}">Unirme</button></div>`;
+        }).join('')) }</div>
+      <div class="section-t">Crear un grupo nuevo</div>
+      <div class="miniform">
+        <input id="gNombre" placeholder="Nombre del grupo *" value="${esc(st.nuevo.nombre)}">
+        <label style="font-size:.85rem;color:var(--muted);margin-top:4px">¿A qué escala de precios quieren apuntar? Todos en el grupo tendrán ese precio.</label>
+        <select id="gMeta" style="background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--cream);padding:10px 11px;font-family:inherit;width:100%">
+          <option value="">Según lo que junten (sin meta fija)</option>
+          ${bs.map(b=>`<option value="${b.umbral}" ${Number(st.nuevo.meta)===Number(b.umbral)?'selected':''}>${esc(b.etiqueta||('Escala '+fmt(b.umbral)))} — desde ${fmt(b.umbral)}</option>`).join('')}
+        </select>
+        <input id="gLnombre" placeholder="Tu nombre (líder) *" value="${esc(st.nuevo.lnombre)}">
+        <input id="gLtel" placeholder="Tu teléfono / WhatsApp *" inputmode="tel" value="${esc(st.nuevo.ltel)}">
+      </div>
+      <div class="genero" style="font-size:.82rem;margin-top:6px">Si al final no llegan a esa inversión, el dueño ajustará la escala al precio que corresponda y podrán editar sus pedidos.</div>
+      <button class="add-cta" id="crearGrupo" style="margin-top:10px">Crear grupo y armar mi pedido</button>
+    </div>`;
+    $('#closeSheet') && ($('#closeSheet').onclick=closeProduct);
+    $('#back').onclick=()=>{ st.pantalla='inicio'; st.modo=null; render(); };
+    document.querySelectorAll('#grpList [data-join]').forEach(b=>b.onclick=()=>{ st.grupoSel=st.grupos[+b.dataset.join]; st.pantalla='pedido'; render(); });
+    const nb={gNombre:'nombre',gLnombre:'lnombre',gLtel:'ltel'};
+    Object.keys(nb).forEach(idc=>{ const el=document.getElementById(idc); if(el) el.oninput=()=>st.nuevo[nb[idc]]=el.value; });
+    const gm=$('#gMeta'); if(gm) gm.onchange=()=>{ st.nuevo.meta=gm.value; };
+    $('#crearGrupo').onclick=crearGrupo;
+  }
+  async function crearGrupo(){
+    const nombre=(st.nuevo.nombre||'').trim(), ln=(st.nuevo.lnombre||'').trim(), lt=(st.nuevo.ltel||'').trim();
+    if(!nombre||!ln||!lt){ toast('Completa nombre del grupo, tu nombre y teléfono'); return; }
+    const btn=$('#crearGrupo'); btn.disabled=true; btn.textContent='Creando...';
+    const { data, error } = await sb.rpc('crear_grupo_consolidado', { p_cid:c.id, p_nombre_grupo:nombre, p_lider_nombre:ln, p_lider_tel:lt, p_meta: st.nuevo.meta?Number(st.nuevo.meta):null });
+    if(error){ btn.disabled=false; btn.textContent='Crear grupo y armar mi pedido'; toast('No se pudo crear el grupo'); return; }
+    guardarCodigo(data.codigo);
+    st.grupoSel={ id:data.grupo_id, codigo:data.codigo, nombre_grupo:nombre, total:0, miembros:0, meta:st.nuevo.meta||0 };
+    st.nombrePref=ln; st.telPref=lt;
+    st.pantalla='pedido'; render();
+    toast('Grupo creado ✓ Código '+data.codigo);
+  }
+
+  /* -------- Pantalla PEDIDO (individual o miembro de grupo) -------- */
+  function screenPedido(){
+    const r=resumen(); const et=etiquetaActual(); const esGrupo=st.modo==='grupo';
+    const proyect = esGrupo ? (montoBaseGrupo()+(Number(st.inversion)||0)) : (Number(st.inversion)||0);
+    $('#sheet').innerHTML = hd() + `<div class="bd">
+      <button class="con-back" id="back">← Volver</button>
+      <div class="marca">Consolidado 🤝 ${esGrupo?'· Grupo':'· Individual'}</div>
+      <h2>${esc(c.nombre)}</h2>
+      ${esGrupo && st.grupoSel ? `<div class="genero">Grupo: <b>${esc(st.grupoSel.nombre_grupo||'')}</b>${st.grupoSel.codigo?` (${esc(st.grupoSel.codigo)})`:''} · ya invertido ${fmt(montoBaseGrupo())}</div>`:''}
+
+      <div class="section-t">1) ¿Cuánto vas a invertir?</div>
+      <div class="miniform"><input id="inv" type="number" inputmode="numeric" placeholder="Monto en ${esc(CONFIG.MONEDA||'S/')}" value="${st.inversion}"></div>
+      <div class="genero" id="brInfo">${ bs.length ? (et?`Con esa inversión${esGrupo?' del grupo':''} tus precios son la columna <b>${esc(et)}</b>${esGrupo?` (proyectado: ${fmt(proyect)})`:''}.`:'Ingresa un monto para ver tus precios.') : 'Esta campaña no tiene precios configurados.' }</div>
+
+      <div class="section-t">2) Elige tus perfumes <span style="color:var(--muted);font-weight:400">(mín. ${minMod} modelos)</span></div>
+      <div id="perfList">${its.map((_,i)=>filaPerfume(i)).join('')}</div>
+
+      <div class="con-sum">
+        <div class="cell"><small>Tu total</small><b id="sumTotal">${fmt(r.t)}</b></div>
+        <div class="cell"><small>Inversión declarada</small><b>${fmt(Number(st.inversion)||0)}</b></div>
+        <div class="cell"><small>Modelos elegidos</small><b id="sumMods" style="color:${r.mods>=minMod?'var(--gold-1)':'#e6a24b'}">${r.mods} / ${minMod}</b></div>
+        <div class="cell"><small>Diferencia vs. inversión</small><b id="sumDif">${fmt(r.t-(Number(st.inversion)||0))}</b></div>
+      </div>
+
+      <div class="section-t">Comprobante de pago (opcional)</div>
+      <div class="pay-up">
+        <label>Si ya diste un adelanto, sube la foto aquí</label>
+        <input id="conFiles" type="file" accept="image/*" multiple>
+        <div class="pay-thumbs" id="conThumbs"></div>
+      </div>
+
+      <div class="section-t">Tus datos</div>
+      <div class="miniform">
+        <input id="conNombre" placeholder="Nombre completo *" value="${esc(st.nombrePref||cliente.nombre||'')}">
+        <input id="conTel" placeholder="Teléfono / WhatsApp *" inputmode="tel" value="${esc(st.telPref||cliente.tel||'')}">
+        <input id="conDir" placeholder="Dirección o referencia (opcional)" value="${esc(cliente.dir||'')}">
+        <textarea id="conNota" rows="2" placeholder="Nota (opcional)"></textarea>
+      </div>
+
+      <button class="add-cta" id="conSend">${esGrupo?'Solicitar unirme al grupo':'Enviar mi pedido'} · ${fmt(r.t)}</button>
+      ${esGrupo?'<div class="genero" style="margin-top:8px;font-size:.82rem">El dueño revisará tu solicitud. El precio final se ajusta según lo que junte el grupo.</div>':''}
+    </div>`;
+
+    $('#closeSheet').onclick=closeProduct;
+    $('#back').onclick=()=>{ if(esGrupo){ st.pantalla='grupos'; } else { st.pantalla='inicio'; st.modo=null; } render(); };
+    const inv=$('#inv'); if(inv){ inv.onchange=()=>{ st.inversion=inv.value; render(); }; }
+    function recomputeCon(){
+      const bi=bIdxActual(); let t=0, mods=0;
+      its.forEach((it,i)=>{ if(itemAgotado(it)) return; const q=st.cart[i]||0; const precio=precioItem(c,i,bi);
+        const subEl=$('#perfList [data-sub="'+i+'"]'); if(subEl) subEl.textContent=(q>0)?fmt(precio*q):'';
+        const prEl=$('#perfList [data-price="'+i+'"]'); if(prEl) prEl.textContent=fmt(precio);
+        if(q>0){ t+=precio*q; mods++; } });
+      const inv2=Number(st.inversion)||0;
+      const stt=$('#sumTotal'); if(stt) stt.textContent=fmt(t);
+      const sm=$('#sumMods'); if(sm){ sm.textContent=mods+' / '+minMod; sm.style.color=(mods>=minMod?'var(--gold-1)':'#e6a24b'); }
+      const sd=$('#sumDif'); if(sd) sd.textContent=fmt(t-inv2);
+      const cs=$('#conSend'); if(cs) cs.textContent=`${esGrupo?'Solicitar unirme al grupo':'Enviar mi pedido'} · ${fmt(t)}`;
+    }
+    document.querySelectorAll('#perfList [data-cp]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.cp; st.cart[i]=(st.cart[i]||0)+1; const inp=$('#perfList [data-cq="'+i+'"]'); if(inp) inp.value=st.cart[i]; recomputeCon(); });
+    document.querySelectorAll('#perfList [data-cm]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.cm; st.cart[i]=Math.max(0,(st.cart[i]||0)-1); const inp=$('#perfList [data-cq="'+i+'"]'); if(inp) inp.value=st.cart[i]; recomputeCon(); });
+    document.querySelectorAll('#perfList [data-cq]').forEach(inp=>{ inp.oninput=()=>{ const i=+inp.dataset.cq; let v=parseInt((inp.value||'').replace(/[^\d]/g,''),10); if(isNaN(v)||v<0)v=0; st.cart[i]=v; recomputeCon(); }; inp.onblur=()=>{ const i=+inp.dataset.cq; inp.value=st.cart[i]||0; }; });
+    function drawThumbs(){ $('#conThumbs').innerHTML=st.files.map((u,i)=>`<div class="pt"><img src="${esc(u.url)}"><button data-rm="${i}">×</button></div>`).join('');
+      $('#conThumbs').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ st.files.splice(+b.dataset.rm,1); drawThumbs(); }); }
+    drawThumbs();
+    $('#conFiles').onchange = async e => { const fs=[...e.target.files]; if(!fs.length)return; toast('Subiendo...'); for(const f of fs){ const u=await subirComprobante(f); if(u) st.files.push({url:u}); } drawThumbs(); toast('Comprobante listo'); };
+    const cmap={conNombre:'nombre',conTel:'tel',conDir:'dir'}; Object.keys(cmap).forEach(idc=>{ const el=document.getElementById(idc); if(el) el.oninput=()=>cliente[cmap[idc]]=el.value; });
+    $('#conSend').onclick=enviarCon;
+  }
+
+  async function enviarCon(){
+    const nombre=($('#conNombre').value||'').trim(), tel=($('#conTel').value||'').trim();
+    const dir=($('#conDir').value||'').trim(), nota=($('#conNota').value||'').trim();
+    const inversion=Number(st.inversion)||0;
+    const r=resumen();
+    if(!inversion){ toast('Escribe cuánto vas a invertir'); return; }
+    if(r.mods<minMod){ toast(`Elige al menos ${minMod} modelos distintos`); return; }
+    if(!nombre||!tel){ toast('Pon tu nombre y teléfono'); return; }
+    const items=Object.keys(st.cart).filter(k=>st.cart[k]>0).map(k=>({idx:Number(k), qty:st.cart[k]}));
+    const btn=$('#conSend'); btn.disabled=true; btn.textContent='Enviando...';
+    let cod, error;
+    if(st.modo==='grupo'){
+      const grpId = st.grupoSel && st.grupoSel.id; if(!grpId){ btn.disabled=false; toast('Elige o crea un grupo'); return; }
+      ({ data:cod, error } = await sb.rpc('unirse_grupo_consolidado', { p_grupo_id:grpId, p_inversion:inversion, p_items:items, p_nombre:nombre, p_tel:tel, p_dir:dir||null, p_nota:nota||null, p_comprobantes:st.files.map(f=>f.url) }));
+    } else {
+      ({ data:cod, error } = await sb.rpc('crear_pedido_consolidado_individual', { p_cid:c.id, p_inversion:inversion, p_items:items, p_nombre:nombre, p_tel:tel, p_dir:dir||null, p_nota:nota||null, p_comprobantes:st.files.map(f=>f.url) }));
+    }
+    if(error){ btn.disabled=false; btn.textContent='Enviar mi pedido';
+      const m=String(error.message||''); 
+      toast( m.includes('MIN_MODELOS')?`Elige al menos ${minMod} modelos`: m.includes('AGOTADO')?'Un perfume quedó agotado': m.includes('GRUPO_CERRADO')?'El grupo ya se cerró':'No se pudo enviar. Intenta de nuevo');
+      return;
+    }
+    guardarCodigo(cod);
+    const titulo = st.modo==='grupo' ? '¡Solicitud enviada al grupo!' : '¡Pedido enviado!';
+    const texto = st.modo==='grupo' ? 'El dueño revisará tu solicitud para aprobar tu ingreso al grupo. Guarda tu código para consultar el estado.' : 'Recibimos tu pedido del consolidado. Te contactaremos por WhatsApp. Guarda tu código.';
+    okScreen(titulo, cod, texto);
+    const lineas=items.map(it=>{ const bi=bIdxActual(); return `• ${enc(its[it.idx].nombre||'')} x${it.qty} = ${enc(fmt(precioItem(c,it.idx,bi)*it.qty))}`; }).join('%0A');
+    const extra = st.modo==='grupo' && st.grupoSel ? `%0AGrupo: ${enc(st.grupoSel.nombre_grupo||'')} (${enc(st.grupoSel.codigo||'')})` : '';
+    const msg=`Hola ${enc(CONFIG.TIENDA_NOMBRE)}! *CONSOLIDADO ${st.modo==='grupo'?'GRUPAL':'INDIVIDUAL'}*:%0AInversión: ${enc(fmt(inversion))}%0A${lineas}%0ATotal: ${enc(fmt(r.t))}%0ACódigo: ${enc(cod)}${extra}%0A%0A👤 ${enc(nombre)} · ${enc(tel)}`;
+    setTimeout(()=>{ if(confirm('¿Enviar también tu pedido por WhatsApp?')) window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`,'_blank'); }, 300);
+  }
+
+  function render(){
+    if(st.pantalla==='inicio') screenInicio();
+    else if(st.pantalla==='grupos'){ if(!st.grupos) st.grupos=null; screenGrupos(); }
+    else if(st.pantalla==='editlogin') screenEditLogin();
+    else if(st.pantalla==='editpedido') screenEditPedido();
+    else screenPedido();
+  }
+  st.grupos = st.grupos; // (mantener)
+  render();
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+
+/* ---- Comprobantes, código y pantalla de éxito ---- */
+const enc = s => encodeURIComponent(s);
+async function subirComprobante(file){
+  try{
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+    const path=`pagos/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+    const { error } = await sb.storage.from(COMP_BUCKET).upload(path, file, {upsert:true});
+    if(error){ toast('No se pudo subir la imagen'); return null; }
+    return sb.storage.from(COMP_BUCKET).getPublicUrl(path).data.publicUrl;
+  }catch(e){ toast('No se pudo subir la imagen'); return null; }
+}
+function guardarCodigo(cod){ try{ const k='mispedidos_'+CONFIG.TIENDA_NOMBRE; const arr=JSON.parse(localStorage.getItem(k)||'[]'); arr.unshift(cod); localStorage.setItem(k, JSON.stringify([...new Set(arr)].slice(0,20))); }catch(e){} }
+function okScreen(titulo, codigo, texto){
+  $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
+    <div class="bd"><div class="ok-screen">
+      <div style="font-size:2.6rem">✅</div>
+      <div class="big">${esc(titulo)}</div>
+      <div class="cod">${esc(codigo)}</div>
+      <p>${esc(texto)}</p>
+      <button class="add-cta" id="okClose" style="margin-top:18px">Entendido</button>
+    </div></div>`;
+  $('#closeSheet').onclick=closeProduct; $('#okClose').onclick=closeProduct;
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+
+/* ---- Consultar estado por código ---- */
+function abrirConsulta(){
+  const k='mispedidos_'+CONFIG.TIENDA_NOMBRE; let ultimos=[]; try{ ultimos=JSON.parse(localStorage.getItem(k)||'[]'); }catch(e){}
+  $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
+    <div class="bd">
+      <div class="marca">Consulta</div>
+      <h2>Estado de tu pedido</h2>
+      <div class="genero">Escribe tu código (PRE-, CON- o GRP-) para ver el estado.</div>
+      ${ultimos.length?`<div class="section-t">Tus últimos códigos</div><div class="chips" style="display:flex;flex-wrap:wrap;gap:8px">${ultimos.slice(0,6).map(c=>`<button class="np" data-cod="${esc(c)}" style="padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">${esc(c)}</button>`).join('')}</div>`:''}
+      <div class="miniform"><input id="codInput" placeholder="Ej. PRE-A1B2C3" style="text-transform:uppercase"></div>
+      <button class="add-cta" id="codBtn" style="margin-top:14px">Consultar</button>
+      <div id="codResult" style="margin-top:16px"></div>
+    </div>`;
+  $('#closeSheet').onclick=closeProduct;
+  document.querySelectorAll('[data-cod]').forEach(b=>b.onclick=()=>{ $('#codInput').value=b.dataset.cod; consultar(); });
+  $('#codBtn').onclick=consultar;
+  async function consultar(){
+    const cod=($('#codInput').value||'').trim().toUpperCase(); if(!cod){ toast('Escribe tu código'); return; }
+    $('#codResult').innerHTML='<div class="state" style="padding:20px"><div class="spinner"></div></div>';
+    let row=null;
+    const rp=await sb.rpc('consultar_preorden',{cod});
+    if(rp&&rp.data&&rp.data[0]) row=rp.data[0];
+    if(!row){ const rc=await sb.rpc('consultar_consolidado',{cod}); if(rc&&rc.data&&rc.data[0]) row=rc.data[0]; }
+    if(!row){ $('#codResult').innerHTML='<div class="genero">No encontramos ese código. Revísalo e intenta de nuevo.</div>'; return; }
+    const est=row.estado||'pendiente'; const esGrupo=(row.tipo==='grupo');
+    const txt = esGrupo ? (est==='abierto'?'Tu grupo está ABIERTO, sumando inversión. Invita a más personas para bajar el precio.':est==='cerrado'?'El grupo está cerrado. Procesamos el pedido conjunto.':'Grupo cancelado.')
+      : est==='aprobado'?'¡Aprobado! ✅ Ya cuentas dentro del grupo/pedido.'
+      : est==='confirmado'?'¡Tu pedido está CONFIRMADO! ✅ Te contactaremos para la entrega.'
+      : est==='entregado'?'Pedido entregado. ¡Gracias! 🎉'
+      : est==='rechazado'?'Tu solicitud fue rechazada. Escríbenos por WhatsApp para ayudarte.'
+      : 'Tu pedido está en revisión. Apenas lo confirmemos, cambiará de estado.';
+    $('#codResult').innerHTML=`<div style="text-align:center"><div class="est-badge ${esc(est)}">${esc(est.toUpperCase())}</div><p style="color:var(--muted);margin-top:10px;line-height:1.6">${txt}</p>${row.total?`<div class="genero" style="justify-content:center;margin-top:6px">Total: ${fmt(row.total)}</div>`:''}</div>`;
+  }
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+
+/* ================= INGRESAR: cuenta del cliente ================= */
+const LOGIN_KEY = 'cuenta_'+(CONFIG.TIENDA_NOMBRE||'tienda');
+let SESION = null;
+try{ SESION = JSON.parse(localStorage.getItem(LOGIN_KEY)||'null'); }catch(e){}
+(function(){ const b=$('#loginBtn'); if(b) b.onclick=()=>{ SESION?mostrarMisPedidos():openLogin(); }; })();
+
+function estadoTextoCliente(est){
+  return ({pendiente:'En revisión',aprobado:'Aprobado ✅',confirmado:'Confirmado ✅',entregado:'Entregado 🎉',rechazado:'Rechazado'})[est||'pendiente'] || est;
+}
+
+function openLogin(){
+  $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
+    <div class="bd">
+      <div class="marca">Mi cuenta</div>
+      <h2>Ingresar a mi pedido</h2>
+      <div class="genero">Usa tu nombre y la contraseña que te enviamos por WhatsApp. Se activa cuando aprobamos tu preorden o consolidado.</div>
+      <div class="miniform" style="margin-top:12px"><input id="logUser" placeholder="Tu nombre *" autocomplete="name"></div>
+      <div class="miniform" style="margin-top:10px"><input id="logPass" type="password" placeholder="Contraseña *" autocomplete="current-password"></div>
+      <button class="add-cta" id="logBtn" style="margin-top:14px">Ingresar</button>
+      <div id="logResult" style="margin-top:14px"></div>
+    </div>`;
+  $('#closeSheet').onclick=closeProduct;
+  $('#logBtn').onclick=hacerLogin;
+  $('#logPass').addEventListener('keydown',e=>{ if(e.key==='Enter') hacerLogin(); });
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+
+async function hacerLogin(){
+  const u=($('#logUser').value||'').trim(), p=($('#logPass').value||'');
+  if(!u||!p){ toast('Escribe tu nombre y contraseña'); return; }
+  $('#logResult').innerHTML='<div class="state" style="padding:16px"><div class="spinner"></div></div>';
+  const { data, error } = await sb.rpc('cliente_login', { p_usuario:u, p_pass:p });
+  if(error){ $('#logResult').innerHTML='<div class="genero">Ocurrió un error. Intenta de nuevo.</div>'; return; }
+  const pedidos = data||[];
+  if(!pedidos.length){ $('#logResult').innerHTML='<div class="genero">Nombre o contraseña incorrectos, o tu pedido aún no está aprobado.</div>'; return; }
+  SESION = { u, p };
+  try{ localStorage.setItem(LOGIN_KEY, JSON.stringify(SESION)); }catch(e){}
+  mostrarMisPedidos(pedidos);
+}
+
+function cerrarSesion(){ SESION=null; try{ localStorage.removeItem(LOGIN_KEY); }catch(e){} toast('Sesión cerrada'); closeProduct(); }
+
+async function mostrarMisPedidos(pre){
+  if(!SESION){ return openLogin(); }
+  let pedidos = pre;
+  if(!pedidos){ const { data } = await sb.rpc('cliente_login', { p_usuario:SESION.u, p_pass:SESION.p }); pedidos = data||[]; }
+  if(!pedidos.length){ cerrarSesion(); return; }
+  $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
+    <div class="bd">
+      <div class="marca">Mi cuenta</div>
+      <h2>Mis pedidos</h2>
+      <div class="genero">Hola ${esc(pedidos[0].cliente_nombre||SESION.u)}. Cualquier cambio queda pendiente hasta que lo aprobemos.</div>
+      <div id="misPedidos" style="margin-top:14px;display:flex;flex-direction:column;gap:14px"></div>
+      <button class="np" id="logout" style="margin-top:16px;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">Cerrar sesión</button>
+    </div>`;
+  $('#closeSheet').onclick=closeProduct;
+  $('#logout').onclick=cerrarSesion;
+  const cont=$('#misPedidos');
+  cont.innerHTML = pedidos.map((o,i)=>{
+    const tipo = o.tipo==='preorden'?'Preorden ✈️':'Consolidado 🤝';
+    const items = (o.items||[]).map(it=>{
+      const q=it.qty||1, sub=(it.subtotal!=null)?it.subtotal:((it.precio!=null||it.precio_unit!=null)?((it.precio_unit!=null?it.precio_unit:it.precio)*q):null);
+      const nom=[it.marca,it.nombre].filter(Boolean).join(' · ')||'Ítem';
+      return `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line-soft)"><span>${esc(nom)} <span style="color:var(--muted)">× ${q}</span></span><span>${sub!=null?fmt(sub):''}</span></div>`;
+    }).join('') || '<div style="color:var(--muted)">Sin ítems.</div>';
+    const comps = (o.comprobantes||[]).length;
+    const esCon = o.tipo==='consolidado';
+    const inv = Number(o.inversion_declarada)||0;
+    const tot = Number(o.total)||0;
+    const restante = inv - tot;
+    const pg = resumenPagos(o);
+    const abonosHtml = (o.abonos||[]).length ? (o.abonos||[]).map(a=>{
+      const f=a.fecha?new Date(a.fecha).toLocaleDateString():''; 
+      return `<div style="display:flex;justify-content:space-between;gap:8px;font-size:.85rem;padding:3px 0"><span>${f} ${a.nota?'· '+esc(a.nota):''}</span><span>${fmt(a.monto)} ${a.confirmado?'<span style="color:var(--gold-1)">✅</span>':'<span style="color:#e6a24b">⏳</span>'}</span></div>`;
+    }).join('') : '<div style="color:var(--muted);font-size:.85rem">Aún no registras pagos.</div>';
+    return `<div style="border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--panel)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <strong>${tipo}${esCon&&o.consolidado_nombre?' · '+esc(o.consolidado_nombre):''}</strong><span class="est-badge ${esc(o.estado||'pendiente')}">${esc(estadoTextoCliente(o.estado))}</span>
+      </div>
+      <div class="genero" style="margin-top:4px">Código: ${esc(o.codigo||'—')}${esCon&&o.bracket_etiqueta?' · Escala '+esc(o.bracket_etiqueta):''}</div>
+      <div style="margin-top:10px;font-size:.9rem">${items}</div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;font-weight:600"><span>Total del pedido</span><span>${fmt(tot)}</span></div>
+        ${esCon&&inv>0?`<div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Inversión que declaraste</span><span>${fmt(inv)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-weight:600;color:${restante>=0?'var(--gold-1)':'#e6a24b'}"><span>${restante>=0?'Te queda por usar':'Te pasaste por'}</span><span>${fmt(Math.abs(restante))}</span></div>
+        <div style="height:8px;border-radius:99px;background:var(--panel-2);overflow:hidden;margin-top:2px"><div style="height:100%;width:${inv>0?Math.min(100,Math.round(tot/inv*100)):0}%;background:var(--gold-grad,var(--gold-1))"></div></div>`:''}
+      </div>
+      <div style="margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)">
+        <div style="font-weight:600;margin-bottom:6px">💵 Mis pagos</div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Pagado (confirmado)</span><span style="font-weight:600">${fmt(pg.pagado)}</span></div>
+        ${pg.porConfirmar>0?`<div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Reportado sin confirmar</span><span>${fmt(pg.porConfirmar)}</span></div>`:''}
+        <div style="display:flex;justify-content:space-between;font-weight:600;color:${pg.saldo>0?'#e6a24b':'var(--gold-1)'}"><span>${pg.saldo>0?'Saldo por pagar':'Pagado completo'}</span><span>${fmt(Math.max(0,pg.saldo))}</span></div>
+        <div style="margin-top:8px">${abonosHtml}</div>
+      </div>
+      <div class="genero" style="margin-top:10px">Comprobantes enviados: ${comps}</div>
+      ${o.tiene_cambio_pendiente?`<div style="margin-top:8px;color:var(--gold-1);font-size:.86rem">⏳ Tienes un cambio esperando aprobación.</div>`:''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="np" data-pago="${i}" style="padding:8px 12px;border-radius:999px;border:1px solid var(--gold-1);background:var(--panel-2);color:var(--gold-1);font-weight:600">💵 Registrar pago</button>
+        <button class="np" data-edit="${i}" style="padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">✏️ Editar datos</button>
+        <label class="np" style="padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1);cursor:pointer">📎 Subir comprobante<input type="file" accept="image/*" data-comp="${i}" style="display:none"></label>
+        <button class="np" data-xls="${i}" style="padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">📊 Exportar Excel</button>
+      </div>
+    </div>`;
+  }).join('');
+  cont.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editarPedido(pedidos[+b.dataset.edit]));
+  cont.querySelectorAll('[data-pago]').forEach(b=>b.onclick=()=>registrarPago(pedidos[+b.dataset.pago]));
+  cont.querySelectorAll('[data-xls]').forEach(b=>b.onclick=()=>exportarPedidoExcel(pedidos[+b.dataset.xls]));
+  cont.querySelectorAll('[data-comp]').forEach(inp=>inp.onchange=async e=>{
+    const o=pedidos[+inp.dataset.comp], f=e.target.files[0]; if(!f) return;
+    toast('Subiendo comprobante...');
+    const url=await subirComprobante(f);
+    if(!url){ toast('No se pudo subir'); return; }
+    const { error } = await sb.rpc('cliente_editar', { p_usuario:SESION.u, p_pass:SESION.p, p_tipo:o.tipo, p_id:o.id, p_cambios:{ nuevo_comprobante:url } });
+    if(error){ toast('Error al enviar'); return; }
+    toast('Comprobante enviado ✅');
+    notificarWA(o, 'Subí un nuevo comprobante de pago.');
+    mostrarMisPedidos();
+  });
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+
+/* Resumen de pagos de un pedido */
+function resumenPagos(o){
+  let pagado=0, porConfirmar=0;
+  (o.abonos||[]).forEach(a=>{ const m=Number(a.monto)||0; if(a.confirmado) pagado+=m; else porConfirmar+=m; });
+  const saldo=(Number(o.total)||0)-pagado;
+  return { pagado, porConfirmar, saldo };
+}
+
+/* Cliente registra un pago (queda por confirmar) */
+function registrarPago(o){
+  $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
+    <div class="bd">
+      <div class="marca">Pago</div>
+      <h2>Registrar un pago</h2>
+      <div class="genero">Escribe cuánto acabas de pagar (adelanto o cuota). Quedará como "por confirmar" hasta que lo revisemos.</div>
+      <div class="miniform" style="margin-top:12px"><input id="pgMonto" type="number" inputmode="decimal" placeholder="Monto pagado *"></div>
+      <div class="miniform" style="margin-top:10px"><input id="pgNota" placeholder="Nota (ej: adelanto por Yape) (opcional)"></div>
+      <div class="pay-up" style="margin-top:10px"><label>Comprobante (opcional)</label><input id="pgFile" type="file" accept="image/*"><div class="pay-thumbs" id="pgThumb"></div></div>
+      <button class="add-cta" id="pgGuardar" style="margin-top:14px">Enviar pago</button>
+      <button class="np" id="pgVolver" style="margin-top:10px;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">Volver</button>
+    </div>`;
+  $('#closeSheet').onclick=closeProduct;
+  $('#pgVolver').onclick=()=>mostrarMisPedidos();
+  let compUrl=null;
+  $('#pgFile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; toast('Subiendo...'); compUrl=await subirComprobante(f); if(compUrl){ $('#pgThumb').innerHTML='<div class="pt"><img src="'+esc(compUrl)+'"></div>'; toast('Comprobante listo'); } };
+  $('#pgGuardar').onclick=async()=>{
+    const monto=parseFloat($('#pgMonto').value); if(!monto||monto<=0){ toast('Escribe un monto válido'); return; }
+    const nota=($('#pgNota').value||'').trim();
+    const { error } = await sb.rpc('cliente_agregar_abono', { p_usuario:SESION.u, p_pass:SESION.p, p_tipo:o.tipo, p_id:o.id, p_monto:monto, p_nota:nota, p_comprobante:compUrl });
+    if(error){ toast('No se pudo registrar'); return; }
+    toast('Pago enviado ✅ (por confirmar)');
+    notificarWA(o, 'Registré un pago de '+fmt(monto)+(nota?' ('+nota+')':'')+'. Por favor confírmalo.');
+    mostrarMisPedidos();
+  };
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+
+/* Cargar SheetJS solo cuando se exporta */
+async function cargarXLSX(){
+  if(window.XLSX) return window.XLSX;
+  await new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload=res; s.onerror=()=>rej(new Error('cdn')); document.head.appendChild(s); });
+  return window.XLSX;
+}
+async function exportarPedidoExcel(o){
+  let XLSX; try{ XLSX=await cargarXLSX(); }catch(e){ toast('No se pudo cargar el exportador'); return; }
+  const M=CONFIG.MONEDA||'S/';
+  const filas=[];
+  filas.push([(o.tipo==='preorden'?'PREORDEN':'CONSOLIDADO')+(o.consolidado_nombre?' · '+o.consolidado_nombre:'')]);
+  filas.push(['Código', o.codigo||'']);
+  filas.push(['Cliente', o.cliente_nombre||'']);
+  if(o.tipo==='consolidado' && o.bracket_etiqueta) filas.push(['Escala de precio', o.bracket_etiqueta]);
+  filas.push(['Estado', estadoTextoCliente(o.estado)]);
+  filas.push([]);
+  filas.push(['Perfume','Marca','Cantidad','Precio unit. ('+M+')','Subtotal ('+M+')']);
+  (o.items||[]).forEach(it=>{ const q=it.qty||1, pu=(it.precio_unit!=null?it.precio_unit:it.precio), sub=(it.subtotal!=null?it.subtotal:(pu!=null?pu*q:'')); filas.push([it.nombre||'',it.marca||'',q,pu!=null?pu:'',sub]); });
+  filas.push([]);
+  filas.push(['','','','TOTAL DEL PEDIDO', Number(o.total)||0]);
+  if(o.tipo==='consolidado' && o.inversion_declarada!=null){
+    filas.push(['','','','Inversión declarada', Number(o.inversion_declarada)||0]);
+    filas.push(['','','','Diferencia', (Number(o.inversion_declarada)||0)-(Number(o.total)||0)]);
+  }
+  // Pagos
+  const pg=resumenPagos(o);
+  filas.push([]);
+  filas.push(['PAGOS / ABONOS']);
+  filas.push(['Fecha','Nota','Registrado por','Estado','Monto ('+M+')']);
+  (o.abonos||[]).forEach(a=>{ filas.push([ a.fecha?new Date(a.fecha).toLocaleString():'', a.nota||'', a.por||'', a.confirmado?'Confirmado':'Por confirmar', Number(a.monto)||0 ]); });
+  filas.push([]);
+  filas.push(['','','','Pagado (confirmado)', pg.pagado]);
+  if(pg.porConfirmar>0) filas.push(['','','','Reportado sin confirmar', pg.porConfirmar]);
+  filas.push(['','','','Saldo por pagar', Math.max(0,pg.saldo)]);
+  const ws=XLSX.utils.aoa_to_sheet(filas);
+  ws['!cols']=[{wch:26},{wch:16},{wch:12},{wch:16},{wch:16}];
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Pedido');
+  XLSX.writeFile(wb, 'pedido-'+(o.codigo||'export')+'.xlsx');
+}
+
+function editarPedido(o){
+  $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
+    <div class="bd">
+      <div class="marca">Editar</div>
+      <h2>Editar mis datos</h2>
+      <div class="genero">El cambio queda pendiente hasta que lo aprobemos. Mientras tanto se mantiene lo último aprobado.</div>
+      <div class="miniform" style="margin-top:12px"><input id="edNombre" placeholder="Nombre" value="${esc(o.cliente_nombre||'')}"></div>
+      <div class="miniform" style="margin-top:10px"><input id="edTel" placeholder="Teléfono / WhatsApp" inputmode="tel" value="${esc(o.cliente_telefono||'')}"></div>
+      <div class="miniform" style="margin-top:10px"><input id="edDir" placeholder="Dirección (opcional)" value="${esc(o.cliente_direccion||'')}"></div>
+      <div class="miniform" style="margin-top:10px"><textarea id="edNota" placeholder="Nota (opcional)" rows="3" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--cream);padding:9px 11px;font-family:inherit">${esc(o.cliente_nota||'')}</textarea></div>
+      <button class="add-cta" id="edGuardar" style="margin-top:14px">Enviar cambios</button>
+      <button class="np" id="edVolver" style="margin-top:10px;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">Volver</button>
+    </div>`;
+  $('#closeSheet').onclick=closeProduct;
+  $('#edVolver').onclick=()=>mostrarMisPedidos();
+  $('#edGuardar').onclick=async()=>{
+    const cambios={ cliente_nombre:$('#edNombre').value.trim(), cliente_telefono:$('#edTel').value.trim(), cliente_direccion:$('#edDir').value.trim(), cliente_nota:$('#edNota').value.trim() };
+    const { error } = await sb.rpc('cliente_editar', { p_usuario:SESION.u, p_pass:SESION.p, p_tipo:o.tipo, p_id:o.id, p_cambios:cambios });
+    if(error){ toast('Error al enviar'); return; }
+    toast('Cambios enviados ✅ (pendientes)');
+    notificarWA(o, 'Edité mis datos:\n• Nombre: '+cambios.cliente_nombre+'\n• Tel: '+cambios.cliente_telefono+(cambios.cliente_direccion?'\n• Dir: '+cambios.cliente_direccion:'')+(cambios.cliente_nota?'\n• Nota: '+cambios.cliente_nota:''));
+    mostrarMisPedidos();
+  };
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+
+function notificarWA(o, detalle){
+  const msg = encodeURIComponent(`Hola, soy ${o.cliente_nombre||SESION.u}. Pedido ${o.codigo||''} (${o.tipo}).\n${detalle}\nPor favor aprueba el cambio. ¡Gracias!`);
+  setTimeout(()=>{ if(confirm('¿Avisar por WhatsApp que enviaste un cambio?')) window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`, '_blank'); }, 250);
+}
+function renderFilters(){
+  const cats = ['Todos', ...(CONFIG.CATEGORIAS||[])];
+  const gens = ['Todos', ...(CONFIG.GENEROS||[])];
+  $('#filters').innerHTML = `
+    <span class="flabel">Tipo</span>
+    ${cats.map(c=>`<button class="chip ${filterCat===c?'active':''}" data-cat="${esc(c)}">${c==='Árabe'?'Árabes':esc(c)}</button>`).join('')}
+    <span class="flabel" style="margin-left:8px">Género</span>
+    ${gens.map(g=>`<button class="chip ${filterGen===g?'active':''}" data-gen="${esc(g)}">${esc(g)}</button>`).join('')}
+    <span class="count" id="fcount"></span>`;
+  document.querySelectorAll('[data-cat]').forEach(c=>c.onclick=()=>{filterCat=c.dataset.cat; renderFilters(); render();});
+  document.querySelectorAll('[data-gen]').forEach(c=>c.onclick=()=>{filterGen=c.dataset.gen; renderFilters(); render();});
+}
+
+/* ================= Grid ================= */
+function render(){
+  let list = PRODUCTS.filter(p =>
+    (filterCat==='Todos' || p.categoria===filterCat) &&
+    (filterGen==='Todos' || p.genero===filterGen) &&
+    (!query || ((p.nombre||'')+' '+(p.marca||'')).toLowerCase().includes(query))
+  );
+  const fc=$('#fcount'); if(fc) fc.textContent = `${list.length} fragancia${list.length!==1?'s':''}`;
+  if(!list.length){ $('#grid').innerHTML = `<div class="state">No encontramos fragancias con ese filtro.</div>`; return; }
+
+  $('#grid').innerHTML = list.map(p => {
+    const desde = precioDesde(p);
+    const main = imgsOf(p)[0];
+    const off = maxOfertaCard(p);
+    return `<button class="card ${agotado(p)?'agotado':''}" data-id="${p.id}">
+      ${p.destacado ? '<span class="badge-dest">Destacado</span>' : ''}
+      ${off ? `<span class="badge-off">−${off}%</span>` : ''}
+      <div class="imgwrap">${main ? `<img src="${esc(main)}" alt="${esc(p.nombre)}" loading="lazy">` : `<span class="ph">${esc((p.marca||p.nombre||'?')[0])}</span>`}</div>
+      <div class="body">
+        <span class="marca">${esc(p.marca||'')}</span>
+        <span class="nombre">${esc(p.nombre)}</span>
+        ${stockLine(p)}
+        <div class="foot">
+          <span class="precio">${desde!=null?`<small>Desde</small><b>${fmt(desde)}</b>`:'<small>Precio</small><b>Consultar</b>'}</span>
+          <span class="ver">→</span>
+        </div>
+      </div>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('.card').forEach(c => c.onclick = () => openProduct(c.dataset.id));
+}
+
+/* ================= Modal producto ================= */
+let selSize=null, curProduct=null;
+function openProduct(id){
+  const p = PROD_BY_ID[id]; if(!p) return;
+  curProduct = p; selSize = null;
+  const notas = NOTAS_BY_PROD[id] || [];
+  const imgs = imgsOf(p);
+  const mainImg = imgs[0];
+  const pres = presActivas(p);
+  const piramide = [['Salida',p.notas_salida],['Corazón',p.notas_corazon],['Fondo',p.notas_fondo]].filter(([,v])=>v);
+
+  $('#sheet').innerHTML = `
+    <div class="hd">
+      <button class="close" id="closeSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>
+      ${mainImg ? `<img id="mainImg" src="${esc(mainImg)}" alt="${esc(p.nombre)}">` : `<div class="ph" style="font-size:4rem">${esc((p.marca||'?')[0])}</div>`}
+    </div>
+    ${imgs.length>1 ? `<div class="gallery">${imgs.map((u,i)=>`<button class="gthumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : ''}
+    <div class="bd">
+      <div class="marca">${esc(p.marca||'')}</div>
+      <h2>${esc(p.nombre)}</h2>
+      <div class="genero">${esc(p.genero||'')}${p.descripcion?' · '+esc(p.descripcion):''}${p.categoria?`<span class="catchip">${esc(catLabel(p.categoria))}</span>`:''}</div>
+      ${(()=>{ const s=stockDe(p); if(s==null) return ''; const low=CONFIG.STOCK_BAJO||5; if(s<=0) return '<div><span class="stock-modal out">Agotado</span></div>'; if(s<=low) return `<div><span class="stock-modal low">¡Últimas ${s} unidades!</span></div>`; return `<div><span class="stock-modal ok">${s} disponibles</span></div>`; })()}
+
+      ${notas.length ? `<div class="section-t">Notas aromáticas</div>
+        <div class="notas-img">${notas.map(n=>`<div class="nota"><div class="ph">${n.imagen_url?`<img src="${esc(n.imagen_url)}" alt="${esc(n.nombre)}">`:esc((n.nombre||'?')[0])}</div><span>${esc(n.nombre)}</span></div>`).join('')}</div>` : ''}
+
+      ${piramide.length ? `<div class="section-t">Pirámide olfativa</div>
+        <div class="piramide">${piramide.map(([k,v])=>`<div class="row"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>` : ''}
+
+      ${(p.longevidad||p.estela||p.ocasion) ? `<div class="section-t">Perfil</div>
+        <div class="perfil">
+          ${p.longevidad?`<div class="p"><div class="k">Duración</div><div class="v">${esc(p.longevidad)}</div></div>`:''}
+          ${p.estela?`<div class="p"><div class="k">Estela</div><div class="v">${esc(p.estela)}</div></div>`:''}
+          ${p.ocasion?`<div class="p"><div class="k">Ocasión</div><div class="v">${esc(p.ocasion)}</div></div>`:''}
+        </div>` : ''}
+
+      <div class="section-t">Seleccionar presentación</div>
+      <div class="tallas" id="tallas">
+        ${pres.length ? pres.map(x=>{
+          const ef = precioEfectivo(p,x);
+          const base = Number(x.precio);
+          const antes = Number(x.antes)||base;
+          const ref = Math.max(antes, base);
+          const pct = ref>ef ? Math.round((ref-ef)/ref*100) : 0;
+          const may = Number(x.precio_may)||0;
+          return `<button class="talla ${pct?'oferta':''}" data-size="${esc(x.ml)}" data-price="${ef}" data-may="${may}">
+            ${pct?`<div class="off">−${pct}%</div>`:''}
+            <div class="ml">${mlLabel(x.ml)}</div>
+            <div class="pr">${pct?`<span class="antes">${fmt(ref)}</span>`:''}${fmt(ef)}</div>
+            ${(MAYOR_MIN>0&&may>0)?`<span class="may">x${MAYOR_MIN}+ · ${fmt(may)} c/u</span>`:''}
+          </button>`;
+        }).join('') : '<div class="v" style="color:var(--muted)">Precios a consultar por WhatsApp.</div>'}
+      </div>
+
+      <div class="envio">
+        <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z" stroke-linejoin="round"/><circle cx="7" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/></svg>
+        <span>${esc(CONFIG.ENVIO_TEXTO||'')}</span>
+      </div>
+
+      <button class="add-cta" id="addBtn" disabled>${agotado(p)?'Agotado':'Elige una presentación'}</button>
+    </div>`;
+
+  document.querySelectorAll('#tallas .talla').forEach(t => t.onclick = () => {
+    if(agotado(p)) return;
+    document.querySelectorAll('#tallas .talla').forEach(x=>x.classList.remove('sel'));
+    t.classList.add('sel');
+    selSize = { size:t.dataset.size, price:+t.dataset.price, may:+t.dataset.may||0 };
+    const b=$('#addBtn'); b.disabled=false; b.textContent = `Añadir · ${mlLabel(t.dataset.size)} · ${fmt(t.dataset.price)}`;
+  });
+  document.querySelectorAll('.gthumb').forEach(t => t.onclick = () => {
+    const m=$('#mainImg'); if(m) m.src=t.dataset.img;
+    document.querySelectorAll('.gthumb').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+  });
+  $('#addBtn').onclick = addToCart;
+  $('#closeSheet').onclick = closeProduct;
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+function closeProduct(){ $('#overlay').classList.remove('open'); document.body.style.overflow=''; }
+$('#overlay').onclick = e => { if(e.target.id==='overlay') closeProduct(); };
+
+/* ================= Modal de combo ================= */
+let curCombo=null, selTier=null, comboQty=1, selAddons=new Set();
+function comboTotal(){
+  if(!curCombo||!selTier) return 0;
+  let t = Number(selTier.precio) * comboQty;
+  (curCombo.addons||[]).forEach((a,i)=>{ if(selAddons.has(i)) t += Number(a.precio)||0; });
+  return Math.round(t*100)/100;
+}
+function refreshComboTotal(){
+  const el=$('#comboTotalV'); if(el) el.textContent = fmt(comboTotal());
+  const b=$('#addComboBtn'); if(b){ b.disabled=!selTier; b.textContent = selTier?`Agregar al carrito · ${fmt(comboTotal())}`:'Elige un tamaño'; }
+}
+function openCombo(id){
+  const c = COMBOS.find(x=>x.id===id); if(!c) return;
+  curCombo=c; selTier=null; comboQty=1; selAddons=new Set();
+  const imgs=imgsOf(c); const mainImg=imgs[0];
+  const tallas=tallasActivas(c);
+  const incluye=Array.isArray(c.incluye)?c.incluye.filter(Boolean):[];
+  const addons=Array.isArray(c.addons)?c.addons.filter(a=>a&&a.nombre&&Number(a.precio)>0):[];
+
+  $('#sheet').innerHTML = `
+    <div class="hd">
+      <button class="close" id="closeSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>
+      ${mainImg ? `<img id="mainImg" src="${esc(mainImg)}" alt="${esc(c.nombre)}">` : `<div class="ph" style="font-size:4rem">${esc((c.nombre||'?')[0])}</div>`}
+    </div>
+    ${imgs.length>1 ? `<div class="gallery">${imgs.map((u,i)=>`<button class="gthumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : ''}
+    <div class="bd">
+      <div class="marca">Promoción</div>
+      <h2>${esc(c.nombre)}</h2>
+      ${c.descripcion?`<div class="genero">${esc(c.descripcion)}</div>`:''}
+
+      ${incluye.length ? `<div class="section-t">Incluye</div>
+        <div class="incluye">${incluye.map(n=>`<span class="it">${esc(n)}</span>`).join('')}</div>` : ''}
+
+      <div class="section-t">Tamaños</div>
+      <div class="tallas" id="tallas">
+        ${tallas.map(t=>{
+          const antes=Number(t.antes)||0, pr=Number(t.precio);
+          return `<button class="talla ${t.mas_vendido?'best-on':''}" data-ml="${esc(t.ml)}" data-price="${pr}" data-antes="${antes||''}">
+            ${t.mas_vendido?'<div class="best">Más vendido</div>':''}
+            <div class="ml">${fmt(pr)}</div>
+            <div class="spr">${esc(mlLabel(t.ml))}${t.sprays?` / ${esc(t.sprays)} sprays`:''}</div>
+            ${antes&&antes>pr?`<div class="pr"><span class="antes">${fmt(antes)}</span></div>`:''}
+          </button>`;
+        }).join('')}
+      </div>
+
+      ${addons.length ? `<div class="combo-box">
+        <div class="cb-h">Combínalo y ahorra</div>
+        ${addons.map((a,i)=>{
+          const antes=Number(a.antes)||0, pr=Number(a.precio);
+          return `<label class="addon" data-addon="${i}">
+            <input type="checkbox" data-addcheck="${i}">
+            <div class="th">${a.imagen_url?`<img src="${esc(a.imagen_url)}" alt="">`:esc((a.nombre||'?')[0])}</div>
+            <div class="info"><div class="n">${esc(a.nombre)}${a.mas_vendido?'<span class="best2">Más vendido</span>':''}</div><div class="m">${a.ml?esc(mlLabel(a.ml)):''}</div></div>
+            <div class="pr">${antes&&antes>pr?`<span class="antes">${fmt(antes)}</span>`:''}<b>${fmt(pr)}</b></div>
+          </label>`;
+        }).join('')}
+      </div>` : ''}
+
+      <div class="combo-qty">
+        <span class="lbl">Cantidad</span>
+        <div class="stepper"><button id="cqMinus">−</button><input class="qv" id="cqVal" type="number" min="1" inputmode="numeric" value="1"><button id="cqPlus">+</button></div>
+      </div>
+
+      <div class="envio">
+        <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z" stroke-linejoin="round"/><circle cx="7" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/></svg>
+        <span>${esc(CONFIG.ENVIO_TEXTO||'')}</span>
+      </div>
+
+      <div class="combo-total"><span class="k">Total</span><span class="v" id="comboTotalV">${fmt(0)}</span></div>
+      <button class="add-cta" id="addComboBtn" disabled>Elige un tamaño</button>
+    </div>`;
+
+  document.querySelectorAll('#tallas .talla').forEach(t => t.onclick = () => {
+    document.querySelectorAll('#tallas .talla').forEach(x=>x.classList.remove('sel'));
+    t.classList.add('sel');
+    selTier = { ml:t.dataset.ml, precio:+t.dataset.price, antes:+t.dataset.antes||null };
+    refreshComboTotal();
+  });
+  document.querySelectorAll('[data-addcheck]').forEach(ch => ch.onchange = () => {
+    const i=+ch.dataset.addcheck; if(ch.checked) selAddons.add(i); else selAddons.delete(i);
+    refreshComboTotal();
+  });
+  document.querySelectorAll('.gthumb').forEach(t => t.onclick = () => {
+    const m=$('#mainImg'); if(m) m.src=t.dataset.img;
+    document.querySelectorAll('.gthumb').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+  });
+  $('#cqMinus').onclick=()=>{ comboQty=Math.max(1,comboQty-1); $('#cqVal').value=comboQty; refreshComboTotal(); };
+  $('#cqPlus').onclick =()=>{ comboQty++; $('#cqVal').value=comboQty; refreshComboTotal(); };
+  (function(){ const el=$('#cqVal'); if(!el) return; el.oninput=()=>{ let v=parseInt((el.value||'').replace(/[^\d]/g,''),10); if(isNaN(v)||v<1)v=1; comboQty=v; refreshComboTotal(); }; el.onblur=()=>{ el.value=comboQty; }; })();
+  $('#addComboBtn').onclick = addComboToCart;
+  $('#closeSheet').onclick = closeProduct;
+  // auto-selecciona la talla "más vendido" si existe, si no la primera
+  const best = tallas.findIndex(t=>t.mas_vendido);
+  const pick = document.querySelectorAll('#tallas .talla')[best>=0?best:0];
+  if(pick) pick.click();
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+function addComboToCart(){
+  if(!curCombo || !selTier) return;
+  const cid='combo_'+curCombo.id;
+  const key=cid+'_'+selTier.ml;
+  const found=CART.find(i=>i.key===key);
+  if(found) found.qty+=comboQty;
+  else CART.push({ key, id:cid, tipo:'combo', nombre:curCombo.nombre, marca:'Combo', categoria:'Promoción', img:imgsOf(curCombo)[0], ml:selTier.ml, precio:selTier.precio, antes:selTier.antes||null, qty:comboQty });
+  (curCombo.addons||[]).forEach((a,i)=>{
+    if(!selAddons.has(i)) return;
+    const akey='addon_'+curCombo.id+'_'+i;
+    const f=CART.find(x=>x.key===akey);
+    if(f) f.qty+=1;
+    else CART.push({ key:akey, id:akey, tipo:'addon', nombre:a.nombre, marca:'Combínalo', img:a.imagen_url||'', ml:a.ml||'', precio:Number(a.precio), antes:Number(a.antes)||null, qty:1 });
+  });
+  saveCart(); toast(`Añadido: ${curCombo.nombre}`);
+  closeProduct(); openCart();
+}
+
+/* ================= Carrito ================= */
+function addToCart(){
+  if(!curProduct || !selSize) return;
+  const s = stockDe(curProduct);
+  if(s!=null && qtyEnCarrito(curProduct.id) >= s){ toast(s<=0?'Producto agotado':'No hay más stock disponible'); return; }
+  const key = curProduct.id + '_' + selSize.size;
+  const found = CART.find(i=>i.key===key);
+  if(found) found.qty++;
+  else CART.push({ key, id:curProduct.id, nombre:curProduct.nombre, marca:curProduct.marca, categoria:curProduct.categoria, img:imgsOf(curProduct)[0], ml:selSize.size, precio:selSize.price, precio_may:selSize.may||0, qty:1 });
+  saveCart();
+  if(regaloDisponible()) toast('🎁 ¡Ganaste un regalo! Elígelo en tu pedido');
+  else toast(`Añadido: ${curProduct.nombre} (${mlLabel(selSize.size)})`);
+  closeProduct(); openCart();
+}
+function saveCart(){ localStorage.setItem('cart_'+CONFIG.TIENDA_NOMBRE, JSON.stringify(CART)); renderCart(); }
+
+/* Agregar un decant de regalo elegido por el cliente */
+function addGift(promoId){
+  const g = GIFT_STATUS.find(x=>x.promoId===promoId); if(!g) return;
+  const chosen = CART.filter(i=>i.tipo==='regalo'&&i.promoId===promoId).length;
+  if(chosen>=g.giftsEarned){ toast('Ya elegiste todos tus regalos'); return; }
+  const sel=document.getElementById('giftSel_'+promoId);
+  const pid = sel ? sel.value : (g.opciones[0]&&g.opciones[0].id);
+  const opt = g.opciones.find(o=>o.id===pid); if(!opt){ toast('Elige un perfume'); return; }
+  CART.push({ key:'regalo_'+promoId+'_'+pid+'_'+Date.now(), id:'regalo_'+pid, tipo:'regalo', promoId, nombre:opt.nombre, marca:'Regalo', img:opt.img||'', ml:g.ml, precio:0, qty:1 });
+  saveCart(); toast('🎁 ¡Regalo agregado: '+opt.nombre+'!');
+}
+/* ¿Hay un regalo recién disponible para elegir? */
+function regaloDisponible(){
+  return (GIFT_STATUS||[]).some(g=>{
+    const chosen = CART.filter(i=>i.tipo==='regalo'&&i.promoId===g.promoId).length;
+    return g.giftsEarned>chosen && g.opciones.length;
+  });
+}
+
+function mayorBanner(){
+  if(!hayMayorEnCarrito()) return '';
+  const u=unidadesCarrito(), M=MAYOR_MIN, active=u>=M;
+  const lbl=(CONFIG.LABEL_MAYORISTA||'Precio por mayor');
+  let txt = active ? `✓ ${lbl} activado`
+    : (u===M-1 ? `¡Falta 1! Con un perfume más se activa el ${lbl.toLowerCase()}`
+    : `Faltan ${M-u} perfumes para el ${lbl.toLowerCase()}`);
+  const pct=Math.min(100, Math.round(u/Math.max(1,M)*100));
+  return `<div class="mayor-note ${active?'on':''}">${txt}<div class="bar"><i style="width:${pct}%"></i></div></div>`;
+}
+function renderCart(){
+  const n = CART.reduce((s,i)=>s+i.qty,0);
+  const cc=$('#cartCount'); cc.textContent=n; cc.style.display=n?'grid':'none';
+
+  if(!CART.length){
+    $('#cartList').innerHTML = `<div class="cart-empty"><b style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--cream)">Tu pedido está vacío</b><br>Añade tus fragancias favoritas.</div>`;
+    $('#cartBot').style.display='none'; GIFT_STATUS=[]; return;
+  }
+
+  let R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS);
+  // Reconciliar regalos: nunca más regalos de los ganados (si bajan los requisitos, se quitan)
+  let giftChanged=false;
+  (R.regalos||[]).forEach(g=>{
+    const gifts = CART.filter(i=>i.tipo==='regalo'&&i.promoId===g.promoId);
+    if(gifts.length > g.giftsEarned){
+      const sobra = new Set(gifts.slice(g.giftsEarned));
+      CART = CART.filter(i=>!sobra.has(i));
+      giftChanged=true;
+    }
+  });
+  if(giftChanged){ localStorage.setItem('cart_'+CONFIG.TIENDA_NOMBRE, JSON.stringify(CART)); R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS); }
+  GIFT_STATUS = R.regalos || [];
+
+  const itemsHtml = R.lines.map(i => {
+    if(i.tipo==='regalo'){
+      return `<div class="ci gift">
+        <div class="th">${i.img?`<img src="${esc(i.img)}" alt="">`:'🎁'}</div>
+        <div class="info">
+          <div class="n">${esc(i.nombre)} <span class="gift-tag">Regalo</span></div>
+          <div class="m">${i.ml?esc(mlLabel(i.ml)):''} · GRATIS</div>
+        </div>
+        <button class="rm" data-rm="${i.key}">Quitar</button>
+      </div>`;
+    }
+    return `<div class="ci">
+      <div class="th">${i.img?`<img src="${esc(i.img)}" alt="">`:''}</div>
+      <div class="info">
+        <div class="n">${esc(i.nombre)}</div>
+        <div class="m">${esc(i.marca||'')} · ${mlLabel(i.ml)}</div>
+        <div class="pr">${i.unit<i.unitOrig?`<span class="antes" style="color:var(--muted-2);text-decoration:line-through;margin-right:5px">${fmt(i.unitOrig)}</span>`:''}${fmt(i.unit)}${i.promo?` <span style="color:var(--ok);font-size:.72rem">· ${esc(i.promo)}</span>`:''}</div>
+        <div class="qty"><button data-dec="${i.key}">−</button><input class="qv" type="number" min="1" inputmode="numeric" data-qset="${i.key}" value="${i.qty}"><button data-inc="${i.key}">+</button></div>
+      </div>
+      <button class="rm" data-rm="${i.key}">Quitar</button>
+    </div>`;
+  }).join('');
+
+  const giftHtml = (R.regalos||[]).map(g=>{
+    const chosen = CART.filter(i=>i.tipo==='regalo'&&i.promoId===g.promoId).length;
+    if(g.giftsEarned>chosen){
+      const porElegir=g.giftsEarned-chosen;
+      if(g.opciones.length){
+        return `<div class="gift-box">
+          <div class="gift-h">🎁 ¡Tienes ${porElegir} regalo${porElegir>1?'s':''} por elegir!</div>
+          <div class="gift-row">
+            <select id="giftSel_${g.promoId}">${g.opciones.map(o=>`<option value="${esc(o.id)}">${esc(o.nombre)}${g.ml?` — ${esc(mlLabel(g.ml))}`:''}</option>`).join('')}</select>
+            <button data-giftadd="${g.promoId}">Agregar</button>
+          </div>
+        </div>`;
+      }
+      return `<div class="upsell">🎁 ¡Ganaste ${porElegir} regalo${porElegir>1?'s':''}! Pero aún no hay perfumes de regalo configurados. (Admin: marca los perfumes de regalo y que estén visibles.)</div>`;
+    }
+    if(g.giftsEarned===0 && g.faltan>0){
+      const sizeTxt = (g.mls&&g.mls.length)? ' de '+g.mls.map(mlLabel).join('/') : '';
+      return `<div class="upsell">🎁 Te falta${g.faltan>1?'n':''} ${g.faltan} decant${g.faltan>1?'s':''}${sizeTxt} para llevarte un regalo: <b>${esc(g.nombre)}</b></div>`;
+    }
+    return '';
+  }).join('');
+
+  $('#cartList').innerHTML = mayorBanner() + itemsHtml + giftHtml
+    + (R.upsells.length ? R.upsells.map(u=>`<div class="upsell">🌟 ${esc(u)}</div>`).join('') : '')
+    + (R.comboDisc.length ? R.comboDisc.map(c=>`<div class="promo-line">🎁 ${esc(c.nombre)}: −${fmt(c.monto)}</div>`).join('') : '');
+
+  $('#cartList').querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>chgQty(b.dataset.inc,1));
+  $('#cartList').querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>chgQty(b.dataset.dec,-1));
+  $('#cartList').querySelectorAll('[data-qset]').forEach(inp=>inp.onchange=()=>setQty(inp.dataset.qset, inp.value));
+  $('#cartList').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{CART=CART.filter(i=>i.key!==b.dataset.rm); saveCart();});
+  $('#cartList').querySelectorAll('[data-giftadd]').forEach(b=>b.onclick=()=>addGift(b.dataset.giftadd));
+
+  const yapeOn = payMethod==='yape' && CONFIG.YAPE_NUMERO;
+  $('#cartBot').style.display='block';
+  $('#cartBot').innerHTML = `
+    <div class="cliente-box">
+      <div class="cliente-t">Tus datos <span>(opcional — para registrar tu pedido)</span></div>
+      <input id="cNombre" placeholder="Nombre" value="${esc(cliente.nombre||'')}">
+      <input id="cTel" placeholder="Teléfono / WhatsApp" inputmode="tel" value="${esc(cliente.tel||'')}">
+      <input id="cDir" placeholder="Dirección o referencia (opcional)" value="${esc(cliente.dir||'')}">
+    </div>
+    ${CONFIG.YAPE_NUMERO ? `<div class="pay-toggle">
+      <button class="${payMethod==='yape'?'on':''}" data-pay="yape">Pagar con Yape</button>
+      <button class="${payMethod==='coordinar'?'on coord':''}" data-pay="coordinar">Coordinar pago</button>
+    </div>`:''}
+    ${yapeOn ? `<div class="yape-box">Yape a <b>${esc(CONFIG.YAPE_NUMERO)}</b>${CONFIG.YAPE_NOMBRE?` (<b>${esc(CONFIG.YAPE_NOMBRE)}</b>)`:''} y pega el N° de operación:
+      <input id="yapeOp" placeholder="N° de operación" inputmode="numeric"></div>`:''}
+    ${R.ahorro>0?`<div class="tot"><span class="k">Subtotal</span><span class="tach">${fmt(R.totalSinDesc)}</span></div>`:''}
+    <div class="tot big"><span class="k">Total</span><span class="v">${fmt(R.total)}</span></div>
+    ${R.ahorro>0?`<div class="ahorro">Ahorras ${fmt(R.ahorro)} 🎉</div>`:''}
+    <button class="wa" id="waCheckout"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.9-1.4A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.1-.2 0-.4.1-.5l.4-.5c.1-.1.1-.3 0-.4l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.7.7-.9 1.6-.6 2.6.5 1.6 1.6 3 3.2 3.9 2 1.1 3.3 1 4.2.9.6-.1 1.4-.6 1.6-1.2.2-.5.2-1 .1-1.1z"/></svg>Pedir por WhatsApp</button>`;
+
+  $('#cartBot').querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{ payMethod=b.dataset.pay; renderCart(); });
+  const cmap={cNombre:'nombre',cTel:'tel',cDir:'dir'};
+  Object.keys(cmap).forEach(idc=>{ const el=document.getElementById(idc); if(el) el.oninput=()=>{ cliente[cmap[idc]]=el.value; }; });
+  $('#waCheckout').onclick = () => checkout(R);
+}
+function chgQty(key,d){ const i=CART.find(x=>x.key===key); if(!i)return;
+  if(d>0){ const p=PROD_BY_ID[i.id]; const s=p?stockDe(p):null; if(s!=null && qtyEnCarrito(i.id)>=s){ toast('No hay más stock disponible'); return; } }
+  i.qty+=d; if(i.qty<1)CART=CART.filter(x=>x.key!==key); saveCart(); }
+function setQty(key,val){ const i=CART.find(x=>x.key===key); if(!i)return;
+  let v=parseInt((''+val).replace(/[^\d]/g,''),10); if(isNaN(v)||v<1)v=1;
+  const p=PROD_BY_ID[i.id]; const s=p?stockDe(p):null;
+  if(s!=null){ const otros=qtyEnCarrito(i.id)-i.qty; if(otros+v>s){ v=Math.max(1,s-otros); toast('Ajustado al stock disponible'); } }
+  i.qty=v; saveCart(); }
+function openCart(){ renderCart(); $('#drawer').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeCart(){ $('#drawer').classList.remove('open'); document.body.style.overflow=''; }
+$('#openCart').onclick = openCart;
+document.querySelectorAll('[data-close-cart]').forEach(el=>el.onclick=closeCart);
+
+async function checkout(R){
+  if(!CART.length){ toast('Tu pedido está vacío'); return; }
+  const nombre=(cliente.nombre||'').trim(), tel=(cliente.tel||'').trim(), dir=(cliente.dir||'').trim();
+  const op = ($('#yapeOp')?.value||'').trim();
+  const enc = s => encodeURIComponent(s);
+
+  // Registrar la venta (no bloquea el pedido si falla)
+  try{
+    const items = R.lines.map(i => ({ id:i.id, nombre:i.nombre, marca:i.marca||'', ml:i.ml, qty:i.qty, precio:i.unit, total:i.lineTotal }));
+    await sb.from('ventas').insert({
+      cliente_nombre:nombre||null, cliente_telefono:tel||null, cliente_direccion:dir||null,
+      items, subtotal:R.totalSinDesc, descuento:R.ahorro, total:R.total,
+      metodo_pago:payMethod, yape_operacion:(payMethod==='yape'?op:'')||null, estado:'nuevo'
+    });
+  }catch(e){ console.warn('No se pudo registrar la venta:', e); }
+
+  // Armar mensaje de WhatsApp
+  let msg = `¡Hola ${enc(CONFIG.TIENDA_NOMBRE)}! Quiero hacer este pedido:%0A%0A`;
+  R.lines.forEach(i => {
+    if(i.tipo==='regalo') msg += `• 🎁 ${enc(i.nombre)} — ${enc(mlLabel(i.ml))} x${i.qty} = GRATIS%0A`;
+    else msg += `• ${enc(i.nombre)} (${enc(i.marca||'')}) — ${enc(mlLabel(i.ml))} x${i.qty} = ${enc(fmt(i.unit*i.qty))}%0A`;
+  });
+  if(R.ahorro>0) msg += `%0A🎉 Ahorro: ${enc(fmt(R.ahorro))}`;
+  msg += `%0A*Total: ${enc(fmt(R.total))}*`;
+  if(nombre||tel||dir){
+    msg += `%0A%0A👤 *Mis datos:*%0A${nombre?`Nombre: ${enc(nombre)}%0A`:''}${tel?`Teléfono: ${enc(tel)}%0A`:''}${dir?`Dirección: ${enc(dir)}`:''}`;
+  }
+  if(payMethod==='yape' && CONFIG.YAPE_NUMERO){
+    msg += `%0A%0A💜 Pago por *Yape* a ${enc(CONFIG.YAPE_NUMERO)}${op?`%0AN° de operación: ${enc(op)}`:''}`;
+  }
+  window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`, '_blank');
+}
+
+/* ================= Buscador ================= */
+$('#q').oninput = e => { query = e.target.value.trim().toLowerCase();
+  if(currentView==='promos') renderCombos();
+  else if(currentView==='preorden') renderPre();
+  else if(currentView==='consolidado') renderCon();
+  else render();
+};
+const _be=$('#btnEstado'); if(_be) _be.onclick = abrirConsulta;
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeProduct(); closeCart(); } });
+
+/* ================= Pestañas Catálogo / Promociones ================= */
+document.querySelectorAll('#viewtabs .vtab').forEach(b => b.onclick = () => setView(b.dataset.view));
+
+let toastT; function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2400); }
+
+renderCart();
+load().finally(()=>setTimeout(()=>{ const l=$('#loader'); if(l) l.classList.add('hide'); }, 450));
+</script>
+<script src="install.js"></script>
+</body>
 </html>

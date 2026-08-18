@@ -7,8 +7,8 @@ const CONFIG = {
 
   // --- Supabase (Project Settings -> API en tu proyecto DDS) ---
   //  PON AQUÍ LAS LLAVES DE TU PROYECTO SUPABASE DE DDS:
-  SUPABASE_URL:      "https://cueofggreijcudpvgyip.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZW9mZ2dyZWlqY3VkcHZneWlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NTA3NTUsImV4cCI6MjA5ODIyNjc1NX0.LUySx4N8ZUTgxPmZ-6W_5GMDoo1oqMY_8Oq-FdNv2t8",
+  SUPABASE_URL:      "https://TU-PROYECTO-DDS.supabase.co",
+  SUPABASE_ANON_KEY: "TU_ANON_KEY_DE_DDS",
 
   // Bucket de imágenes de productos (créalo en Supabase > Storage, público).
   BUCKET: "productos",
@@ -103,4 +103,23 @@ const CONFIG = {
   // --- Opciones de filtros ---
   CATEGORIAS: ["Árabe", "Diseñador", "Nicho"],
   GENEROS:    ["Hombre", "Mujer", "Unisex"],
+
+  // --- INICIO: número grande de "clientes satisfechos" ---
+  CLIENTES_TEXTO: "800",
+
+  // --- INICIO: testimonios (edítalos aquí). foto: URL opcional (déjala "" y sale ★★★★★) ---
+  TESTIMONIOS: [
+    { texto: "Llegó todo bien. Excelente presentación.", nombre: "Luis Martínez", foto: "" },
+    { texto: "Por fin probé perfumes de esta calidad y no hay comparación.", nombre: "Marco Junior", foto: "" },
+    { texto: "Siempre quise probar estos perfumes pero eran muy costosos. ¡Gracias!", nombre: "Luciano Torres", foto: "" },
+    { texto: "Prueba estos perfumes a ver cuál te gusta más. Muy buenos.", nombre: "Raúl Castro", foto: "" },
+  ],
+
+  // --- INICIO: imagen de fondo por categoría en el mosaico (opcional). ---
+  //  Si dejas una vacía, la tarjeta usa un fondo oscuro elegante con el nombre.
+  CATEGORIA_IMAGENES: {
+    // "Árabe":     "https://.../arabes.jpg",
+    // "Diseñador": "https://.../disenador.jpg",
+    // "Nicho":     "https://.../nicho.jpg",
+  },
 };

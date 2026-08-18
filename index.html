@@ -481,6 +481,32 @@ header::after{background:var(--line); opacity:1}
   .ini-hero-copy{align-items:center}
   .ini-hero-img{order:-1}
 }
+
+/* Catálogo en mosaico */
+.cat-wrap{margin-top:24px}
+.cat-sub{color:var(--muted); font-size:.9rem; margin-bottom:16px}
+.cat-back{display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line); color:var(--cream); border-radius:999px; padding:8px 16px; font-size:.85rem; cursor:pointer; margin-bottom:4px}
+.cat-back:hover{border-color:var(--gold-3)}
+
+/* Megamenú (solo escritorio) */
+.vtab-wrap{position:relative; display:inline-flex}
+.megamenu{position:absolute; top:100%; left:50%; transform:translateX(-50%); margin-top:8px; z-index:60;
+  display:none; gap:20px; background:#101010; border:1px solid #262626; border-radius:14px; padding:18px; width:640px; box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.mm-cats{display:flex; flex-direction:column; gap:4px; min-width:210px}
+.mm-cat{text-align:left; background:none; color:#e8e6e2; font-size:.9rem; padding:9px 12px; border-radius:8px; cursor:pointer; letter-spacing:.04em; text-transform:uppercase}
+.mm-cat:hover{background:#1d1d1d; color:var(--accent)}
+.mm-prev{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; flex:1}
+.mm-pcard{background:#161616; border:1px solid #262626; border-radius:10px; padding:0 0 8px; cursor:pointer; text-align:left; overflow:hidden}
+.mm-pcard:hover{border-color:#3a3a3a}
+.mm-pimg{aspect-ratio:1/1; background:#e9e9ec; display:grid; place-items:center; overflow:hidden}
+.mm-pimg img{width:100%; height:100%; object-fit:cover}
+.mm-pimg .ph{font-family:'Cormorant Garamond',serif; font-size:1.6rem; color:#888}
+.mm-pname{color:#e8e6e2; font-size:.72rem; padding:6px 8px 0; line-height:1.2}
+.mm-pprice{color:#fff; font-weight:700; font-size:.8rem; padding:0 8px}
+@media(hover:hover) and (min-width:900px){
+  .hasmenu:hover .megamenu{display:flex}
+}
+@media(max-width:899px){ .megamenu{display:none !important} }
 </style>
 </head>
 <body>
@@ -522,7 +548,10 @@ header::after{background:var(--line); opacity:1}
 
 <div class="viewtabs" id="viewtabs" style="display:none">
   <button class="vtab active" data-view="inicio">Inicio</button>
-  <button class="vtab" data-view="catalogo">Catálogo</button>
+  <div class="vtab-wrap hasmenu">
+    <button class="vtab" data-view="catalogo">Catálogo</button>
+    <div class="megamenu" id="megamenu"></div>
+  </div>
   <button class="vtab" data-view="mayor" id="tabMayor" style="display:none">Precio por mayor<span class="fire">📦</span></button>
   <button class="vtab" data-view="promos" id="tabPromos" style="display:none">Promociones<span class="fire">🔥</span></button>
   <button class="vtab" data-view="preorden" id="tabPre" style="display:none">Preorden<span class="fire">✈️</span></button>
@@ -532,6 +561,7 @@ header::after{background:var(--line); opacity:1}
 <div class="status-bar" id="statusBar" style="display:none"><button id="btnEstado">🔎 Consultar mi preorden / consolidado</button></div>
 
 <div class="inicio" id="inicioView" style="display:none"></div>
+<div class="inicio" id="catMosaico" style="display:none"></div>
 
 <div class="filters" id="filters"></div>
 <div class="grid" id="grid"><div class="state"><div class="spinner"></div>Cargando catálogo...</div></div>
@@ -710,7 +740,7 @@ async function load(){
   const ra = await sb.from('ajustes').select('*').eq('id','principal').maybeSingle();
   if(!ra.error && ra.data && ra.data.hero_sub) $('#heroSub').textContent = ra.data.hero_sub;
 
-  renderFilters(); renderCombos(); renderPre(); renderCon();
+  renderFilters(); renderCombos(); renderPre(); renderCon(); renderMegamenu();
 
   // El menú ahora SIEMPRE se ve (Inicio y Catálogo son fijos)
   const SEC = (window.CONFIG && CONFIG.SECCIONES) || {};
@@ -763,13 +793,15 @@ function setView(v){
   // En Inicio ocultamos el hero genérico (el Inicio trae su propio hero destacado)
   const heroEl=document.querySelector('.hero'); if(heroEl) heroEl.style.display = inInicio ? 'none' : '';
   const divEl=document.querySelector('.divider'); if(divEl) divEl.style.display = inInicio ? 'none' : '';
-  $('#filters').style.display     = v==='catalogo' ? 'flex' : 'none';
-  $('#grid').style.display        = v==='catalogo' ? 'grid' : 'none';
+  const cm=$('#catMosaico'); if(cm) cm.style.display = 'none';
+  $('#filters').style.display     = 'none';
+  $('#grid').style.display        = 'none';
   $('#mayorGrid').style.display   = v==='mayor'    ? 'grid' : 'none';
   $('#combosGrid').style.display  = v==='promos'   ? 'grid' : 'none';
   $('#preGrid').style.display     = v==='preorden' ? 'grid' : 'none';
   $('#conGrid').style.display     = v==='consolidado' ? 'grid' : 'none';
   if(inInicio) renderInicio();
+  else if(v==='catalogo') showCatalogo();
   else if(v==='mayor') renderMayor();
   else if(v==='promos') renderCombos();
   else if(v==='preorden') renderPre();
@@ -855,7 +887,67 @@ function renderInicio(){
   cont.querySelectorAll('[data-view="armar"]').forEach(b=>b.onclick=()=>{ setView('promos'); window.scrollTo({top:0,behavior:'smooth'}); });
 }
 
-/* ================= Precio por mayor (vista) ================= */
+/* ================= CATÁLOGO EN MOSAICO (categorías) ================= */
+// Muestra el mosaico de categorías si no hay categoría elegida; si hay, muestra la grilla.
+function showCatalogo(){
+  const enGrilla = filterCat && filterCat!=='Todos';
+  const cm=$('#catMosaico'); if(cm) cm.style.display = enGrilla ? 'none' : 'block';
+  $('#filters').style.display = enGrilla ? 'flex' : 'none';
+  $('#grid').style.display    = enGrilla ? 'grid' : 'none';
+  if(enGrilla){ renderFilters(); render(); }
+  else { renderCatMosaico(); }
+}
+
+function tilesCategorias(){
+  const cats=CONFIG.CATEGORIAS||[]; 
+  return [{n:'PROMOS',v:'promos',cat:''}].concat(cats.map(c=>({n:(c==='Árabe'?'ÁRABES':String(c).toUpperCase()),v:'catalogo',cat:c})));
+}
+
+function renderCatMosaico(){
+  const cont=$('#catMosaico'); if(!cont) return;
+  const imgs=CONFIG.CATEGORIA_IMAGENES||{};
+  const tiles=tilesCategorias();
+  cont.innerHTML=`<div class="cat-wrap">
+    <h3 class="ini-h serif" style="margin-bottom:6px">Catálogo</h3>
+    <p class="cat-sub">Elige qué tipo de perfume quieres ver</p>
+    <div class="ini-tiles">${tiles.map(t=>{
+      const bg=t.cat&&imgs[t.cat]?` style="background-image:url('${esc(imgs[t.cat])}')"`:'';
+      return `<button class="ini-tile${bg?' has-img':''}"${bg} data-view="${t.v}" data-cat="${esc(t.cat)}"><span class="ini-tile-label">${esc(t.n)}</span></button>`;
+    }).join('')}</div>
+  </div>`;
+  cont.querySelectorAll('.ini-tile').forEach(b=>b.onclick=()=>{
+    if(b.dataset.view==='promos'){ setView('promos'); }
+    else { filterCat=b.dataset.cat||'Todos'; showCatalogo(); }
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+
+// Megamenú (solo escritorio): al pasar el mouse por "Catálogo" sale un panel con
+// las categorías + una vista previa de 3 perfumes.
+function renderMegamenu(){
+  const mm=$('#megamenu'); if(!mm) return;
+  const cats=CONFIG.CATEGORIAS||[];
+  const previa=(PRODUCTS||[]).filter(p=>p.visible!==false).slice(0,3);
+  const catsHtml = cats.map(c=>`<button class="mm-cat" data-cat="${esc(c)}">Perfumes ${c==='Árabe'?'Árabes':esc(c)}</button>`).join('')
+    + `<button class="mm-cat" data-cat="__promos">Promociones 🔥</button>`;
+  const prevHtml = previa.map(p=>{
+    const img=imgsOf(p)[0];
+    const pr=presActivas(p);
+    const precio = pr.length ? fmt(pr[0].precio) : '';
+    const imgHtml = img ? `<img src="${esc(img)}" loading="lazy">` : `<span class="ph">${esc((p.nombre||'?')[0])}</span>`;
+    return `<button class="mm-pcard" data-id="${p.id}"><div class="mm-pimg">${imgHtml}</div><div class="mm-pname">${esc(p.nombre)}</div><div class="mm-pprice">${precio}</div></button>`;
+  }).join('') || '<div class="cat-sub" style="padding:10px">Aún no hay perfumes cargados.</div>';
+  mm.innerHTML = `<div class="mm-cats">${catsHtml}</div><div class="mm-prev">${prevHtml}</div>`;
+  mm.querySelectorAll('.mm-cat').forEach(b=>b.onclick=()=>{
+    const c=b.dataset.cat;
+    if(c==='__promos'){ setView('promos'); }
+    else { filterCat=c; setView('catalogo'); }
+    mm.style.display='none'; setTimeout(()=>{mm.style.display='';},300);
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+  mm.querySelectorAll('.mm-pcard').forEach(b=>b.onclick=()=>openProduct(b.dataset.id));
+}
+
 function renderMayor(){
   const cont=$('#mayorGrid'); if(!cont) return;
   const banner = `<div class="state" style="grid-column:1/-1;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;line-height:1.6">
@@ -1672,13 +1764,16 @@ function renderFilters(){
   const cats = ['Todos', ...(CONFIG.CATEGORIAS||[])];
   const gens = ['Todos', ...(CONFIG.GENEROS||[])];
   $('#filters').innerHTML = `
+    <button class="cat-back" id="catBack">← Categorías</button>
     <span class="flabel">Tipo</span>
     ${cats.map(c=>`<button class="chip ${filterCat===c?'active':''}" data-cat="${esc(c)}">${c==='Árabe'?'Árabes':esc(c)}</button>`).join('')}
     <span class="flabel" style="margin-left:8px">Género</span>
     ${gens.map(g=>`<button class="chip ${filterGen===g?'active':''}" data-gen="${esc(g)}">${esc(g)}</button>`).join('')}
     <span class="count" id="fcount"></span>`;
-  document.querySelectorAll('[data-cat]').forEach(c=>c.onclick=()=>{filterCat=c.dataset.cat; renderFilters(); render();});
-  document.querySelectorAll('[data-gen]').forEach(c=>c.onclick=()=>{filterGen=c.dataset.gen; renderFilters(); render();});
+  const fEl=$('#filters');
+  fEl.querySelectorAll('[data-cat]').forEach(c=>c.onclick=()=>{filterCat=c.dataset.cat; showCatalogo();});
+  fEl.querySelectorAll('[data-gen]').forEach(c=>c.onclick=()=>{filterGen=c.dataset.gen; renderFilters(); render();});
+  const bk=$('#catBack'); if(bk) bk.onclick=()=>{ filterCat='Todos'; showCatalogo(); window.scrollTo({top:0,behavior:'smooth'}); };
 }
 
 /* ================= Grid ================= */

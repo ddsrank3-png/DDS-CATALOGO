@@ -7,8 +7,8 @@ const CONFIG = {
 
   // --- Supabase (Project Settings -> API en tu proyecto DDS) ---
   //  PON AQUÍ LAS LLAVES DE TU PROYECTO SUPABASE DE DDS:
-  SUPABASE_URL:      "https://cueofggreijcudpvgyip.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZW9mZ2dyZWlqY3VkcHZneWlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NTA3NTUsImV4cCI6MjA5ODIyNjc1NX0.LUySx4N8ZUTgxPmZ-6W_5GMDoo1oqMY_8Oq-FdNv2t8",
+  SUPABASE_URL:      "https://TU-PROYECTO-DDS.supabase.co",
+  SUPABASE_ANON_KEY: "TU_ANON_KEY_DE_DDS",
 
   // Bucket de imágenes de productos (créalo en Supabase > Storage, público).
   BUCKET: "productos",
@@ -121,5 +121,27 @@ const CONFIG = {
     // "Árabe":     "https://.../arabes.jpg",
     // "Diseñador": "https://.../disenador.jpg",
     // "Nicho":     "https://.../nicho.jpg",
+  },
+
+  // ============================================================
+  //  ARMA TU COMBO — el cliente elige categoría + tamaño + perfumes y arma su set.
+  //  Los precios son POR CATEGORÍA Y TAMAÑO (no por perfume). Edítalos aquí.
+  // ============================================================
+  COMBO_ARMA: {
+    activo: true,
+    titulo: "Arma tu combo",
+    subtitulo: "Elige tus decants favoritos y ahorra automáticamente",
+    envio_gratis_desde: 200,           // "Te faltan S/X para envío gratis" (0 = ocultar)
+    precios: {
+      "Árabe":     { "3": 15, "5": 18, "10": 30, "30": 80 },
+      "Diseñador": { "3": 24, "5": 39, "10": 75, "30": 180 },
+      "Nicho":     { "3": 39, "5": 65, "10": 110 },
+    },
+    // Descuento automático según CUÁNTOS decants lleve (edítalo; [] = sin descuento).
+    descuentos: [
+      { desde: 2, pct: 5 },
+      { desde: 3, pct: 8 },
+      { desde: 5, pct: 12 },
+    ],
   },
 };

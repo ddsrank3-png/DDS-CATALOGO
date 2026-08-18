@@ -507,6 +507,69 @@ header::after{background:var(--line); opacity:1}
   .hasmenu:hover .megamenu{display:flex}
 }
 @media(max-width:899px){ .megamenu{display:none !important} }
+
+/* ===================== ARMA TU COMBO ===================== */
+.armar{max-width:1200px; margin:0 auto; padding:0 20px 50px}
+.armar-head{text-align:center; margin:26px 0 8px}
+.armar-head h2{font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,6vw,3rem); font-weight:700; letter-spacing:.03em}
+.armar-head p{color:var(--muted); font-size:.95rem; margin-top:4px}
+.armar-steps{display:flex; gap:8px; justify-content:center; align-items:center; margin:14px 0 22px; flex-wrap:wrap}
+.armar-step{display:inline-flex; align-items:center; gap:8px; color:var(--muted-2); font-size:.82rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase}
+.armar-step b{display:grid; place-items:center; width:26px; height:26px; border-radius:50%; border:1.5px solid var(--line); font-size:.8rem; color:var(--muted-2)}
+.armar-step.on{color:var(--cream)} .armar-step.on b{background:#111; color:#fff; border-color:#111}
+.armar-step .sep{width:26px; height:1px; background:var(--line)}
+.armar-body{display:grid; grid-template-columns:1fr 320px; gap:22px; align-items:start}
+.armar-main{min-width:0}
+.armar-lbl{font-size:.72rem; letter-spacing:.12em; color:var(--muted-2); text-transform:uppercase; margin:18px 0 10px}
+.armar-cats,.armar-sizes{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px}
+.armar-opt{background:var(--panel); border:1.5px solid var(--line); border-radius:14px; padding:16px; cursor:pointer; text-align:center; transition:all .15s}
+.armar-opt:hover{border-color:var(--gold-3)}
+.armar-opt.on{background:#111; border-color:#111; color:#fff}
+.armar-opt .t{font-family:'Cormorant Garamond',serif; font-size:1.35rem; font-weight:700; letter-spacing:.02em}
+.armar-opt .s{font-size:.76rem; color:var(--muted); margin-top:2px}
+.armar-opt.on .s{color:rgba(255,255,255,.7)}
+.armar-count{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin:18px 0 6px}
+.armar-count b{font-size:1.6rem; font-family:'Cormorant Garamond',serif; color:var(--cream)}
+.armar-count span{font-size:.8rem; color:var(--muted); text-align:right}
+.armar-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; margin-top:8px}
+.armar-pcard{position:relative; background:var(--panel); border:1.5px solid var(--line); border-radius:12px; padding:0 0 10px; cursor:pointer; text-align:left; overflow:hidden; transition:all .15s}
+.armar-pcard:hover{border-color:var(--gold-3)}
+.armar-pcard.on{border-color:#111; box-shadow:0 0 0 1.5px #111 inset}
+.armar-pcheck{position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%; border:1.5px solid var(--line); background:#fff; display:grid; place-items:center; z-index:2; font-size:.8rem; color:transparent}
+.armar-pcard.on .armar-pcheck{background:#111; border-color:#111; color:#fff}
+.armar-pimg{width:100%; aspect-ratio:1/1; background:var(--panel-2); display:grid; place-items:center; overflow:hidden}
+.armar-pimg img{width:100%; height:100%; object-fit:cover}
+.armar-pimg .ph{font-family:'Cormorant Garamond',serif; font-size:2rem; color:var(--gold-deep)}
+.armar-pname{font-size:.78rem; padding:8px 10px 0; color:var(--cream); line-height:1.25}
+.armar-hint{color:var(--muted); font-size:.85rem; padding:20px; text-align:center; grid-column:1/-1}
+
+/* Sidebar TU COMBO */
+.armar-side{position:sticky; top:14px; background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden}
+.armar-side-top{background:#111; color:#fff; padding:14px 16px; display:flex; justify-content:space-between; align-items:center}
+.armar-side-top b{letter-spacing:.06em; font-size:.9rem}
+.armar-side-top span{font-size:.78rem; color:rgba(255,255,255,.7)}
+.armar-envio{background:#fff7e6; border-bottom:1px solid var(--line); color:#8a6a24; font-size:.78rem; padding:9px 14px; display:flex; align-items:center; gap:8px}
+.armar-envio.ok{background:#e8f8ee; color:#12833f}
+.armar-items{max-height:320px; overflow:auto; padding:6px 8px}
+.armar-item{display:flex; align-items:center; gap:10px; padding:8px; border-bottom:1px solid var(--line-soft)}
+.armar-item:last-child{border-bottom:none}
+.armar-item .ai-body{flex:1; min-width:0}
+.armar-item .ai-name{font-size:.8rem; color:var(--cream); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.armar-item .ai-tag{font-size:.7rem; color:var(--muted)}
+.armar-item .ai-price{font-weight:700; font-size:.82rem; color:var(--cream)}
+.armar-item .ai-del{width:24px; height:24px; border-radius:50%; background:#111; color:#fff; display:grid; place-items:center; cursor:pointer; flex:0 0 auto}
+.armar-empty{color:var(--muted); font-size:.85rem; text-align:center; padding:26px 14px}
+.armar-side-bot{padding:14px 16px; border-top:1px solid var(--line)}
+.armar-row{display:flex; justify-content:space-between; font-size:.85rem; color:var(--muted); margin-bottom:4px}
+.armar-row.desc{color:#12833f}
+.armar-total{display:flex; justify-content:space-between; align-items:center; background:#111; color:#fff; border-radius:10px; padding:12px 14px; margin:10px 0}
+.armar-total b{font-size:1.35rem; font-family:'Cormorant Garamond',serif}
+.armar-pay{width:100%; background:#12b76a; color:#fff; border-radius:12px; padding:14px; font-weight:700; font-size:.95rem; cursor:pointer}
+.armar-pay:disabled{background:#cfe9d9; cursor:not-allowed}
+@media(max-width:900px){
+  .armar-body{grid-template-columns:1fr}
+  .armar-side{position:static; order:2}
+}
 </style>
 </head>
 <body>
@@ -552,6 +615,7 @@ header::after{background:var(--line); opacity:1}
     <button class="vtab" data-view="catalogo">Catálogo</button>
     <div class="megamenu" id="megamenu"></div>
   </div>
+  <button class="vtab" data-view="armar" id="tabArmar" style="display:none">Arma tu combo<span class="fire">🧩</span></button>
   <button class="vtab" data-view="mayor" id="tabMayor" style="display:none">Precio por mayor<span class="fire">📦</span></button>
   <button class="vtab" data-view="promos" id="tabPromos" style="display:none">Promociones<span class="fire">🔥</span></button>
   <button class="vtab" data-view="preorden" id="tabPre" style="display:none">Preorden<span class="fire">✈️</span></button>
@@ -562,6 +626,7 @@ header::after{background:var(--line); opacity:1}
 
 <div class="inicio" id="inicioView" style="display:none"></div>
 <div class="inicio" id="catMosaico" style="display:none"></div>
+<div class="armar" id="armarView" style="display:none"></div>
 
 <div class="filters" id="filters"></div>
 <div class="grid" id="grid"><div class="state"><div class="spinner"></div>Cargando catálogo...</div></div>
@@ -754,6 +819,8 @@ async function load(){
   const tp=$('#tabPromos'); if(tp) tp.style.display = promosOn ? 'inline-flex' : 'none';
   const tpr=$('#tabPre'); if(tpr) tpr.style.display = preOn ? 'inline-flex' : 'none';
   const tc=$('#tabCon'); if(tc) tc.style.display = conOn ? 'inline-flex' : 'none';
+  const armarOn = (CONFIG.COMBO_ARMA && CONFIG.COMBO_ARMA.activo!==false && Object.keys(CONFIG.COMBO_ARMA.precios||{}).length>0);
+  const ta=$('#tabArmar'); if(ta) ta.style.display = armarOn ? 'inline-flex' : 'none';
   const sbBar=$('#statusBar'); if(sbBar) sbBar.style.display = (preOn||conOn) ? 'flex' : 'none';
 
   // Arrancar en la vista Inicio (hero + más vendidos + testimonios + categorías)
@@ -794,6 +861,7 @@ function setView(v){
   const heroEl=document.querySelector('.hero'); if(heroEl) heroEl.style.display = inInicio ? 'none' : '';
   const divEl=document.querySelector('.divider'); if(divEl) divEl.style.display = inInicio ? 'none' : '';
   const cm=$('#catMosaico'); if(cm) cm.style.display = 'none';
+  const av=$('#armarView'); if(av) av.style.display = v==='armar' ? 'block' : 'none';
   $('#filters').style.display     = 'none';
   $('#grid').style.display        = 'none';
   $('#mayorGrid').style.display   = v==='mayor'    ? 'grid' : 'none';
@@ -802,6 +870,7 @@ function setView(v){
   $('#conGrid').style.display     = v==='consolidado' ? 'grid' : 'none';
   if(inInicio) renderInicio();
   else if(v==='catalogo') showCatalogo();
+  else if(v==='armar') renderArmar();
   else if(v==='mayor') renderMayor();
   else if(v==='promos') renderCombos();
   else if(v==='preorden') renderPre();
@@ -884,7 +953,7 @@ function renderInicio(){
     window.scrollTo({top:0,behavior:'smooth'});
   });
   cont.querySelectorAll('[data-view="catalogo"]:not(.ini-tile)').forEach(b=>b.onclick=()=>setView('catalogo'));
-  cont.querySelectorAll('[data-view="armar"]').forEach(b=>b.onclick=()=>{ setView('promos'); window.scrollTo({top:0,behavior:'smooth'}); });
+  cont.querySelectorAll('[data-view="armar"]').forEach(b=>b.onclick=()=>{ setView('armar'); window.scrollTo({top:0,behavior:'smooth'}); });
 }
 
 /* ================= CATÁLOGO EN MOSAICO (categorías) ================= */
@@ -946,6 +1015,147 @@ function renderMegamenu(){
     window.scrollTo({top:0,behavior:'smooth'});
   });
   mm.querySelectorAll('.mm-pcard').forEach(b=>b.onclick=()=>openProduct(b.dataset.id));
+}
+
+/* ================= ARMA TU COMBO ================= */
+let armarCat=null, armarMl=null, armarSel=[];
+function armarCfg(){ return CONFIG.COMBO_ARMA||{}; }
+function armarPrecios(){ return armarCfg().precios||{}; }
+function armarCats(){ return Object.keys(armarPrecios()); }
+function armarSizesDe(cat){ return Object.keys(armarPrecios()[cat]||{}); }         // ['3','5','10',...]
+function armarPrecioDe(cat,ml){ const p=(armarPrecios()[cat]||{})[ml]; return p==null?null:Number(p); }
+function armarDesdeDe(cat){ const v=Object.values(armarPrecios()[cat]||{}).map(Number); return v.length?Math.min(...v):null; }
+
+function armarCalc(){
+  const subtotal = armarSel.reduce((s,i)=>s+Number(i.precio),0);
+  const n = armarSel.length;
+  const tiers = (armarCfg().descuentos||[]).slice().sort((a,b)=>b.desde-a.desde);
+  const tier = tiers.find(t=>n>=Number(t.desde));
+  const pct = tier?Number(tier.pct):0;
+  const desc = Math.round(subtotal*pct/100);
+  return { subtotal, desc, pct, total:Math.max(0,subtotal-desc), n };
+}
+
+function renderArmar(){
+  const cont=$('#armarView'); if(!cont) return;
+  const cfg=armarCfg();
+  const cats=armarCats();
+  if(!armarCat && cats.length===1) armarCat=cats[0];
+  const sizes = armarCat?armarSizesDe(armarCat):[];
+  if(armarMl && !sizes.includes(armarMl)) armarMl=null;
+  const C=armarCalc();
+
+  // Pasos
+  const stepOn=(s)=> s==='cat' ? true : s==='ml' ? !!armarCat : (!!armarCat && !!armarMl);
+  const steps=`<div class="armar-steps">
+    <span class="armar-step ${stepOn('cat')?'on':''}"><b>1</b>Categoría</span><span class="sep"></span>
+    <span class="armar-step ${stepOn('ml')?'on':''}"><b>2</b>Tamaño</span><span class="sep"></span>
+    <span class="armar-step ${stepOn('per')?'on':''}"><b>3</b>Perfumes</span>
+  </div>`;
+
+  // Categorías
+  const catsHtml=`<div class="armar-lbl">Categoría</div><div class="armar-cats">${cats.map(c=>{
+    const desde=armarDesdeDe(c);
+    return `<button class="armar-opt ${armarCat===c?'on':''}" data-cat="${esc(c)}"><div class="t">${c==='Árabe'?'ÁRABES':esc(String(c).toUpperCase())}</div><div class="s">${desde!=null?'Desde '+fmt(desde):''}</div></button>`;
+  }).join('')}</div>`;
+
+  // Tamaños (si hay categoría)
+  let sizesHtml='';
+  if(armarCat){
+    sizesHtml=`<div class="armar-lbl">Tamaño</div><div class="armar-sizes">${sizes.map(ml=>{
+      const pr=armarPrecioDe(armarCat,ml);
+      return `<button class="armar-opt ${armarMl===ml?'on':''}" data-ml="${esc(ml)}"><div class="t">${esc(ml)}ML</div><div class="s">Individual ${fmt(pr)}</div></button>`;
+    }).join('')}</div>`;
+  }
+
+  // Contador + hint
+  const minD=(cfg.descuentos&&cfg.descuentos.length)?Math.min(...cfg.descuentos.map(d=>Number(d.desde))):0;
+  const hint = C.n===0 ? (minD?`Selecciona mínimo ${minD} para el descuento`:'Elige tus decants')
+    : (C.pct>0?`¡Combo activo! Sigue agregando para más descuento`:(minD&&C.n<minD?`Agrega ${minD-C.n} más para el descuento`:'¡Combo activo!'));
+  const countHtml=`<div class="armar-count"><b>${C.n}</b><span>${esc(hint)}</span></div>`;
+
+  // Grilla de perfumes (si hay categoría y tamaño)
+  let gridHtml='';
+  if(armarCat && armarMl){
+    const list=(PRODUCTS||[]).filter(p=>p.visible!==false && (p.categoria===armarCat));
+    if(!list.length) gridHtml=`<div class="armar-hint">Aún no hay perfumes en ${esc(armarCat)}. Cárgalos en el panel.</div>`;
+    else gridHtml=`<div class="armar-grid">${list.map(p=>{
+      const key=p.id+'__'+armarMl; const on=armarSel.some(x=>x.key===key);
+      const img=imgsOf(p)[0];
+      const imgHtml=img?`<img src="${esc(img)}" loading="lazy">`:`<span class="ph">${esc((p.nombre||'?')[0])}</span>`;
+      return `<button class="armar-pcard ${on?'on':''}" data-add="${p.id}"><span class="armar-pcheck">✓</span><div class="armar-pimg">${imgHtml}</div><div class="armar-pname">${esc(p.nombre)}</div></button>`;
+    }).join('')}</div>`;
+  } else if(armarCat && !armarMl){
+    gridHtml=`<div class="armar-hint">Elige un tamaño para ver los perfumes disponibles.</div>`;
+  } else {
+    gridHtml=`<div class="armar-hint">Elige una categoría para empezar.</div>`;
+  }
+
+  // Sidebar
+  const umbral=Number(cfg.envio_gratis_desde)||0;
+  let envioHtml='';
+  if(umbral>0){
+    if(C.total>=umbral) envioHtml=`<div class="armar-envio ok">🚚 ¡Tienes envío gratis!</div>`;
+    else envioHtml=`<div class="armar-envio">🚚 Te faltan ${fmt(umbral-C.total)} para envío gratis</div>`;
+  }
+  const itemsHtml = armarSel.length ? armarSel.map(i=>`<div class="armar-item">
+      <div class="ai-body"><div class="ai-name">${esc(i.nombre)}</div><div class="ai-tag">${esc(i.categoria)} · ${esc(i.ml)}ml</div></div>
+      <div class="ai-price">${fmt(i.precio)}</div>
+      <div class="ai-del" data-del="${esc(i.key)}">✕</div>
+    </div>`).join('') : `<div class="armar-empty">Ningún perfume seleccionado aún</div>`;
+  const sideHtml=`<div class="armar-side">
+    <div class="armar-side-top"><b>TU COMBO</b><span>${C.n} ${C.n===1?'item':'items'}</span></div>
+    ${envioHtml}
+    <div class="armar-items">${itemsHtml}</div>
+    <div class="armar-side-bot">
+      <div class="armar-row"><span>Precio sin descuento</span><span>${fmt(C.subtotal)}</span></div>
+      ${C.desc>0?`<div class="armar-row desc"><span>Descuento (${C.pct}%)</span><span>- ${fmt(C.desc)}</span></div>`:''}
+      <div class="armar-total"><span>TOTAL A PAGAR</span><b>${fmt(C.total)}</b></div>
+      <button class="armar-pay" id="armarPay" ${C.n?'':'disabled'}>💬 Pedir por WhatsApp</button>
+    </div>
+  </div>`;
+
+  cont.innerHTML=`<div class="armar-head"><h2>${esc(cfg.titulo||'Arma tu combo')}</h2><p>${esc(cfg.subtitulo||'')}</p></div>
+    ${steps}
+    <div class="armar-body">
+      <div class="armar-main">${catsHtml}${sizesHtml}${countHtml}${gridHtml}</div>
+      ${sideHtml}
+    </div>`;
+
+  cont.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ armarCat=b.dataset.cat; renderArmar(); });
+  cont.querySelectorAll('[data-ml]').forEach(b=>b.onclick=()=>{ armarMl=b.dataset.ml; renderArmar(); });
+  cont.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>armarToggle(b.dataset.add));
+  cont.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ armarSel=armarSel.filter(x=>x.key!==b.dataset.del); renderArmar(); });
+  const pay=$('#armarPay'); if(pay) pay.onclick=armarCheckout;
+}
+
+function armarToggle(id){
+  if(!armarMl){ toast('Elige primero el tamaño'); return; }
+  const p=(PRODUCTS||[]).find(x=>x.id===id); if(!p) return;
+  const key=id+'__'+armarMl;
+  const idx=armarSel.findIndex(x=>x.key===key);
+  if(idx>=0){ armarSel.splice(idx,1); }
+  else{
+    const precio=armarPrecioDe(p.categoria,armarMl);
+    if(precio==null){ toast('Ese tamaño no está en '+p.categoria); return; }
+    armarSel.push({ key, id:p.id, nombre:p.nombre, categoria:p.categoria, ml:armarMl, precio });
+  }
+  renderArmar();
+}
+
+async function armarCheckout(){
+  if(!armarSel.length){ toast('Agrega al menos un decant'); return; }
+  const C=armarCalc(); const enc=encodeURIComponent;
+  try{
+    const items=armarSel.map(i=>({ id:i.id, nombre:i.nombre, marca:i.categoria, ml:i.ml, qty:1, precio:i.precio, total:i.precio }));
+    await sb.from('ventas').insert({ cliente_nombre:null, cliente_telefono:null, cliente_direccion:null,
+      items, subtotal:C.subtotal, descuento:C.desc, total:C.total, metodo_pago:'combo', yape_operacion:null, estado:'nuevo' });
+  }catch(e){ console.warn('No se registró la venta del combo:', e); }
+  let msg=`¡Hola ${enc(CONFIG.TIENDA_NOMBRE)}! Armé mi combo 🧩:%0A%0A`;
+  armarSel.forEach(i=>{ msg+=`• ${enc(i.nombre)} — ${enc(i.categoria)} ${enc(i.ml)}ml = ${enc(fmt(i.precio))}%0A`; });
+  if(C.desc>0) msg+=`%0A🎉 Descuento combo (${C.pct}%25): -${enc(fmt(C.desc))}`;
+  msg+=`%0A*Total: ${enc(fmt(C.total))}*%0A%0A¿Cómo coordino el pago?`;
+  window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`,'_blank');
 }
 
 function renderMayor(){

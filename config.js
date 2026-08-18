@@ -7,8 +7,8 @@ const CONFIG = {
 
   // --- Supabase (Project Settings -> API en tu proyecto DDS) ---
   //  PON AQUÍ LAS LLAVES DE TU PROYECTO SUPABASE DE DDS:
-  SUPABASE_URL:      "https://TU-PROYECTO-DDS.supabase.co",
-  SUPABASE_ANON_KEY: "TU_ANON_KEY_DE_DDS",
+  SUPABASE_URL:      "https://cueofggreijcudpvgyip.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZW9mZ2dyZWlqY3VkcHZneWlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NTA3NTUsImV4cCI6MjA5ODIyNjc1NX0.LUySx4N8ZUTgxPmZ-6W_5GMDoo1oqMY_8Oq-FdNv2t8",
 
   // Bucket de imágenes de productos (créalo en Supabase > Storage, público).
   BUCKET: "productos",

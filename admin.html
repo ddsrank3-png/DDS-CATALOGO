@@ -231,6 +231,27 @@ img{display:block;max-width:100%}
     <div class="bar"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem">Ajustes del catálogo</h3></div>
     <div class="field"><label>Frase de bienvenida (debajo del nombre)</label><textarea id="aHero" rows="2" placeholder="Ej. Decants y fragancias seleccionadas..."></textarea><div class="hint">Aparece en la portada del catálogo, debajo del nombre grande.</div></div>
     <div class="field"><label>Mensaje de agradecimiento (comprobante impreso)</label><textarea id="aGracias" rows="2" placeholder="Ej. ¡Gracias por tu compra!"></textarea><div class="hint">Se imprime al final del comprobante de venta.</div></div>
+
+    <div class="bar" style="margin-top:22px"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem">🏠 Inicio</h3></div>
+    <div class="field"><label>Número de "clientes satisfechos"</label><input id="aClientes" placeholder="800"><div class="hint">El número grande de la sección "+800 clientes satisfechos".</div></div>
+    <div class="field"><label>Testimonios</label>
+      <div id="aTestis"></div>
+      <button type="button" class="btn ghost" id="addTesti" style="margin-top:6px">+ Agregar testimonio</button>
+      <div class="hint">La foto es opcional; sin foto sale ★★★★★.</div>
+    </div>
+
+    <div class="bar" style="margin-top:22px"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem">🖼️ Imágenes del catálogo (mosaico)</h3></div>
+    <div id="aCatImgs"></div>
+    <div class="hint">Imagen de fondo de cada tarjeta de categoría. Sin imagen, sale un fondo oscuro con el nombre.</div>
+
+    <div class="bar" style="margin-top:22px"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem">🧩 Arma tu combo — descuentos</h3></div>
+    <div class="field"><label>Envío gratis desde (S/)</label><input id="aEnvio" type="number" step="1" placeholder="200"><div class="hint">0 = ocultar el aviso de envío gratis.</div></div>
+    <div class="field"><label>Descuento por cantidad de decants</label>
+      <div id="aDescuentos"></div>
+      <button type="button" class="btn ghost" id="addDesc" style="margin-top:6px">+ Agregar tramo</button>
+      <div class="hint">Ej. desde 2 decants → 5% · desde 3 → 8% · desde 5 → 12%. Sin tramos = sin descuento automático.</div>
+    </div>
+
     <div class="actions"><button class="btn" id="saveAjustes">Guardar ajustes</button></div>
   </section>
 </div>
@@ -303,7 +324,15 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 })();
 
 /* ============ Carga ============ */
-async function boot(){ await Promise.all([loadNotas(), loadProductos(), loadPromos(), loadCombos(), loadVentas(), loadAjustes(), loadPre(), loadPrePedidos(), loadCon(), loadConPedidos(), loadGrupos()]); renderVentas(); }
+async function boot(){
+  const S=(window.CONFIG&&CONFIG.SECCIONES)||{};
+  const on=k=>S[k]!==false;
+  const tasks=[loadNotas(), loadProductos(), loadPromos(), loadCombos(), loadVentas(), loadAjustes()];
+  if(on('preorden'))    tasks.push(loadPre(), loadPrePedidos());
+  if(on('consolidado')) tasks.push(loadCon(), loadConPedidos(), loadGrupos());
+  await Promise.all(tasks.map(p=>Promise.resolve(p).catch(e=>console.warn('carga omitida:',e&&e.message))));
+  renderVentas();
+}
 
 async function loadAjustes(){
   const {data}=await sb.from('ajustes').select('*').eq('id','principal').maybeSingle();
@@ -314,9 +343,86 @@ function renderAjustes(){
   const h=$('#aHero'), g=$('#aGracias');
   if(h) h.value = (AJUSTES&&AJUSTES.hero_sub) || CONFIG.HERO_SUB || '';
   if(g) g.value = (AJUSTES&&AJUSTES.mensaje_gracias) || CONFIG.MENSAJE_GRACIAS || '';
+  const D=(AJUSTES&&AJUSTES.data)||{};
+  const CA=CONFIG.COMBO_ARMA||{};
+  // Inicio
+  const cl=$('#aClientes'); if(cl) cl.value = D.clientes_texto || CONFIG.CLIENTES_TEXTO || '';
+  AJ_TESTIS = Array.isArray(D.testimonios) ? D.testimonios.slice() : (Array.isArray(CONFIG.TESTIMONIOS)?CONFIG.TESTIMONIOS.slice():[]);
+  renderTestis();
+  // Mosaico: una imagen por categoría
+  AJ_CATIMG = Object.assign({}, CONFIG.CATEGORIA_IMAGENES||{}, D.categoria_imagenes||{});
+  renderCatImgs();
+  // Arma tu combo
+  const en=$('#aEnvio'); if(en) en.value = (D.combo_envio_gratis!=null?D.combo_envio_gratis:(CA.envio_gratis_desde!=null?CA.envio_gratis_desde:''));
+  AJ_DESC = Array.isArray(D.combo_descuentos) ? D.combo_descuentos.slice() : (Array.isArray(CA.descuentos)?CA.descuentos.slice():[]);
+  renderDescuentos();
 }
+
+let AJ_TESTIS=[], AJ_CATIMG={}, AJ_DESC=[];
+
+function renderTestis(){
+  const w=$('#aTestis'); if(!w) return;
+  w.innerHTML = AJ_TESTIS.map((t,i)=>`
+    <div class="subfield" style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px" data-ti="${i}">
+      <div class="grid2" style="gap:8px">
+        <div><label>Nombre</label><input class="t_nom" value="${esc(t.nombre||'')}" placeholder="Ej. Luis Martínez"></div>
+        <div><label>Foto (opcional)</label><div class="t_imgwrap">${t.foto?`<div class="im"><img src="${esc(t.foto)}" style="max-height:44px"></div>`:''}<input type="file" accept="image/*" class="t_file"></div></div>
+      </div>
+      <label style="margin-top:6px">Testimonio</label><textarea class="t_txt" rows="2" placeholder="Lo que dijo el cliente">${esc(t.texto||'')}</textarea>
+      <button type="button" class="btn ghost t_del" style="margin-top:6px">Quitar</button>
+    </div>`).join('') || '<div class="hint">Sin testimonios aún.</div>';
+  w.querySelectorAll('[data-ti]').forEach(row=>{
+    const i=+row.dataset.ti;
+    row.querySelector('.t_nom').oninput=e=>AJ_TESTIS[i].nombre=e.target.value;
+    row.querySelector('.t_txt').oninput=e=>AJ_TESTIS[i].texto=e.target.value;
+    row.querySelector('.t_del').onclick=()=>{ AJ_TESTIS.splice(i,1); renderTestis(); };
+    row.querySelector('.t_file').onchange=async e=>{ const f=e.target.files[0]; if(!f)return; toast('Subiendo...'); const u=await uploadImg(f,'testimonios'); if(u){ AJ_TESTIS[i].foto=u; renderTestis(); toast('Lista'); } };
+  });
+}
+
+function renderCatImgs(){
+  const w=$('#aCatImgs'); if(!w) return;
+  const cats=CONFIG.CATEGORIAS||[];
+  w.innerHTML = cats.map(c=>`
+    <div class="subfield" data-ci="${esc(c)}" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <b style="min-width:90px">${esc(c)}</b>
+      <div class="ci_imgwrap">${AJ_CATIMG[c]?`<div class="im"><img src="${esc(AJ_CATIMG[c])}" style="max-height:44px"></div>`:'<span class="hint">Sin imagen</span>'}</div>
+      <input type="file" accept="image/*" class="ci_file">
+      ${AJ_CATIMG[c]?'<button type="button" class="btn ghost ci_del">Quitar</button>':''}
+    </div>`).join('');
+  w.querySelectorAll('[data-ci]').forEach(row=>{
+    const c=row.dataset.ci;
+    row.querySelector('.ci_file').onchange=async e=>{ const f=e.target.files[0]; if(!f)return; toast('Subiendo...'); const u=await uploadImg(f,'categorias'); if(u){ AJ_CATIMG[c]=u; renderCatImgs(); toast('Lista'); } };
+    const del=row.querySelector('.ci_del'); if(del) del.onclick=()=>{ delete AJ_CATIMG[c]; renderCatImgs(); };
+  });
+}
+
+function renderDescuentos(){
+  const w=$('#aDescuentos'); if(!w) return;
+  w.innerHTML = AJ_DESC.map((d,i)=>`
+    <div class="grid2 descRow" data-di="${i}" style="gap:8px;align-items:end;margin-bottom:6px">
+      <div><label>Desde (N decants)</label><input class="d_desde" type="number" min="1" value="${d.desde??''}"></div>
+      <div style="display:flex;gap:8px;align-items:end">
+        <div style="flex:1"><label>Descuento %</label><input class="d_pct" type="number" min="0" max="100" value="${d.pct??''}"></div>
+        <button type="button" class="btn ghost d_del" style="padding:8px">✕</button>
+      </div>
+    </div>`).join('') || '<div class="hint">Sin descuento automático.</div>';
+  w.querySelectorAll('.descRow').forEach(row=>{
+    const i=+row.dataset.di;
+    row.querySelector('.d_desde').oninput=e=>AJ_DESC[i].desde=+e.target.value||0;
+    row.querySelector('.d_pct').oninput=e=>AJ_DESC[i].pct=+e.target.value||0;
+    row.querySelector('.d_del').onclick=()=>{ AJ_DESC.splice(i,1); renderDescuentos(); };
+  });
+}
+
 async function saveAjustes(){
-  const payload={ id:'principal', hero_sub:$('#aHero').value.trim()||null, mensaje_gracias:$('#aGracias').value.trim()||null };
+  const D = Object.assign({}, (AJUSTES&&AJUSTES.data)||{});
+  D.clientes_texto = ($('#aClientes').value||'').trim() || null;
+  D.testimonios = AJ_TESTIS.filter(t=>(t.texto||'').trim()||(t.nombre||'').trim());
+  D.categoria_imagenes = AJ_CATIMG;
+  const env=$('#aEnvio').value; D.combo_envio_gratis = env===''?null:(+env||0);
+  D.combo_descuentos = AJ_DESC.filter(d=>d.desde>0&&d.pct>0).sort((a,b)=>a.desde-b.desde);
+  const payload={ id:'principal', hero_sub:$('#aHero').value.trim()||null, mensaje_gracias:$('#aGracias').value.trim()||null, data:D };
   const {error}=await sb.from('ajustes').upsert(payload);
   if(error){ toast('Error: '+error.message,true); return; }
   AJUSTES=payload; toast('Ajustes guardados ✓');
@@ -1496,6 +1602,8 @@ if($('#newVenta')) $('#newVenta').onclick=()=>ventaManualForm();
 if($('#newPre')) $('#newPre').onclick=()=>preForm(null);
 if($('#newCon')) $('#newCon').onclick=()=>conForm(null);
 if($('#saveAjustes')) $('#saveAjustes').onclick=saveAjustes;
+if($('#addTesti')) $('#addTesti').onclick=()=>{ AJ_TESTIS.push({texto:'',nombre:'',foto:''}); renderTestis(); };
+if($('#addDesc')) $('#addDesc').onclick=()=>{ AJ_DESC.push({desde:2,pct:5}); renderDescuentos(); };
 if($('#reloadAccesos')) $('#reloadAccesos').onclick=loadAccesos;
 
 /* ================= ACCESOS DE CLIENTES ================= */

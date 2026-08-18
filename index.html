@@ -803,7 +803,17 @@ async function load(){
   CONSOLIDADOS = rcon.error ? [] : (rcon.data||[]);
 
   const ra = await sb.from('ajustes').select('*').eq('id','principal').maybeSingle();
-  if(!ra.error && ra.data && ra.data.hero_sub) $('#heroSub').textContent = ra.data.hero_sub;
+  if(!ra.error && ra.data){
+    if(ra.data.hero_sub) $('#heroSub').textContent = ra.data.hero_sub;
+    // Ajustes editables desde el panel (Inicio, mosaico, arma tu combo)
+    const D = ra.data.data || {};
+    if(D.clientes_texto) CONFIG.CLIENTES_TEXTO = D.clientes_texto;
+    if(Array.isArray(D.testimonios) && D.testimonios.length) CONFIG.TESTIMONIOS = D.testimonios;
+    if(D.categoria_imagenes) CONFIG.CATEGORIA_IMAGENES = Object.assign({}, CONFIG.CATEGORIA_IMAGENES||{}, D.categoria_imagenes);
+    if(!CONFIG.COMBO_ARMA) CONFIG.COMBO_ARMA={};
+    if(Array.isArray(D.combo_descuentos)) CONFIG.COMBO_ARMA.descuentos = D.combo_descuentos;
+    if(D.combo_envio_gratis!=null && D.combo_envio_gratis!=='') CONFIG.COMBO_ARMA.envio_gratis_desde = Number(D.combo_envio_gratis);
+  }
 
   renderFilters(); renderCombos(); renderPre(); renderCon(); renderMegamenu();
 

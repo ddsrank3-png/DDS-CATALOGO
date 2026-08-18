@@ -1,0 +1,5 @@
+# DDS Parfums — sitio estático (HTML/JS). NO se compila.
+# Este archivo manda sobre la configuración de la interfaz de Netlify.
+[build]
+  command = "echo 'Sitio estatico: sin compilacion'"
+  publish = "."

@@ -574,6 +574,31 @@ header::after{background:var(--line); opacity:1}
 .pd-pay{font-size:.66rem; font-weight:700; padding:6px 9px; border-radius:7px; color:#fff; letter-spacing:.02em}
 .pd-badges{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:6px; text-align:center}
 .pd-badge{font-size:.66rem; color:var(--muted)} .pd-badge b{display:block; font-size:1.1rem; margin-bottom:2px}
+/* Notas en óvalos (columna izquierda, como la imagen) */
+.pd-notaspanel{border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-top:14px}
+.pd-notaspanel h4{font-size:.72rem; letter-spacing:.16em; color:var(--muted-2); text-transform:uppercase; margin-bottom:12px; font-weight:600}
+.pd-ovals{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 10px}
+.pd-oval{text-align:center}
+.pd-oval .ov{width:78%; margin:0 auto; aspect-ratio:.82/1; border-radius:50%; display:grid; place-items:center; overflow:hidden; color:#fff; font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:600; box-shadow:0 6px 14px rgba(0,0,0,.12)}
+.pd-oval .ov img{width:100%; height:100%; object-fit:cover}
+.pd-oval small{display:block; margin-top:6px; font-size:.8rem; color:var(--cream)}
+/* Encabezado Tamaños con líneas */
+.pd-sizes-h{display:flex; align-items:center; gap:12px; justify-content:center; color:var(--cream); font-weight:600; letter-spacing:.02em; margin-bottom:2px}
+.pd-sizes-h::before,.pd-sizes-h::after{content:""; height:1px; flex:1; max-width:60px; background:var(--line)}
+/* Fila cantidad + agregar */
+.pd-buyrow{display:flex; gap:10px; align-items:stretch}
+.pd-buyrow .pd-qty{flex:0 0 auto}
+.pd-buyrow .pd-b{flex:1}
+/* Entrega */
+.pd-deliv{font-size:.82rem; color:var(--muted); text-align:left; margin-top:6px}
+.pd-deliv b{color:#c0392b}
+.pd-track{display:flex; align-items:flex-start; justify-content:space-between; margin-top:10px; position:relative}
+.pd-track .st{flex:1; text-align:center; position:relative; z-index:2}
+.pd-track .ic{width:42px; height:42px; border-radius:50%; background:var(--panel-2); display:grid; place-items:center; margin:0 auto 6px; font-size:1.1rem}
+.pd-track .st.on .ic{background:#111; color:#fff}
+.pd-track .tt{font-size:.72rem; font-weight:600; color:var(--cream)}
+.pd-track .dd{font-size:.66rem; color:var(--muted)}
+.pd-track .ln{position:absolute; top:21px; left:16%; right:16%; height:2px; border-top:2px dashed var(--line); z-index:1}
 @media(max-width:980px){ .pd{grid-template-columns:1fr} .pd-media,.pd-buy{position:static} }
 
 /* ===================== ARMA TU COMBO ===================== */
@@ -802,7 +827,7 @@ let PRODUCTS=[], NOTAS_BY_PROD={}, PROMOS=[], PROD_BY_ID={};
 let COMBOS=[], currentView='inicio';
 let PREORDENES=[], CONSOLIDADOS=[];
 let GIFT_STATUS=[];
-let filterCat='Todos', filterGen='Todos', query='';
+let filterCat='Todos', filterGen='Todos', filterTipo='Todos', query='';
 let CART = JSON.parse(localStorage.getItem('cart_'+CONFIG.TIENDA_NOMBRE) || '[]');
 let payMethod='coordinar';
 let cliente={nombre:'',tel:'',dir:''};
@@ -1037,7 +1062,7 @@ function renderInicio(){
 /* ================= CATÁLOGO EN MOSAICO (categorías) ================= */
 // Muestra el mosaico de categorías si no hay categoría elegida; si hay, muestra la grilla.
 function showCatalogo(){
-  const enGrilla = filterCat && filterCat!=='Todos';
+  const enGrilla = (filterCat && filterCat!=='Todos') || (filterTipo && filterTipo!=='Todos');
   const cm=$('#catMosaico'); if(cm) cm.style.display = enGrilla ? 'none' : 'block';
   $('#filters').style.display = enGrilla ? 'flex' : 'none';
   $('#grid').style.display    = enGrilla ? 'grid' : 'none';
@@ -1056,15 +1081,22 @@ function renderCatMosaico(){
   const tiles=tilesCategorias();
   cont.innerHTML=`<div class="cat-wrap">
     <h3 class="ini-h serif" style="margin-bottom:6px">Catálogo</h3>
-    <p class="cat-sub">Elige qué tipo de perfume quieres ver</p>
+    <p class="cat-sub">Elige qué quieres ver</p>
+    <div class="ini-tiles" style="margin-bottom:14px">
+      <button class="ini-tile" data-tipo="Decant"><span class="ini-tile-label">DECANTS</span></button>
+      <button class="ini-tile" data-tipo="Sellado"><span class="ini-tile-label">PERFUMES SELLADOS</span></button>
+    </div>
+    <p class="cat-sub">O por categoría</p>
     <div class="ini-tiles">${tiles.map(t=>{
       const bg=t.cat&&imgs[t.cat]?` style="background-image:url('${esc(imgs[t.cat])}')"`:'';
       return `<button class="ini-tile${bg?' has-img':''}"${bg} data-view="${t.v}" data-cat="${esc(t.cat)}"><span class="ini-tile-label">${esc(t.n)}</span></button>`;
     }).join('')}</div>
   </div>`;
   cont.querySelectorAll('.ini-tile').forEach(b=>b.onclick=()=>{
-    if(b.dataset.view==='promos'){ setView('promos'); }
-    else { filterCat=b.dataset.cat||'Todos'; showCatalogo(); }
+    if(b.dataset.tipo){ filterTipo=b.dataset.tipo; filterCat='Todos'; setView('catalogo'); renderFilters(); render();
+      $('#catMosaico').style.display='none'; $('#filters').style.display='flex'; $('#grid').style.display='grid'; }
+    else if(b.dataset.view==='promos'){ setView('promos'); }
+    else { filterCat=b.dataset.cat||'Todos'; filterTipo='Todos'; showCatalogo(); }
     window.scrollTo({top:0,behavior:'smooth'});
   });
 }
@@ -2053,15 +2085,18 @@ function renderFilters(){
   const gens = ['Todos', ...(CONFIG.GENEROS||[])];
   $('#filters').innerHTML = `
     <button class="cat-back" id="catBack">← Categorías</button>
-    <span class="flabel">Tipo</span>
+    <span class="flabel">Mostrar</span>
+    ${['Todos','Decant','Sellado'].map(t=>`<button class="chip ${filterTipo===t?'active':''}" data-tipo="${t}">${t==='Todos'?'Todos':(t==='Decant'?'Decants':'Sellados')}</button>`).join('')}
+    <span class="flabel" style="margin-left:8px">Tipo</span>
     ${cats.map(c=>`<button class="chip ${filterCat===c?'active':''}" data-cat="${esc(c)}">${c==='Árabe'?'Árabes':esc(c)}</button>`).join('')}
     <span class="flabel" style="margin-left:8px">Género</span>
     ${gens.map(g=>`<button class="chip ${filterGen===g?'active':''}" data-gen="${esc(g)}">${esc(g)}</button>`).join('')}
     <span class="count" id="fcount"></span>`;
   const fEl=$('#filters');
+  fEl.querySelectorAll('[data-tipo]').forEach(c=>c.onclick=()=>{filterTipo=c.dataset.tipo; renderFilters(); render();});
   fEl.querySelectorAll('[data-cat]').forEach(c=>c.onclick=()=>{filterCat=c.dataset.cat; showCatalogo();});
   fEl.querySelectorAll('[data-gen]').forEach(c=>c.onclick=()=>{filterGen=c.dataset.gen; renderFilters(); render();});
-  const bk=$('#catBack'); if(bk) bk.onclick=()=>{ filterCat='Todos'; showCatalogo(); window.scrollTo({top:0,behavior:'smooth'}); };
+  const bk=$('#catBack'); if(bk) bk.onclick=()=>{ filterCat='Todos'; filterTipo='Todos'; showCatalogo(); window.scrollTo({top:0,behavior:'smooth'}); };
 }
 
 /* ================= Grid ================= */
@@ -2069,6 +2104,7 @@ function render(){
   let list = PRODUCTS.filter(p =>
     (filterCat==='Todos' || p.categoria===filterCat) &&
     (filterGen==='Todos' || p.genero===filterGen) &&
+    (filterTipo==='Todos' || (p.tipo||'Decant')===filterTipo) &&
     (!query || ((p.nombre||'')+' '+(p.marca||'')).toLowerCase().includes(query))
   );
   const fc=$('#fcount'); if(fc) fc.textContent = `${list.length} fragancia${list.length!==1?'s':''}`;
@@ -2099,6 +2135,7 @@ function render(){
 /* ================= Ficha de producto (pantalla completa) ================= */
 let selSize=null, curProduct=null, prodQty=1;
 function _tieneKw(txt,kws){ const t=String(txt||'').toLowerCase(); return kws.some(k=>t.includes(k)); }
+function _notaColor(name){ let h=0; const s=String(name||''); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))%360; const hue=(h%50)+20; return `hsl(${hue} 45% 55%)`; }
 function openProduct(id){
   const p = PROD_BY_ID[id]; if(!p) return;
   curProduct = p; selSize = null; prodQty = 1;
@@ -2109,6 +2146,8 @@ function openProduct(id){
   const s = stockDe(p);
   const low = CONFIG.STOCK_BAJO||5;
   const stockHtml = s==null ? '' : (s<=0 ? '<span class="pd-stock out">Agotado</span>' : (s<=low ? `<span class="pd-stock low">¡Últimas ${s}!</span>` : `<span class="pd-stock">${s} disponibles</span>`));
+  const tipoTxt = p.tipo==='Sellado' ? 'Perfume' : (p.tipo==='Decant' ? 'Decant' : '');
+  const catChip = p.categoria ? (tipoTxt ? `${tipoTxt} ${p.categoria==='Árabe'?'Árabe':p.categoria}` : catLabel(p.categoria)) : '';
   const oca = p.ocasion||'';
   const dia = _tieneKw(oca+' '+(p.descripcion||''),['día','dia','diurno','oficina','diario']);
   const noche = _tieneKw(oca+' '+(p.descripcion||''),['noche','nocturno','cita','fiesta','evento']);
@@ -2123,8 +2162,19 @@ function openProduct(id){
     const dest = (i===1 && pres.length>=2);
     return `<button class="pd-size" data-size="${esc(ml)}" data-price="${ef}" data-may="${Number(x.precio_may)||0}">
       ${dest?'<span class="top">MÁS VENDIDO</span>':''}
-      <div class="dot"></div><div class="pr">${fmt(ef)}</div><div class="ml">${mlLabel(ml)}${sprays?` · ${sprays}`:''}</div></button>`;
+      <div class="dot"></div><div class="pr">${fmt(ef)}</div><div class="ml">${mlLabel(ml)}${sprays?` / ${sprays}`:''}</div></button>`;
   }).join('') : '<div class="pd-desc">Precios a consultar por WhatsApp.</div>';
+
+  const notasHtml = notas.length ? `<div class="pd-notaspanel"><h4>Notas</h4><div class="pd-ovals">${notas.map(n=>{
+    const real = n.imagen_url && !String(n.imagen_url).startsWith('data:');
+    const inner = real ? `<img src="${esc(n.imagen_url)}" alt="${esc(n.nombre)}">` : esc((n.nombre||'?')[0].toUpperCase());
+    return `<div class="pd-oval"><div class="ov" style="background:${real?'var(--panel-2)':_notaColor(n.nombre)}">${inner}</div><small>${esc(n.nombre)}</small></div>`;
+  }).join('')}</div></div>` : '';
+
+  // Entrega: cuenta regresiva hasta las 6pm y línea de tiempo
+  const now=new Date(); const cut=new Date(now); cut.setHours(18,0,0,0); if(cut<=now) cut.setDate(cut.getDate()+1);
+  const mins=Math.max(0,Math.floor((cut-now)/60000)); const cd=`${Math.floor(mins/60)} h ${String(mins%60).padStart(2,'0')} min`;
+  const fFecha=d=>d.toLocaleDateString('es-PE',{day:'numeric',month:'long'});
 
   $('#sheet').innerHTML = `
     <div class="pd-close">
@@ -2136,13 +2186,14 @@ function openProduct(id){
       <div class="pd-media">
         <div class="pd-imgbox">${mainImg?`<img id="mainImg" src="${esc(mainImg)}" alt="${esc(p.nombre)}">`:`<span class="ph">${esc((p.marca||p.nombre||'?')[0])}</span>`}</div>
         ${imgs.length>1?`<div class="pd-thumbs">${imgs.map((u,i)=>`<button class="pd-thumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}"></button>`).join('')}</div>`:''}
+        ${notasHtml}
       </div>
 
       <div class="pd-info">
         <div class="pd-marca">${esc(p.marca||'')}</div>
         <h1 class="pd-name">${esc(p.nombre)}</h1>
         <div class="pd-desc">${p.genero?`<b>${esc(p.genero)}</b> · `:''}${esc(p.descripcion||'')}</div>
-        <div class="pd-tags">${p.categoria?`<span class="pd-tag">${esc(catLabel(p.categoria))}</span>`:''}${stockHtml}</div>
+        <div class="pd-tags">${catChip?`<span class="pd-tag">${esc(catChip)}</span>`:''}${stockHtml}</div>
 
         ${(p.longevidad||p.estela)?`<div class="pd-block"><h4>Perfil olfativo</h4><div class="pd-perfil">
           <div class="cell"><div class="k">⏳ Longevidad</div><div class="v">${esc(p.longevidad||'—')}</div></div>
@@ -2156,27 +2207,34 @@ function openProduct(id){
         ${ocaMatch?`<div class="pd-block"><h4>Ocasiones</h4><div class="pd-oca">
           ${estaciones.map(([c,ic,nm,kw])=>`<div class="oc ${c} ${_tieneKw(oca,kw)?'on':''}">${ic} ${nm}</div>`).join('')}
         </div></div>`:(oca?`<div class="pd-block"><h4>Ocasiones</h4><div class="pd-desc">${esc(oca)}</div></div>`:'')}
-
-        ${notas.length?`<div class="pd-block"><h4>Notas</h4><div class="pd-notas">${notas.map(n=>`<div class="pd-nota"><div class="im">${n.imagen_url?`<img src="${esc(n.imagen_url)}" alt="${esc(n.nombre)}">`:`<span>${esc((n.nombre||'?')[0])}</span>`}</div><small>${esc(n.nombre)}</small></div>`).join('')}</div></div>`:''}
       </div>
 
       <div class="pd-buy">
-        <div class="pd-buy-lbl">Tamaños</div>
+        <div class="pd-sizes-h">Tamaños</div>
         <div class="pd-sizes" id="tallas">${sizesHtml}</div>
-        <div class="pd-qty"><button id="qMinus">−</button><input id="qInput" type="number" min="1" value="1"><button id="qPlus">+</button></div>
-        <button class="pd-b dark" id="addBtn" ${agotado(p)?'disabled':''}>${agotado(p)?'Agotado':'🛒 Agregar al carrito'}</button>
-        <button class="pd-b line" id="buyBtn" ${agotado(p)?'disabled':''}>Comprar ahora</button>
+        <div class="pd-buyrow">
+          <div class="pd-qty"><button id="qMinus">−</button><input id="qInput" type="number" min="1" value="1"><button id="qPlus">+</button></div>
+          <button class="pd-b dark" id="addBtn" ${agotado(p)?'disabled':''}>${agotado(p)?'Agotado':'🛒 Agregar al carrito'}</button>
+        </div>
+        <button class="pd-b dark" id="buyBtn" ${agotado(p)?'disabled':''}>Comprar ahora</button>
         <button class="pd-b pay" id="payBtn" ${agotado(p)?'disabled':''}>💬 PAGO CONTRA ENTREGA<small>PREVIO ADELANTO</small></button>
         <div class="pd-pays">
           <span class="pd-pay" style="background:#1a1f71">VISA</span>
-          <span class="pd-pay" style="background:#eb001b">Mastercard</span>
+          <span class="pd-pay" style="background:#000">Mastercard</span>
           <span class="pd-pay" style="background:#742284">Yape</span>
-          <span class="pd-pay" style="background:#f5a623;color:#3a2a00">PagoEfectivo</span>
+          <span class="pd-pay" style="background:#f5b800;color:#3a2a00">PagoEfectivo</span>
         </div>
         <div class="pd-badges">
           <div class="pd-badge"><b>🚚</b>Envío gratis (+${fmt(envioUmbral)})</div>
           <div class="pd-badge"><b>↩️</b>3 días de devolución</div>
           <div class="pd-badge"><b>✅</b>100% originales</div>
+        </div>
+        <div class="pd-deliv">Si haces tu pedido dentro de <b>${cd}</b> estará en camino hoy</div>
+        <div class="pd-track">
+          <div class="ln"></div>
+          <div class="st on"><div class="ic">🛍️</div><div class="tt">Pedido</div><div class="dd">Hoy</div></div>
+          <div class="st"><div class="ic">🚚</div><div class="tt">Enviado</div><div class="dd">${fFecha(now)}</div></div>
+          <div class="st"><div class="ic">📦</div><div class="tt">Entregado</div><div class="dd">${fFecha(now)}</div></div>
         </div>
       </div>
     </div>`;

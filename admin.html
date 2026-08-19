@@ -456,7 +456,7 @@ function renderProductos(){
       <div class="th">${img?`<img src="${esc(img)}">`:esc((p.marca||p.nombre||'?')[0])}</div>
       <div class="info">
         <div class="n">${esc(p.nombre)} ${p.destacado?'<span class="tg">Destacado</span>':''} ${p.visible===false?'<span class="tg off">Oculto</span>':''}</div>
-        <div class="sub">${esc(p.marca||'')} · ${esc(p.categoria||'')} · ${esc(p.genero||'')} · ${pres.length} presentación${pres.length!==1?'es':''}${p.stock!=null?` · Stock: ${p.stock}`:''}</div>
+        <div class="sub">${esc(p.tipo||'Decant')} · ${esc(p.marca||'')} · ${esc(p.categoria||'')} · ${esc(p.genero||'')} · ${pres.length} presentación${pres.length!==1?'es':''}${p.stock!=null?` · Stock: ${p.stock}`:''}</div>
       </div>
       <div class="acts">
         <button class="iconbtn" data-edit="${p.id}">✏️</button>
@@ -483,10 +483,14 @@ function prodForm(id){
       <div class="field"><label>Nombre</label><input id="pNombre" value="${esc(p.nombre||'')}"></div>
     </div>
     <div class="grid3">
+      <div class="field"><label>Tipo</label><select id="pTipo">
+        <option value="Decant" ${(p.tipo||'Decant')==='Decant'?'selected':''}>Decant</option>
+        <option value="Sellado" ${p.tipo==='Sellado'?'selected':''}>Perfume sellado</option>
+      </select></div>
       <div class="field"><label>Categoría</label><select id="pCat">${cats.map(c=>`<option ${p.categoria===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
       <div class="field"><label>Género</label><select id="pGen">${gens.map(g=>`<option ${p.genero===g?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
-      <div class="field"><label>Orden</label><input id="pOrden" type="number" value="${p.orden??0}"></div>
     </div>
+    <div class="field" style="max-width:200px"><label>Orden</label><input id="pOrden" type="number" value="${p.orden??0}"></div>
     <div class="field"><label>Descripción corta</label><input id="pDesc" value="${esc(p.descripcion||'')}" placeholder="Ej. Fresco, amaderado, elegante"></div>
 
     <div class="field"><label>Stock (unidades)</label><input id="pStock" type="number" min="0" value="${p.stock??''}" placeholder="Vacío = sin límite"><div class="hint">Vacío = no controlar stock · 0 = agotado · N = unidades disponibles. Se muestra en el catálogo.</div></div>
@@ -586,7 +590,7 @@ function prodForm(id){
     const presLimpio = pres.filter(x=>String(x.ml).trim() && Number(x.precio)>0)
       .map(x=>({ml:String(x.ml).trim(), precio:Number(x.precio), precio_may:x.precio_may?Number(x.precio_may):0, antes:x.antes?Number(x.antes):null, activo:x.activo!==false}));
     const payload = {
-      marca:$('#pMarca').value.trim(), nombre, categoria:$('#pCat').value, genero:$('#pGen').value,
+      marca:$('#pMarca').value.trim(), nombre, tipo:$('#pTipo').value, categoria:$('#pCat').value, genero:$('#pGen').value,
       orden:parseInt($('#pOrden').value)||0, descripcion:$('#pDesc').value.trim(),
       stock: $('#pStock').value.trim()===''? null : (parseInt($('#pStock').value)||0),
       imagenes:imgs, imagen_url:imgs[0]||null, presentaciones:presLimpio,

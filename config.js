@@ -133,16 +133,15 @@ const CONFIG = {
     titulo: "Arma tu combo",
     subtitulo: "Elige tus decants favoritos y ahorra automáticamente",
     envio_gratis_desde: 200,           // "Te faltan S/X para envío gratis" (0 = ocultar)
+    // Precio base por (categoría, talla). Si el producto tiene su propio precio en esa talla, se usa ese.
     precios: {
-      "Árabe":     { "3": 15, "5": 18, "10": 30, "30": 80 },
-      "Diseñador": { "3": 24, "5": 39, "10": 75, "30": 180 },
-      "Nicho":     { "3": 39, "5": 65, "10": 110 },
+      "Árabe":     { "2": 12, "3": 15, "5": 18, "10": 30, "30": 80 },
+      "Diseñador": { "2": 20, "3": 24, "5": 39, "10": 75, "30": 180 },
+      "Nicho":     { "2": 34, "3": 39, "5": 65, "10": 110 },
     },
-    // Descuento automático según CUÁNTOS decants lleve (edítalo; [] = sin descuento).
-    descuentos: [
-      { desde: 2, pct: 5 },
-      { desde: 3, pct: 8 },
-      { desde: 5, pct: 12 },
-    ],
+    // Descuento por CANTIDAD (conteo efectivo) — tramos universales:
+    pct_tramos: [ { n:2, pct:5 }, { n:3, pct:10 }, { n:5, pct:15 } ],
+    // Tope de % que alcanza cada categoría POR SÍ SOLA (se rompe si hay un decant más caro en el combo):
+    topes: { "Árabe": 15, "Diseñador": 10, "Nicho": 5 },
   },
 };

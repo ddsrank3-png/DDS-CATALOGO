@@ -1152,13 +1152,41 @@ function armarPrecioDe(cat,ml){ const p=(armarPrecios()[cat]||{})[ml]; return p=
 function armarDesdeDe(cat){ const v=Object.values(armarPrecios()[cat]||{}).map(Number); return v.length?Math.min(...v):null; }
 
 function armarCalc(){
-  const subtotal = armarSel.reduce((s,i)=>s+Number(i.precio),0);
-  const n = armarSel.length;
-  const tiers = (armarCfg().descuentos||[]).slice().sort((a,b)=>b.desde-a.desde);
-  const tier = tiers.find(t=>n>=Number(t.desde));
-  const pct = tier?Number(tier.pct):0;
-  const desc = Math.round(subtotal*pct/100);
-  return { subtotal, desc, pct, total:Math.max(0,subtotal-desc), n };
+  const cfg=armarCfg();
+  const precios=cfg.precios||{};
+  const items=armarSel;
+  const n=items.length;
+  // Base = el precio con el que se agregó cada decant (precio registrado del producto; fallback a la tabla).
+  const baseDe=(it)=>{ const v=Number(it.precio); if(v>0) return v; const p=(precios[it.categoria]||{})[String(it.ml)]; return p!=null?Number(p):0; };
+  // Rango GLOBAL de cada categoría por precio promedio (1 = más barata)
+  const rankOf=(cat)=>{ const vals=Object.values(precios[cat]||{}).map(Number).filter(x=>x>0); return vals.length?Math.min(...vals):0; };
+  const allCats=Object.keys(precios);
+  const sortedAll=[...allCats].sort((a,b)=>rankOf(a)-rankOf(b));
+  const rankIdx={}; sortedAll.forEach((c,i)=>rankIdx[c]=i+1);          // global: árabe=1, diseñador=2, nicho=3
+  const cats=[...new Set(items.map(i=>i.categoria))];
+  const cnt={}; cats.forEach(c=>cnt[c]=items.filter(i=>i.categoria===c).length);
+  // Tramos universales por conteo efectivo (redondeo hacia abajo)
+  const tramos=(cfg.pct_tramos||[{n:2,pct:5},{n:3,pct:10},{n:5,pct:15}]).slice().sort((a,b)=>a.n-b.n);
+  const pctDeEff=(eff)=>{ let p=0; for(const t of tramos){ if(eff>=t.n) p=t.pct; } return p; };
+  const topes=cfg.topes||{ "Árabe":15, "Diseñador":10, "Nicho":5 };
+  // Peso de un decant de categoría X hacia el tramo de la categoría C
+  const peso=(X,C)=>{ if(X===C) return 1; if(rankOf(X)<rankOf(C)) return 0.5; return 0.5+0.5*(rankIdx[X]||2); }; // más caro: diseñador 1.5, nicho 2
+
+  const pctByCat={};
+  cats.forEach(c=>{
+    let eff=0; cats.forEach(x=>{ eff += cnt[x]*peso(x,c); });
+    let pct=pctDeEff(eff);
+    const hayMasCaro = cats.some(x=>rankOf(x)>rankOf(c) && cnt[x]>0);
+    if(!hayMasCaro){ const tope=topes[c]!=null?topes[c]:15; pct=Math.min(pct,tope); }
+    pctByCat[c]=pct;
+  });
+
+  let subtotal=0, total=0;
+  items.forEach(it=>{ const base=baseDe(it); subtotal+=base; total += base*(1-(pctByCat[it.categoria]||0)/100); });
+  subtotal=Math.round(subtotal*100)/100;
+  total=Math.round(total*100)/100;
+  const desc=Math.max(0, Math.round((subtotal-total)*100)/100);
+  return { subtotal, desc, total, n, pct: subtotal>0?Math.round(desc/subtotal*100):0, pctByCat };
 }
 
 function renderArmar(){
@@ -1194,9 +1222,9 @@ function renderArmar(){
   }
 
   // Contador + hint
-  const minD=(cfg.descuentos&&cfg.descuentos.length)?Math.min(...cfg.descuentos.map(d=>Number(d.desde))):0;
-  const hint = C.n===0 ? (minD?`Selecciona mínimo ${minD} para el descuento`:'Elige tus decants')
-    : (C.pct>0?`¡Combo activo! Sigue agregando para más descuento`:(minD&&C.n<minD?`Agrega ${minD-C.n} más para el descuento`:'¡Combo activo!'));
+  const minD=(cfg.pct_tramos&&cfg.pct_tramos.length)?Math.min(...cfg.pct_tramos.map(d=>Number(d.n))):2;
+  const hint = C.n===0 ? `Selecciona mínimo ${minD} para el descuento`
+    : (C.pct>0?`¡Combo activo! Sigue agregando para más descuento`:(C.n<minD?`Agrega ${minD-C.n} más para el descuento`:'¡Combo activo!'));
   const countHtml=`<div class="armar-count"><b>${C.n}</b><span>${esc(hint)}</span></div>`;
 
   // Grilla de perfumes (si hay categoría y tamaño)
@@ -1261,8 +1289,12 @@ function armarToggle(id){
   const idx=armarSel.findIndex(x=>x.key===key);
   if(idx>=0){ armarSel.splice(idx,1); }
   else{
-    const precio=armarPrecioDe(p.categoria,armarMl);
-    if(precio==null){ toast('Ese tamaño no está en '+p.categoria); return; }
+    // Precio base = precio registrado del producto para esa talla; si no lo tiene, la tabla del combo
+    let precio=null;
+    const pres=(presActivas(p)||[]).find(x=>String(x.ml)===String(armarMl));
+    if(pres) precio=Number(pres.precio);
+    if(precio==null) precio=armarPrecioDe(p.categoria,armarMl);
+    if(precio==null){ toast('Ese tamaño no está disponible'); return; }
     armarSel.push({ key, id:p.id, nombre:p.nombre, categoria:p.categoria, ml:armarMl, precio });
   }
   renderArmar();

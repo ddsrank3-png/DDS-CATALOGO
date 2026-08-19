@@ -274,7 +274,7 @@ const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 const BUCKET = CONFIG.BUCKET || 'catalogo';
 const $ = s => document.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const MLS = ['3','5','10','30','Sellado'];
+const MLS = ['2','3','5','10','30','Sellado'];
 const MAYOR_MIN = Number(CONFIG.MAYOR_MIN)||0;
 $('#loginStore').textContent = CONFIG.TIENDA_NOMBRE;
 $('#storeTitle').textContent = CONFIG.TIENDA_NOMBRE;

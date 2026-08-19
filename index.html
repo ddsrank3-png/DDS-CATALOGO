@@ -484,6 +484,8 @@ header::after{background:var(--line); opacity:1}
 
 /* Catálogo en mosaico */
 .cat-wrap{margin-top:24px}
+.frow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:10px}
+.frow .flabel{min-width:82px; color:var(--muted-2); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase}
 .cat-sub{color:var(--muted); font-size:.9rem; margin-bottom:16px}
 .cat-back{display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line); color:var(--cream); border-radius:999px; padding:8px 16px; font-size:.85rem; cursor:pointer; margin-bottom:4px}
 .cat-back:hover{border-color:var(--gold-3)}
@@ -509,8 +511,13 @@ header::after{background:var(--line); opacity:1}
 @media(max-width:899px){ .megamenu{display:none !important} }
 
 /* ===================== FICHA A PANTALLA COMPLETA ===================== */
-.overlay{padding:0 !important; align-items:stretch !important}
-.sheet{max-width:1180px !important; width:100% !important; min-height:100vh !important; margin:0 auto !important; border-radius:0 !important; border:none !important; background:var(--bg) !important; box-shadow:none !important; animation:fadeIn .25s ease !important}
+.overlay{padding:0 !important; align-items:flex-start !important; -webkit-overflow-scrolling:touch}
+.sheet{max-width:1180px !important; width:100% !important; min-height:100vh !important; margin:0 auto !important; border-radius:0 !important; border:none !important; background:var(--bg) !important; box-shadow:none !important; overflow:visible !important; animation:fadeIn .25s ease !important}
+/* Nombre de la tienda en el encabezado (junto al logo) */
+.brand{display:flex; align-items:center; gap:10px}
+.brand img{height:34px; width:auto}
+.brandtxt{font-family:'Cormorant Garamond',serif; font-weight:700; font-size:1.15rem; letter-spacing:.06em; color:var(--cream); text-transform:uppercase; white-space:nowrap}
+@media(max-width:600px){ .brandtxt{font-size:.95rem; letter-spacing:.03em} .brand img{height:28px} }
 .pd-close{position:sticky; top:0; z-index:5; display:flex; justify-content:space-between; align-items:center; padding:14px 22px; background:var(--bg); border-bottom:1px solid var(--line)}
 .pd-close .bk{display:inline-flex; align-items:center; gap:8px; background:none; color:var(--cream); font-size:.9rem; cursor:pointer; font-weight:600}
 .pd-close .brand{font-family:'Cormorant Garamond',serif; font-size:1.3rem; letter-spacing:.04em; color:var(--cream)}
@@ -557,6 +564,8 @@ header::after{background:var(--line); opacity:1}
 .pd-size.on{border-color:#111; box-shadow:0 0 0 1.5px #111 inset}
 .pd-size .dot{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--muted-2); margin:0 auto 8px}
 .pd-size.on .dot{border-color:#111; background:#111; box-shadow:inset 0 0 0 3px #fff}
+.pd-size.soldout{opacity:.45; cursor:not-allowed}
+.pd-size.soldout .pr{text-decoration:line-through}
 .pd-size .pr{font-weight:700; font-size:1rem; color:var(--cream)}
 .pd-size .ml{font-size:.72rem; color:var(--muted); margin-top:2px}
 .pd-size .top{position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:#111; color:#fff; font-size:.58rem; font-weight:700; padding:3px 8px; border-radius:999px; white-space:nowrap; letter-spacing:.03em}
@@ -783,7 +792,8 @@ const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;',
 })();
 
 /* Branding desde config */
-$('#brand').innerHTML = CONFIG.LOGO_URL ? `<img src="${CONFIG.LOGO_URL}" alt="${esc(CONFIG.TIENDA_NOMBRE)}" onerror="this.outerHTML='&lt;span class=\\'word gold-text\\'&gt;${esc(CONFIG.TIENDA_NOMBRE)}&lt;/span&gt;'">` : `<span class="word gold-text">${esc(CONFIG.TIENDA_NOMBRE)}</span>`;
+const _ciudad = CONFIG.CIUDAD ? ' '+CONFIG.CIUDAD : '';
+$('#brand').innerHTML = (CONFIG.LOGO_URL ? `<img src="${CONFIG.LOGO_URL}" alt="${esc(CONFIG.TIENDA_NOMBRE)}">` : '') + `<span class="brandtxt">${esc((CONFIG.TIENDA_NOMBRE||'')+_ciudad)}</span>`;
 $('#tagline').textContent = CONFIG.TIENDA_TAGLINE || '';
 $('#heroTitle').textContent = CONFIG.TIENDA_NOMBRE;
 /* Banner de envíos (marquee): BANNER_ENVIO puede ser un texto o una lista de frases */
@@ -960,9 +970,9 @@ function setView(v){
   document.querySelectorAll('#viewtabs .vtab').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
   const inInicio = v==='inicio';
   const iv=$('#inicioView'); if(iv) iv.style.display = inInicio ? 'block' : 'none';
-  // En Inicio ocultamos el hero genérico (el Inicio trae su propio hero destacado)
-  const heroEl=document.querySelector('.hero'); if(heroEl) heroEl.style.display = inInicio ? 'none' : '';
-  const divEl=document.querySelector('.divider'); if(divEl) divEl.style.display = inInicio ? 'none' : '';
+  // El nombre grande del medio ya no se usa: basta el del encabezado
+  const heroEl=document.querySelector('.hero'); if(heroEl) heroEl.style.display = 'none';
+  const divEl=document.querySelector('.divider'); if(divEl) divEl.style.display = 'none';
   const cm=$('#catMosaico'); if(cm) cm.style.display = 'none';
   const av=$('#armarView'); if(av) av.style.display = v==='armar' ? 'block' : 'none';
   $('#filters').style.display     = 'none';
@@ -1040,13 +1050,13 @@ function renderInicio(){
 
   // 5) Mosaico de categorías
   const cats=CONFIG.CATEGORIAS||[]; const imgs=CONFIG.CATEGORIA_IMAGENES||{};
-  const tiles=[{n:'PROMOS',v:'promos',cat:''}].concat(cats.map(c=>({n:(c==='Árabe'?'ÁRABES':String(c).toUpperCase()),v:'catalogo',cat:c})));
+  const tiles=[{n:'PROMOS',v:'promos',cat:'',key:'Promos'}].concat(cats.map(c=>({n:(c==='Árabe'?'ÁRABES':String(c).toUpperCase()),v:'catalogo',cat:c,key:c})));
   const tilesHtml=`<div class="ini-sec"><h3 class="ini-h center serif">CATÁLOGO</h3><div class="ini-tiles">${tiles.map(t=>{
-    const bg=t.cat&&imgs[t.cat]?` style="background-image:url('${esc(imgs[t.cat])}')"`:'';
+    const bg=imgs[t.key]?` style="background-image:url('${esc(imgs[t.key])}')"`:'';
     return `<button class="ini-tile${bg?' has-img':''}"${bg} data-view="${t.v}" data-cat="${esc(t.cat)}"><span class="ini-tile-label">${esc(t.n)}</span></button>`;
   }).join('')}</div></div>`;
 
-  cont.innerHTML = heroHtml + carHtml + ctaHtml + testiHtml + tilesHtml;
+  cont.innerHTML = heroHtml + carHtml + tilesHtml + ctaHtml + testiHtml;
 
   // Eventos
   cont.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>openCombo(b.dataset.combo));
@@ -1064,7 +1074,7 @@ function renderInicio(){
 function showCatalogo(){
   const enGrilla = (filterCat && filterCat!=='Todos') || (filterTipo && filterTipo!=='Todos');
   const cm=$('#catMosaico'); if(cm) cm.style.display = enGrilla ? 'none' : 'block';
-  $('#filters').style.display = enGrilla ? 'flex' : 'none';
+  $('#filters').style.display = enGrilla ? 'block' : 'none';
   $('#grid').style.display    = enGrilla ? 'grid' : 'none';
   if(enGrilla){ renderFilters(); render(); }
   else { renderCatMosaico(); }
@@ -1079,18 +1089,22 @@ function renderCatMosaico(){
   const cont=$('#catMosaico'); if(!cont) return;
   const imgs=CONFIG.CATEGORIA_IMAGENES||{};
   const tiles=tilesCategorias();
+  const bgOf=(key)=> imgs[key] ? ` style="background-image:url('${esc(imgs[key])}')" ` : '';
   cont.innerHTML=`<div class="cat-wrap">
     <h3 class="ini-h serif" style="margin-bottom:6px">Catálogo</h3>
     <p class="cat-sub">Elige qué quieres ver</p>
     <div class="ini-tiles" style="margin-bottom:14px">
-      <button class="ini-tile" data-tipo="Decant"><span class="ini-tile-label">DECANTS</span></button>
-      <button class="ini-tile" data-tipo="Sellado"><span class="ini-tile-label">PERFUMES SELLADOS</span></button>
+      <button class="ini-tile${imgs['Decants']?' has-img':''}"${bgOf('Decants')} data-tipo="Decant"><span class="ini-tile-label">DECANTS</span></button>
+      <button class="ini-tile${imgs['Sellados']?' has-img':''}"${bgOf('Sellados')} data-tipo="Sellado"><span class="ini-tile-label">PERFUMES SELLADOS</span></button>
     </div>
     <p class="cat-sub">O por categoría</p>
-    <div class="ini-tiles">${tiles.map(t=>{
-      const bg=t.cat&&imgs[t.cat]?` style="background-image:url('${esc(imgs[t.cat])}')"`:'';
-      return `<button class="ini-tile${bg?' has-img':''}"${bg} data-view="${t.v}" data-cat="${esc(t.cat)}"><span class="ini-tile-label">${esc(t.n)}</span></button>`;
-    }).join('')}</div>
+    <div class="ini-tiles">
+      <button class="ini-tile${imgs['Promos']?' has-img':''}"${bgOf('Promos')} data-view="promos" data-cat=""><span class="ini-tile-label">PROMOS</span></button>
+      ${(CONFIG.CATEGORIAS||[]).map(c=>{
+        const bg=imgs[c]?` style="background-image:url('${esc(imgs[c])}')" `:'';
+        return `<button class="ini-tile${imgs[c]?' has-img':''}"${bg} data-view="catalogo" data-cat="${esc(c)}"><span class="ini-tile-label">${c==='Árabe'?'ÁRABES':esc(String(c).toUpperCase())}</span></button>`;
+      }).join('')}
+    </div>
   </div>`;
   cont.querySelectorAll('.ini-tile').forEach(b=>b.onclick=()=>{
     if(b.dataset.tipo){ filterTipo=b.dataset.tipo; filterCat='Todos'; setView('catalogo'); renderFilters(); render();
@@ -2084,27 +2098,30 @@ function renderFilters(){
   const cats = ['Todos', ...(CONFIG.CATEGORIAS||[])];
   const gens = ['Todos', ...(CONFIG.GENEROS||[])];
   $('#filters').innerHTML = `
-    <button class="cat-back" id="catBack">← Categorías</button>
-    <span class="flabel">Mostrar</span>
-    ${['Todos','Decant','Sellado'].map(t=>`<button class="chip ${filterTipo===t?'active':''}" data-tipo="${t}">${t==='Todos'?'Todos':(t==='Decant'?'Decants':'Sellados')}</button>`).join('')}
-    <span class="flabel" style="margin-left:8px">Tipo</span>
-    ${cats.map(c=>`<button class="chip ${filterCat===c?'active':''}" data-cat="${esc(c)}">${c==='Árabe'?'Árabes':esc(c)}</button>`).join('')}
-    <span class="flabel" style="margin-left:8px">Género</span>
-    ${gens.map(g=>`<button class="chip ${filterGen===g?'active':''}" data-gen="${esc(g)}">${esc(g)}</button>`).join('')}
-    <span class="count" id="fcount"></span>`;
+    <div class="frow"><button class="cat-back" id="catBack">← Categorías</button></div>
+    <div class="frow"><span class="flabel">Mostrar</span>
+      ${['Todos','Decant','Sellado'].map(t=>`<button class="chip ${filterTipo===t?'active':''}" data-tipo="${t}">${t==='Todos'?'Todos':(t==='Decant'?'Decants':'Sellados')}</button>`).join('')}</div>
+    <div class="frow"><span class="flabel">Categoría</span>
+      ${cats.map(c=>`<button class="chip ${filterCat===c?'active':''}" data-cat="${esc(c)}">${c==='Árabe'?'Árabes':esc(c)}</button>`).join('')}</div>
+    <div class="frow"><span class="flabel">Género</span>
+      ${gens.map(g=>`<button class="chip ${filterGen===g?'active':''}" data-gen="${esc(g)}">${esc(g)}</button>`).join('')}
+      <span class="count" id="fcount"></span></div>`;
   const fEl=$('#filters');
   fEl.querySelectorAll('[data-tipo]').forEach(c=>c.onclick=()=>{filterTipo=c.dataset.tipo; renderFilters(); render();});
-  fEl.querySelectorAll('[data-cat]').forEach(c=>c.onclick=()=>{filterCat=c.dataset.cat; showCatalogo();});
+  fEl.querySelectorAll('[data-cat]').forEach(c=>c.onclick=()=>{filterCat=c.dataset.cat; renderFilters(); render();});
   fEl.querySelectorAll('[data-gen]').forEach(c=>c.onclick=()=>{filterGen=c.dataset.gen; renderFilters(); render();});
-  const bk=$('#catBack'); if(bk) bk.onclick=()=>{ filterCat='Todos'; filterTipo='Todos'; showCatalogo(); window.scrollTo({top:0,behavior:'smooth'}); };
+  const bk=$('#catBack'); if(bk) bk.onclick=()=>{ filterCat='Todos'; filterTipo='Todos'; filterGen='Todos'; showCatalogo(); window.scrollTo({top:0,behavior:'smooth'}); };
 }
 
 /* ================= Grid ================= */
+function _esSellado(ml){ return String(ml).toLowerCase()==='sellado'; }
+function presDeTipo(p, tipo){ return presActivas(p).filter(x=> tipo==='Sellado' ? _esSellado(x.ml) : !_esSellado(x.ml)); }
+function tieneTipo(p, tipo){ return presDeTipo(p,tipo).length>0; }
 function render(){
   let list = PRODUCTS.filter(p =>
     (filterCat==='Todos' || p.categoria===filterCat) &&
     (filterGen==='Todos' || p.genero===filterGen) &&
-    (filterTipo==='Todos' || (p.tipo||'Decant')===filterTipo) &&
+    (filterTipo==='Todos' || tieneTipo(p, filterTipo)) &&
     (!query || ((p.nombre||'')+' '+(p.marca||'')).toLowerCase().includes(query))
   );
   const fc=$('#fcount'); if(fc) fc.textContent = `${list.length} fragancia${list.length!==1?'s':''}`;
@@ -2143,7 +2160,8 @@ function openProduct(id){
   const imgs = imgsOf(p);
   const mainImg = imgs[0];
   const pres = presActivas(p);
-  const s = stockDe(p);
+  const _stocks = pres.map(x=>x.stock).filter(v=>v!=null&&v!=='');
+  const s = _stocks.length ? _stocks.reduce((a,b)=>a+Number(b),0) : stockDe(p);
   const low = CONFIG.STOCK_BAJO||5;
   const stockHtml = s==null ? '' : (s<=0 ? '<span class="pd-stock out">Agotado</span>' : (s<=low ? `<span class="pd-stock low">¡Últimas ${s}!</span>` : `<span class="pd-stock">${s} disponibles</span>`));
   const tipoTxt = p.tipo==='Sellado' ? 'Perfume' : (p.tipo==='Decant' ? 'Decant' : '');
@@ -2158,10 +2176,12 @@ function openProduct(id){
 
   const sizesHtml = pres.length ? pres.map((x,i)=>{
     const ef=precioEfectivo(p,x); const ml=x.ml;
-    const sprays = isNaN(ml)?'' : `${Math.round(Number(ml)*18/10)*10} sprays`;
-    const dest = (i===1 && pres.length>=2);
-    return `<button class="pd-size" data-size="${esc(ml)}" data-price="${ef}" data-may="${Number(x.precio_may)||0}">
-      ${dest?'<span class="top">MÁS VENDIDO</span>':''}
+    const st = (x.stock==null||x.stock==='')?null:Number(x.stock);
+    const soldout = st!=null && st<=0;
+    const sprays = _esSellado(ml)?'' : `${Math.round(Number(ml)*18/10)*10} sprays`;
+    const dest = (i===1 && pres.length>=2) && !soldout;
+    return `<button class="pd-size ${soldout?'soldout':''}" ${soldout?'disabled':''} data-size="${esc(ml)}" data-price="${ef}" data-stock="${st==null?'':st}" data-may="${Number(x.precio_may)||0}">
+      ${dest?'<span class="top">MÁS VENDIDO</span>':''}${soldout?'<span class="top" style="background:#c0392b">AGOTADO</span>':''}
       <div class="dot"></div><div class="pr">${fmt(ef)}</div><div class="ml">${mlLabel(ml)}${sprays?` / ${sprays}`:''}</div></button>`;
   }).join('') : '<div class="pd-desc">Precios a consultar por WhatsApp.</div>';
 
@@ -2240,9 +2260,9 @@ function openProduct(id){
     </div>`;
 
   const setSel=(t)=>{ document.querySelectorAll('#tallas .pd-size').forEach(x=>x.classList.remove('on')); t.classList.add('on');
-    selSize={ size:t.dataset.size, price:+t.dataset.price, may:+t.dataset.may||0 };
+    selSize={ size:t.dataset.size, price:+t.dataset.price, may:+t.dataset.may||0, stock:t.dataset.stock===''?null:+t.dataset.stock };
     const b=$('#addBtn'); if(b&&!agotado(p)) b.textContent=`🛒 Agregar · ${mlLabel(t.dataset.size)} · ${fmt(t.dataset.price)}`; };
-  document.querySelectorAll('#tallas .pd-size').forEach(t=>t.onclick=()=>{ if(!agotado(p)) setSel(t); });
+  document.querySelectorAll('#tallas .pd-size').forEach(t=>t.onclick=()=>{ if(!t.disabled) setSel(t); });
   document.querySelectorAll('.pd-thumb').forEach(t=>t.onclick=()=>{ const m=$('#mainImg'); if(m)m.src=t.dataset.img; document.querySelectorAll('.pd-thumb').forEach(x=>x.classList.remove('active')); t.classList.add('active'); });
   const qi=$('#qInput'); const setQ=v=>{ prodQty=Math.max(1,v||1); if(qi) qi.value=prodQty; };
   if($('#qMinus')) $('#qMinus').onclick=()=>setQ(prodQty-1);
@@ -2378,10 +2398,11 @@ function addComboToCart(){
 /* ================= Carrito ================= */
 function addToCart(){
   if(!curProduct || !selSize) return;
-  const s = stockDe(curProduct);
   const q = Math.max(1, prodQty||1);
-  if(s!=null && (qtyEnCarrito(curProduct.id)+q) > s){ toast(s<=0?'Producto agotado':'No hay suficiente stock'); return; }
+  const st = (selSize.stock!=null) ? selSize.stock : stockDe(curProduct);
   const key = curProduct.id + '_' + selSize.size;
+  const yaKey = (CART.find(i=>i.key===key)||{}).qty || 0;
+  if(st!=null && (yaKey+q) > st){ toast(st<=0?'Talla agotada':'No hay suficiente stock de esa talla'); return; }
   const found = CART.find(i=>i.key===key);
   if(found) found.qty += q;
   else CART.push({ key, id:curProduct.id, nombre:curProduct.nombre, marca:curProduct.marca, categoria:curProduct.categoria, img:imgsOf(curProduct)[0], ml:selSize.size, precio:selSize.price, precio_may:selSize.may||0, qty:q });

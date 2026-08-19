@@ -18,6 +18,7 @@ const CONFIG = {
   // --- Datos de la tienda ---
   TIENDA_NOMBRE:  "DDS Parfums",
   TIENDA_TAGLINE: "Día de Suerte · Ica, Perú",
+  CIUDAD:         "Ica",
   MONEDA:         "S/",
 
   // --- Frase debajo del nombre grande (también editable en el panel > Ajustes) ---

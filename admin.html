@@ -382,10 +382,11 @@ function renderTestis(){
 
 function renderCatImgs(){
   const w=$('#aCatImgs'); if(!w) return;
-  const cats=CONFIG.CATEGORIAS||[];
-  w.innerHTML = cats.map(c=>`
+  const especiales=['Promos','Decants','Sellados'];
+  const items = especiales.concat(CONFIG.CATEGORIAS||[]);
+  w.innerHTML = items.map(c=>`
     <div class="subfield" data-ci="${esc(c)}" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <b style="min-width:90px">${esc(c)}</b>
+      <b style="min-width:110px">${esc(c)}</b>
       <div class="ci_imgwrap">${AJ_CATIMG[c]?`<div class="im"><img src="${esc(AJ_CATIMG[c])}" style="max-height:44px"></div>`:'<span class="hint">Sin imagen</span>'}</div>
       <input type="file" accept="image/*" class="ci_file">
       ${AJ_CATIMG[c]?'<button type="button" class="btn ghost ci_del">Quitar</button>':''}
@@ -543,11 +544,12 @@ function prodForm(id){
 
   function renderPres(){
     $('#presList').innerHTML = pres.map((x,i)=>`
-      <div class="pres-row" style="grid-template-columns:.85fr 1fr 1fr 1fr auto auto">
+      <div class="pres-row" style="grid-template-columns:.85fr 1fr 1fr 1fr .8fr auto auto">
         <input data-pml="${i}" value="${esc(x.ml)}" placeholder="talla">
         <input data-pprecio="${i}" type="number" step="0.01" value="${x.precio??''}" placeholder="precio">
         <input data-pmay="${i}" type="number" step="0.01" value="${x.precio_may??''}" placeholder="por mayor">
         <input data-pantes="${i}" type="number" step="0.01" value="${x.antes??''}" placeholder="antes">
+        <input data-pstock="${i}" type="number" min="0" value="${x.stock??''}" placeholder="stock">
         <div class="chk"><input type="checkbox" data-pact="${i}" ${x.activo!==false?'checked':''}></div>
         <button class="del" data-pdel="${i}">×</button>
       </div>`).join('');
@@ -555,11 +557,12 @@ function prodForm(id){
     $('#presList').querySelectorAll('[data-pprecio]').forEach(el=>el.oninput=()=>pres[+el.dataset.pprecio].precio=el.value);
     $('#presList').querySelectorAll('[data-pmay]').forEach(el=>el.oninput=()=>pres[+el.dataset.pmay].precio_may=el.value);
     $('#presList').querySelectorAll('[data-pantes]').forEach(el=>el.oninput=()=>pres[+el.dataset.pantes].antes=el.value);
+    $('#presList').querySelectorAll('[data-pstock]').forEach(el=>el.oninput=()=>pres[+el.dataset.pstock].stock=el.value);
     $('#presList').querySelectorAll('[data-pact]').forEach(el=>el.onchange=()=>pres[+el.dataset.pact].activo=el.checked);
     $('#presList').querySelectorAll('[data-pdel]').forEach(el=>el.onclick=()=>{ pres.splice(+el.dataset.pdel,1); renderPres(); });
   }
   renderPres();
-  document.querySelectorAll('[data-addml]').forEach(b=>b.onclick=()=>{ pres.push({ml:b.dataset.addml,precio:'',antes:'',activo:true}); renderPres(); });
+  document.querySelectorAll('[data-addml]').forEach(b=>b.onclick=()=>{ pres.push({ml:b.dataset.addml,precio:'',antes:'',stock:'',activo:true}); renderPres(); });
 
   $('#notasPick').querySelectorAll('[data-nota]').forEach(b=>b.onclick=()=>{
     const nid=b.dataset.nota; if(selNotas.has(nid))selNotas.delete(nid); else selNotas.add(nid);
@@ -588,7 +591,7 @@ function prodForm(id){
   $('#saveProd').onclick = async () => {
     const nombre=$('#pNombre').value.trim(); if(!nombre){ toast('Ponle un nombre',true); return; }
     const presLimpio = pres.filter(x=>String(x.ml).trim() && Number(x.precio)>0)
-      .map(x=>({ml:String(x.ml).trim(), precio:Number(x.precio), precio_may:x.precio_may?Number(x.precio_may):0, antes:x.antes?Number(x.antes):null, activo:x.activo!==false}));
+      .map(x=>({ml:String(x.ml).trim(), precio:Number(x.precio), precio_may:x.precio_may?Number(x.precio_may):0, antes:x.antes?Number(x.antes):null, stock:(x.stock===''||x.stock==null)?null:(parseInt(x.stock)||0), activo:x.activo!==false}));
     const payload = {
       marca:$('#pMarca').value.trim(), nombre, tipo:$('#pTipo').value, categoria:$('#pCat').value, genero:$('#pGen').value,
       orden:parseInt($('#pOrden').value)||0, descripcion:$('#pDesc').value.trim(),

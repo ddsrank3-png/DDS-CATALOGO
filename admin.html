@@ -382,7 +382,7 @@ function renderTestis(){
 
 function renderCatImgs(){
   const w=$('#aCatImgs'); if(!w) return;
-  const especiales=['Promos','Decants','Sellados'];
+  const especiales=['Promos'];
   const items = especiales.concat(CONFIG.CATEGORIAS||[]);
   w.innerHTML = items.map(c=>`
     <div class="subfield" data-ci="${esc(c)}" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
@@ -494,8 +494,6 @@ function prodForm(id){
     <div class="field" style="max-width:200px"><label>Orden</label><input id="pOrden" type="number" value="${p.orden??0}"></div>
     <div class="field"><label>Descripción corta</label><input id="pDesc" value="${esc(p.descripcion||'')}" placeholder="Ej. Fresco, amaderado, elegante"></div>
 
-    <div class="field"><label>Stock (unidades)</label><input id="pStock" type="number" min="0" value="${p.stock??''}" placeholder="Vacío = sin límite"><div class="hint">Vacío = no controlar stock · 0 = agotado · N = unidades disponibles. Se muestra en el catálogo.</div></div>
-
     <div class="field"><label>Imágenes</label>
       <input id="pFiles" type="file" accept="image/*" multiple>
       <div class="imgs" id="imgList"></div>
@@ -519,7 +517,7 @@ function prodForm(id){
     <div class="grid3">
       <div class="field"><label>Duración</label><input id="pLong" value="${esc(p.longevidad||'')}" placeholder="Ej. 8-10 h"></div>
       <div class="field"><label>Estela</label><input id="pEstela" value="${esc(p.estela||'')}" placeholder="Ej. Moderada"></div>
-      <div class="field"><label>Ocasión</label><input id="pOcasion" value="${esc(p.ocasion||'')}" placeholder="Ej. Noche"></div>
+      <div class="field"><label>Ocasión</label><input id="pOcasion" value="${esc(p.ocasion||'')}" placeholder="Ej. Cita, Fiesta, Noche fresca (separa con comas)"><div id="ocasionPrev" class="hint" style="margin-top:6px"></div></div>
     </div>
 
     <div class="check"><input type="checkbox" id="pDest" ${p.destacado?'checked':''}><label for="pDest">Destacado (aparece con etiqueta)</label></div>
@@ -564,10 +562,15 @@ function prodForm(id){
   renderPres();
   document.querySelectorAll('[data-addml]').forEach(b=>b.onclick=()=>{ pres.push({ml:b.dataset.addml,precio:'',antes:'',stock:'',activo:true}); renderPres(); });
 
-  $('#notasPick').querySelectorAll('[data-nota]').forEach(b=>b.onclick=()=>{
-    const nid=b.dataset.nota; if(selNotas.has(nid))selNotas.delete(nid); else selNotas.add(nid);
-    b.classList.toggle('sel');
-  });
+  // Vista previa de emojis según la ocasión escrita
+  const OCASION_EMOJIS=[['romántic','❤️'],['cita','❤️'],['seducc','🔥'],['discoteca','🕺'],['antro','🕺'],['fiesta','🎉'],['cena','🍽️'],['boda','💍'],['evento','👔'],['gala','👔'],['elegan','🥂'],['reunion','🥂'],['reunión','🥂'],['oficina','💼'],['trabajo','💼'],['universidad','🎓'],['estudio','🎓'],['gym','🏋️'],['deporte','🏋️'],['playa','🏖️'],['vacacion','🌴'],['aire libre','🏞️'],['paseo','🏞️'],['casual','🚶'],['nocturn','🌙'],['noche','🌙'],['fresc','❄️'],['frío','❄️'],['frio','❄️'],['invierno','❄️'],['clima cál','🌡️'],['cálid','☀️'],['calid','☀️'],['diario','☀️'],['día','☀️'],['dia','☀️'],['calor','☀️'],['verano','☀️'],['primavera','🌸'],['otoño','🍂'],['otono','🍂'],['dulce','🍬'],['intenso','🔥'],['salida','🚶']];
+  const emojiDe=t=>{t=String(t||'').toLowerCase();for(const[k,e]of OCASION_EMOJIS){if(t.includes(k))return e;}return '🌸';};
+  function renderOcasionPrev(){
+    const el=$('#ocasionPrev'); if(!el) return;
+    const items=String($('#pOcasion').value||'').split(/[,;/·|\n]+/).map(s=>s.trim()).filter(Boolean);
+    el.innerHTML = items.length ? ('Se verá así: '+items.map(s=>`${emojiDe(s)} ${esc(s)}`).join('   ')) : 'Escribe las ocasiones separadas por comas y saldrán con su emoji automático.';
+  }
+  if($('#pOcasion')){ $('#pOcasion').oninput=renderOcasionPrev; renderOcasionPrev(); }
 
   // Auto-seleccionar notas de la biblioteca según lo escrito en salida/corazón/fondo
   function normNota(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
@@ -595,7 +598,7 @@ function prodForm(id){
     const payload = {
       marca:$('#pMarca').value.trim(), nombre, tipo:$('#pTipo').value, categoria:$('#pCat').value, genero:$('#pGen').value,
       orden:parseInt($('#pOrden').value)||0, descripcion:$('#pDesc').value.trim(),
-      stock: $('#pStock').value.trim()===''? null : (parseInt($('#pStock').value)||0),
+      stock: (()=>{ const ss=presLimpio.map(x=>x.stock).filter(v=>v!=null); return ss.length? ss.reduce((a,b)=>a+Number(b),0) : null; })(),
       imagenes:imgs, imagen_url:imgs[0]||null, presentaciones:presLimpio,
       notas_salida:$('#pSalida').value.trim()||null, notas_corazon:$('#pCorazon').value.trim()||null, notas_fondo:$('#pFondo').value.trim()||null,
       longevidad:$('#pLong').value.trim()||null, estela:$('#pEstela').value.trim()||null, ocasion:$('#pOcasion').value.trim()||null,

@@ -172,6 +172,8 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .add-cta:disabled{opacity:.5; cursor:not-allowed; background:var(--panel-2); color:var(--muted)}
 
 /* Carrito drawer */
+.drawer-scrim{position:fixed; inset:0; z-index:65; background:rgba(4,4,6,.55); backdrop-filter:blur(3px); opacity:0; visibility:hidden; transition:opacity .25s}
+.drawer-scrim.open{opacity:1; visibility:visible}
 .drawer{position:fixed; top:0; right:0; height:100%; width:100%; max-width:420px; z-index:70; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border-left:1px solid var(--line); transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column}
 .drawer.open{transform:none}
 .drawer .top{display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--line-soft)}
@@ -551,6 +553,9 @@ header::after{background:var(--line); opacity:1}
 .pd-oca .oc{display:flex; align-items:center; gap:8px; padding:11px 12px; border-radius:10px; font-size:.86rem; border:1px solid var(--line); color:var(--muted-2)}
 .pd-oca .oc.on{color:#fff; border:none}
 .pd-oca .oc.inv.on{background:#5aa9e6} .pd-oca .oc.pri.on{background:#7ac77a} .pd-oca .oc.ver.on{background:#f2c14e; color:#5a4300} .pd-oca .oc.oto.on{background:#e08a4b}
+.pd-ocalist{display:flex; flex-direction:column; gap:8px}
+.oc-item{display:flex; align-items:center; gap:10px; font-size:.9rem; color:var(--cream)}
+.oc-item .e{font-size:1.15rem; width:24px; text-align:center}
 .pd-notas{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
 .pd-nota{text-align:center}
 .pd-nota .im{width:100%; aspect-ratio:1/1; border-radius:12px; overflow:hidden; background:var(--panel-2); display:grid; place-items:center}
@@ -584,13 +589,13 @@ header::after{background:var(--line); opacity:1}
 .pd-badges{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:6px; text-align:center}
 .pd-badge{font-size:.66rem; color:var(--muted)} .pd-badge b{display:block; font-size:1.1rem; margin-bottom:2px}
 /* Notas en óvalos (columna izquierda, como la imagen) */
-.pd-notaspanel{border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-top:14px}
-.pd-notaspanel h4{font-size:.72rem; letter-spacing:.16em; color:var(--muted-2); text-transform:uppercase; margin-bottom:12px; font-weight:600}
-.pd-ovals{display:grid; grid-template-columns:repeat(3,1fr); gap:14px 10px}
+.pd-notaspanel{border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-top:14px}
+.pd-notaspanel h4{font-size:.7rem; letter-spacing:.16em; color:var(--muted-2); text-transform:uppercase; margin-bottom:10px; font-weight:600}
+.pd-ovals{display:grid; grid-template-columns:repeat(auto-fill,minmax(58px,1fr)); gap:10px 8px}
 .pd-oval{text-align:center}
-.pd-oval .ov{width:78%; margin:0 auto; aspect-ratio:.82/1; border-radius:50%; display:grid; place-items:center; overflow:hidden; color:#fff; font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:600; box-shadow:0 6px 14px rgba(0,0,0,.12)}
+.pd-oval .ov{width:46px; height:54px; margin:0 auto; border-radius:50%; display:grid; place-items:center; overflow:hidden; color:#fff; font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:600; box-shadow:0 3px 8px rgba(0,0,0,.12)}
 .pd-oval .ov img{width:100%; height:100%; object-fit:cover}
-.pd-oval small{display:block; margin-top:6px; font-size:.8rem; color:var(--cream)}
+.pd-oval small{display:block; margin-top:4px; font-size:.66rem; color:var(--cream); line-height:1.15}
 /* Encabezado Tamaños con líneas */
 .pd-sizes-h{display:flex; align-items:center; gap:12px; justify-content:center; color:var(--cream); font-weight:600; letter-spacing:.02em; margin-bottom:2px}
 .pd-sizes-h::before,.pd-sizes-h::after{content:""; height:1px; flex:1; max-width:60px; background:var(--line)}
@@ -743,6 +748,7 @@ header::after{background:var(--line); opacity:1}
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 
 <!-- Carrito -->
+<div class="drawer-scrim" id="drawerScrim"></div>
 <div class="drawer" id="drawer">
   <div class="top">
     <h3>Tu pedido</h3>
@@ -1093,11 +1099,6 @@ function renderCatMosaico(){
   cont.innerHTML=`<div class="cat-wrap">
     <h3 class="ini-h serif" style="margin-bottom:6px">Catálogo</h3>
     <p class="cat-sub">Elige qué quieres ver</p>
-    <div class="ini-tiles" style="margin-bottom:14px">
-      <button class="ini-tile${imgs['Decants']?' has-img':''}"${bgOf('Decants')} data-tipo="Decant"><span class="ini-tile-label">DECANTS</span></button>
-      <button class="ini-tile${imgs['Sellados']?' has-img':''}"${bgOf('Sellados')} data-tipo="Sellado"><span class="ini-tile-label">PERFUMES SELLADOS</span></button>
-    </div>
-    <p class="cat-sub">O por categoría</p>
     <div class="ini-tiles">
       <button class="ini-tile${imgs['Promos']?' has-img':''}"${bgOf('Promos')} data-view="promos" data-cat=""><span class="ini-tile-label">PROMOS</span></button>
       ${(CONFIG.CATEGORIAS||[]).map(c=>{
@@ -2099,15 +2100,12 @@ function renderFilters(){
   const gens = ['Todos', ...(CONFIG.GENEROS||[])];
   $('#filters').innerHTML = `
     <div class="frow"><button class="cat-back" id="catBack">← Categorías</button></div>
-    <div class="frow"><span class="flabel">Mostrar</span>
-      ${['Todos','Decant','Sellado'].map(t=>`<button class="chip ${filterTipo===t?'active':''}" data-tipo="${t}">${t==='Todos'?'Todos':(t==='Decant'?'Decants':'Sellados')}</button>`).join('')}</div>
     <div class="frow"><span class="flabel">Categoría</span>
       ${cats.map(c=>`<button class="chip ${filterCat===c?'active':''}" data-cat="${esc(c)}">${c==='Árabe'?'Árabes':esc(c)}</button>`).join('')}</div>
     <div class="frow"><span class="flabel">Género</span>
       ${gens.map(g=>`<button class="chip ${filterGen===g?'active':''}" data-gen="${esc(g)}">${esc(g)}</button>`).join('')}
       <span class="count" id="fcount"></span></div>`;
   const fEl=$('#filters');
-  fEl.querySelectorAll('[data-tipo]').forEach(c=>c.onclick=()=>{filterTipo=c.dataset.tipo; renderFilters(); render();});
   fEl.querySelectorAll('[data-cat]').forEach(c=>c.onclick=()=>{filterCat=c.dataset.cat; renderFilters(); render();});
   fEl.querySelectorAll('[data-gen]').forEach(c=>c.onclick=()=>{filterGen=c.dataset.gen; renderFilters(); render();});
   const bk=$('#catBack'); if(bk) bk.onclick=()=>{ filterCat='Todos'; filterTipo='Todos'; filterGen='Todos'; showCatalogo(); window.scrollTo({top:0,behavior:'smooth'}); };
@@ -2153,6 +2151,18 @@ function render(){
 let selSize=null, curProduct=null, prodQty=1;
 function _tieneKw(txt,kws){ const t=String(txt||'').toLowerCase(); return kws.some(k=>t.includes(k)); }
 function _notaColor(name){ let h=0; const s=String(name||''); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))%360; const hue=(h%50)+20; return `hsl(${hue} 45% 55%)`; }
+const OCASION_EMOJIS = [
+  ['romántic','❤️'],['cita','❤️'],['seducc','🔥'],['discoteca','🕺'],['antro','🕺'],['fiesta','🎉'],['cena','🍽️'],
+  ['boda','💍'],['evento','👔'],['gala','👔'],['elegan','🥂'],['reunion','🥂'],['reunión','🥂'],
+  ['oficina','💼'],['trabajo','💼'],['universidad','🎓'],['estudio','🎓'],['gym','🏋️'],['deporte','🏋️'],
+  ['playa','🏖️'],['vacacion','🌴'],['aire libre','🏞️'],['paseo','🏞️'],['casual','🚶'],
+  ['nocturn','🌙'],['noche','🌙'],['fresc','❄️'],['frío','❄️'],['frio','❄️'],['invierno','❄️'],['clima cál','🌡️'],['cálid','☀️'],['calid','☀️'],
+  ['diario','☀️'],['día','☀️'],['dia','☀️'],['calor','☀️'],['verano','☀️'],['primavera','🌸'],['otoño','🍂'],['otono','🍂'],
+  ['dulce','🍬'],['intenso','🔥'],['salida','🚶']
+];
+function emojiDeOcasion(txt){ const t=String(txt||'').toLowerCase(); for(const [k,e] of OCASION_EMOJIS){ if(t.includes(k)) return e; } return '🌸'; }
+function ocasionItems(ocasion){ return String(ocasion||'').split(/[,;/·|\n]+/).map(s=>s.trim()).filter(Boolean).map(s=>({txt:s, emoji:emojiDeOcasion(s)})); }
+function ocasionListHTML(ocasion){ const it=ocasionItems(ocasion); if(!it.length) return ''; return `<div class="pd-ocalist">${it.map(o=>`<div class="oc-item"><span class="e">${o.emoji}</span>${esc(o.txt)}</div>`).join('')}</div>`; }
 function openProduct(id){
   const p = PROD_BY_ID[id]; if(!p) return;
   curProduct = p; selSize = null; prodQty = 1;
@@ -2224,9 +2234,7 @@ function openProduct(id){
           <div class="opt dia ${dia?'on':''}">☀️ Día</div><div class="opt noche ${noche?'on':''}">🌙 Noche</div>
         </div></div>`:''}
 
-        ${ocaMatch?`<div class="pd-block"><h4>Ocasiones</h4><div class="pd-oca">
-          ${estaciones.map(([c,ic,nm,kw])=>`<div class="oc ${c} ${_tieneKw(oca,kw)?'on':''}">${ic} ${nm}</div>`).join('')}
-        </div></div>`:(oca?`<div class="pd-block"><h4>Ocasiones</h4><div class="pd-desc">${esc(oca)}</div></div>`:'')}
+        ${oca?`<div class="pd-block"><h4>Ocasiones de uso</h4>${ocasionListHTML(oca)}</div>`:''}
       </div>
 
       <div class="pd-buy">
@@ -2553,8 +2561,9 @@ function setQty(key,val){ const i=CART.find(x=>x.key===key); if(!i)return;
   const p=PROD_BY_ID[i.id]; const s=p?stockDe(p):null;
   if(s!=null){ const otros=qtyEnCarrito(i.id)-i.qty; if(otros+v>s){ v=Math.max(1,s-otros); toast('Ajustado al stock disponible'); } }
   i.qty=v; saveCart(); }
-function openCart(){ renderCart(); $('#drawer').classList.add('open'); document.body.style.overflow='hidden'; }
-function closeCart(){ $('#drawer').classList.remove('open'); document.body.style.overflow=''; }
+function openCart(){ renderCart(); $('#drawer').classList.add('open'); const sc=$('#drawerScrim'); if(sc) sc.classList.add('open'); document.body.style.overflow='hidden'; }
+function closeCart(){ $('#drawer').classList.remove('open'); const sc=$('#drawerScrim'); if(sc) sc.classList.remove('open'); document.body.style.overflow=''; }
+(function(){ const sc=$('#drawerScrim'); if(sc) sc.onclick=closeCart; })();
 $('#openCart').onclick = openCart;
 document.querySelectorAll('[data-close-cart]').forEach(el=>el.onclick=closeCart);
 

@@ -124,6 +124,13 @@ const CONFIG = {
     // "Nicho":     "https://.../nicho.jpg",
   },
 
+  // Regalo por combo: si el carrito llega a estas cantidades por categoría, el cliente elige un decant gratis.
+  REGALO_COMBO: {
+    activo: true,
+    condiciones: { "Árabe": 4, "Diseñador": 2, "Nicho": 1 },   // 4 árabes, o 2 diseñador, o 1 nicho (o más)
+    ml: "2",                                                     // talla del regalo
+  },
+
   // Presentaciones que se cargan AUTOMÁTICAMENTE al crear un producto nuevo, según su categoría.
   //  (talla, precio, antes = precio tachado). Edítalas a tu gusto.
   PRESET_PRESENTACIONES: {

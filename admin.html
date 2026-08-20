@@ -525,6 +525,7 @@ function prodForm(id){
 
     <div class="check"><input type="checkbox" id="pDest" ${p.destacado?'checked':''}><label for="pDest">Destacado (aparece con etiqueta)</label></div>
     <div class="check"><input type="checkbox" id="pVis" ${p.visible!==false?'checked':''}><label for="pVis">Visible en el catálogo</label></div>
+    <div class="check"><input type="checkbox" id="pRegalo" ${p.regalo_permitido?'checked':''}><label for="pRegalo">🎁 Permitido como regalo de combo (se ofrece su decant de 2ml gratis)</label></div>
 
     <div class="actions">
       <button class="btn" id="saveProd">${id?'Guardar cambios':'Crear producto'}</button>
@@ -609,7 +610,7 @@ function prodForm(id){
       imagenes:imgs, imagen_url:imgs[0]||null, presentaciones:presLimpio,
       notas_salida:$('#pSalida').value.trim()||null, notas_corazon:$('#pCorazon').value.trim()||null, notas_fondo:$('#pFondo').value.trim()||null,
       longevidad:$('#pLong').value.trim()||null, estela:$('#pEstela').value.trim()||null, ocasion:$('#pOcasion').value.trim()||null,
-      destacado:$('#pDest').checked, visible:$('#pVis').checked,
+      destacado:$('#pDest').checked, visible:$('#pVis').checked, regalo_permitido:$('#pRegalo').checked,
     };
     let pid=id, error;
     if(id){ ({error}=await sb.from('productos').update(payload).eq('id',id)); }

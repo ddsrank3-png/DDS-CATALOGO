@@ -174,6 +174,11 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 /* Carrito drawer */
 .drawer-scrim{position:fixed; inset:0; z-index:65; background:rgba(4,4,6,.55); backdrop-filter:blur(3px); opacity:0; visibility:hidden; transition:opacity .25s}
 .drawer-scrim.open{opacity:1; visibility:visible}
+.combo-nudge{display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:linear-gradient(90deg,var(--gold-pale),#fff); border:1.5px solid var(--gold-3); color:var(--gold-deep); font-weight:600; font-size:.9rem; padding:12px 14px; border-radius:12px; margin-bottom:12px; cursor:pointer; animation:nudgeShake 1.6s ease-in-out infinite}
+.combo-nudge b{color:var(--gold-deep)}
+.combo-nudge:hover{filter:brightness(.98)}
+@keyframes nudgeShake{0%,88%,100%{transform:translateX(0) rotate(0)}90%{transform:translateX(-2px) rotate(-.6deg)}92%{transform:translateX(3px) rotate(.6deg)}94%{transform:translateX(-3px) rotate(-.5deg)}96%{transform:translateX(2px) rotate(.4deg)}98%{transform:translateX(-1px) rotate(0)}}
+@media(prefers-reduced-motion:reduce){ .combo-nudge{animation:none} }
 .drawer{position:fixed; top:0; right:0; height:100%; width:100%; max-width:420px; z-index:70; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border-left:1px solid var(--line); transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column}
 .drawer.open{transform:none}
 .drawer .top{display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--line-soft)}
@@ -1189,18 +1194,19 @@ function armarCalc(){
     tierByCat[c]=t;   // 0 = sin combo (precio base)
   });
 
-  let subtotal=0, total=0;
+  let subtotal=0, total=0; const detalle=[];
   items.forEach(it=>{
     const b=base(it); subtotal+=b;
     const t=tierByCat[it.categoria];
     let pu=b;
     if(t){ const cp=comboP(it.categoria,t,it.ml); if(cp!=null) pu=cp/t; }
     total+=pu;
+    detalle.push({ ...it, base:b, final:Math.round(pu) });
   });
   subtotal=Math.round(subtotal);
   total=Math.round(total);
   const desc=Math.max(0, subtotal-total);
-  return { subtotal, desc, total, n, pct: subtotal>0?Math.round(desc/subtotal*100):0, tierByCat };
+  return { subtotal, desc, total, n, pct: subtotal>0?Math.round(desc/subtotal*100):0, tierByCat, detalle };
 }
 
 function renderArmar(){
@@ -1278,7 +1284,7 @@ function renderArmar(){
       <div class="armar-row"><span>Precio sin descuento</span><span>${fmt(C.subtotal)}</span></div>
       ${C.desc>0?`<div class="armar-row desc"><span>Descuento (${C.pct}%)</span><span>- ${fmt(C.desc)}</span></div>`:''}
       <div class="armar-total"><span>TOTAL A PAGAR</span><b>${fmt(C.total)}</b></div>
-      <button class="armar-pay" id="armarPay" ${C.n?'':'disabled'}>💬 Pedir por WhatsApp</button>
+      <button class="armar-pay" id="armarPay" ${C.n?'':'disabled'}>🛒 Agregar combo al carrito</button>
     </div>
   </div>`;
 
@@ -1314,19 +1320,22 @@ function armarToggle(id){
   renderArmar();
 }
 
-async function armarCheckout(){
+function armarCheckout(){
   if(!armarSel.length){ toast('Agrega al menos un decant'); return; }
-  const C=armarCalc(); const enc=encodeURIComponent;
-  try{
-    const items=armarSel.map(i=>({ id:i.id, nombre:i.nombre, marca:i.categoria, ml:i.ml, qty:1, precio:i.precio, total:i.precio }));
-    await sb.from('ventas').insert({ cliente_nombre:null, cliente_telefono:null, cliente_direccion:null,
-      items, subtotal:C.subtotal, descuento:C.desc, total:C.total, metodo_pago:'combo', yape_operacion:null, estado:'nuevo' });
-  }catch(e){ console.warn('No se registró la venta del combo:', e); }
-  let msg=`¡Hola ${enc(CONFIG.TIENDA_NOMBRE)}! Armé mi combo 🧩:%0A%0A`;
-  armarSel.forEach(i=>{ msg+=`• ${enc(i.nombre)} — ${enc(i.categoria)} ${enc(i.ml)}ml = ${enc(fmt(i.precio))}%0A`; });
-  if(C.desc>0) msg+=`%0A🎉 Descuento combo (${C.pct}%25): -${enc(fmt(C.desc))}`;
-  msg+=`%0A*Total: ${enc(fmt(C.total))}*%0A%0A¿Cómo coordino el pago?`;
-  window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`,'_blank');
+  const C=armarCalc();
+  const gid = 'C'+Date.now();   // id de grupo del combo
+  (C.detalle||[]).forEach((d,i)=>{
+    CART.push({
+      key:'combo_'+gid+'_'+i, id:d.id, tipo:'combo', comboArmado:true, comboGid:gid,
+      nombre:d.nombre, marca:'Combo · '+d.categoria, categoria:d.categoria,
+      img:(PROD_BY_ID[d.id]?imgsOf(PROD_BY_ID[d.id])[0]:'')||'',
+      ml:d.ml, precio:d.final, antes:(d.base>d.final?d.base:null), qty:1
+    });
+  });
+  saveCart();
+  armarSel=[]; renderArmar();
+  toast('🧩 Combo agregado al carrito');
+  openCart();
 }
 
 function renderMayor(){
@@ -2493,6 +2502,27 @@ function addToCart(){
 }
 function saveCart(){ localStorage.setItem('cart_'+CONFIG.TIENDA_NOMBRE, JSON.stringify(CART)); renderCart(); }
 
+/* Regalo por COMBO: 4 árabe / 2 diseñador / 1 nicho (config) → un decant de 2ml gratis */
+function regaloComboEstado(){
+  const cfg=CONFIG.REGALO_COMBO||{};
+  if(cfg.activo===false) return {activo:false, disponible:false};
+  const cond=cfg.condiciones||{ "Árabe":4, "Diseñador":2, "Nicho":1 };
+  const gml=String(cfg.ml||'2');
+  const cnt={};
+  CART.forEach(i=>{ if(i.tipo==='regalo'||i.tipo==='addon') return; if(String(i.ml||'').toLowerCase()==='sellado') return; const c=i.categoria; if(!c||!(c in cond)) return; cnt[c]=(cnt[c]||0)+(i.qty||1); });
+  let disponible=false; Object.keys(cond).forEach(c=>{ if((cnt[c]||0)>=Number(cond[c])) disponible=true; });
+  const opciones=(PRODUCTS||[]).filter(p=>p.regalo_permitido && p.visible!==false).map(p=>({id:p.id,nombre:p.nombre,img:imgsOf(p)[0]||''}));
+  const elegido=CART.find(i=>i.tipo==='regalo'&&i.promoId==='__comboregalo__');
+  return { activo:true, disponible, opciones, elegido, gml, cnt, cond };
+}
+function addGiftCombo(pid){
+  const st=regaloComboEstado(); if(!st.disponible) return;
+  if(st.elegido){ toast('Ya elegiste tu regalo'); return; }
+  const p=PROD_BY_ID[pid]; if(!p){ toast('Elige un perfume'); return; }
+  CART.push({ key:'regalo___combo___'+pid+'_'+Date.now(), id:pid, tipo:'regalo', promoId:'__comboregalo__', nombre:p.nombre, marca:'Regalo', img:imgsOf(p)[0]||'', ml:st.gml, precio:0, qty:1 });
+  saveCart(); toast('🎁 ¡Regalo agregado!');
+}
+
 /* Agregar un decant de regalo elegido por el cliente */
 function addGift(promoId){
   const g = GIFT_STATUS.find(x=>x.promoId===promoId); if(!g) return;
@@ -2545,6 +2575,13 @@ function renderCart(){
   if(giftChanged){ localStorage.setItem('cart_'+CONFIG.TIENDA_NOMBRE, JSON.stringify(CART)); R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS); }
   GIFT_STATUS = R.regalos || [];
 
+  // Regalo por combo (condición por categoría): reconciliar
+  const rce = regaloComboEstado();
+  if(!(rce.activo && rce.disponible)){
+    const before=CART.length; CART=CART.filter(i=>!(i.tipo==='regalo'&&i.promoId==='__comboregalo__'));
+    if(CART.length!==before){ saveCart(); R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS); }
+  }
+
   const itemsHtml = R.lines.map(i => {
     if(i.tipo==='regalo'){
       return `<div class="ci gift">
@@ -2590,7 +2627,28 @@ function renderCart(){
     return '';
   }).join('');
 
-  $('#cartList').innerHTML = mayorBanner() + itemsHtml + giftHtml
+  // Aviso animado "arma tu combo"
+  const armarOn = CONFIG.COMBO_ARMA && CONFIG.COMBO_ARMA.activo!==false && Object.keys(CONFIG.COMBO_ARMA.precios||{}).length>0;
+  const hayDecantSuelto = CART.some(i=>i.tipo!=='regalo'&&i.tipo!=='addon'&&i.tipo!=='combo' && String(i.ml||'').toLowerCase()!=='sellado');
+  const nudgeHtml = (armarOn && hayDecantSuelto) ? `<button class="combo-nudge" id="comboNudge">🧩 <span>¡Arma tu combo y obtén <b>mejores precios</b>!</span></button>` : '';
+
+  // Bloque de regalo por combo
+  const rc = regaloComboEstado();
+  let comboGiftHtml='';
+  if(rc.activo && rc.disponible){
+    if(rc.elegido){
+      comboGiftHtml=`<div class="gift-box"><div class="gift-h">🎁 Regalo agregado: ${esc(rc.elegido.nombre)} · ${esc(mlLabel(rc.gml))}</div></div>`;
+    } else if(rc.opciones.length){
+      comboGiftHtml=`<div class="gift-box">
+        <div class="gift-h">🎁 ¡Ganaste un regalo! Elige un decant de ${esc(mlLabel(rc.gml))} <b>gratis</b></div>
+        <div class="gift-row"><select id="comboGiftSel">${rc.opciones.map(o=>`<option value="${esc(o.id)}">${esc(o.nombre)}</option>`).join('')}</select><button id="comboGiftAdd">Agregar</button></div>
+      </div>`;
+    } else {
+      comboGiftHtml=`<div class="upsell">🎁 ¡Ganaste un regalo! (Admin: marca perfumes como "permitido para regalo".)</div>`;
+    }
+  }
+
+  $('#cartList').innerHTML = nudgeHtml + mayorBanner() + itemsHtml + giftHtml + comboGiftHtml
     + (R.upsells.length ? R.upsells.map(u=>`<div class="upsell">🌟 ${esc(u)}</div>`).join('') : '')
     + (R.comboDisc.length ? R.comboDisc.map(c=>`<div class="promo-line">🎁 ${esc(c.nombre)}: −${fmt(c.monto)}</div>`).join('') : '');
 
@@ -2599,6 +2657,8 @@ function renderCart(){
   $('#cartList').querySelectorAll('[data-qset]').forEach(inp=>inp.onchange=()=>setQty(inp.dataset.qset, inp.value));
   $('#cartList').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{CART=CART.filter(i=>i.key!==b.dataset.rm); saveCart();});
   $('#cartList').querySelectorAll('[data-giftadd]').forEach(b=>b.onclick=()=>addGift(b.dataset.giftadd));
+  const cn=$('#comboNudge'); if(cn) cn.onclick=()=>{ closeCart(); setView('armar'); window.scrollTo({top:0,behavior:'smooth'}); };
+  const cga=$('#comboGiftAdd'); if(cga) cga.onclick=()=>addGiftCombo($('#comboGiftSel').value);
 
   const yapeOn = payMethod==='yape' && CONFIG.YAPE_NUMERO;
   $('#cartBot').style.display='block';

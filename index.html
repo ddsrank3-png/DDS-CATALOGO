@@ -545,6 +545,14 @@ header::after{background:var(--line); opacity:1}
 .pd-perfil{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 .pd-perfil .cell{border:1px solid var(--line); border-radius:10px; padding:10px 12px}
 .pd-perfil .k{font-size:.72rem; color:var(--muted-2)} .pd-perfil .v{font-weight:700; color:var(--cream); font-size:.95rem}
+.pd-metrics{display:flex; flex-direction:column; gap:14px}
+.pm-top{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+.pm-ic{font-size:1.05rem}
+.pm-lbl{font-size:.8rem; color:var(--muted-2); text-transform:uppercase; letter-spacing:.08em; flex:1}
+.pm-niv{font-weight:700; font-size:.85rem; color:var(--cream)}
+.pm-bar{height:9px; border-radius:999px; background:var(--panel-2); overflow:hidden}
+.pm-bar span{display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,var(--gold-3),var(--gold-deep))}
+.pm-txt{font-size:.8rem; color:var(--muted); margin-top:5px; line-height:1.4}
 .pd-dn{display:grid; grid-template-columns:1fr 1fr; gap:8px}
 .pd-dn .opt{display:flex; align-items:center; justify-content:center; gap:6px; padding:12px; border-radius:10px; font-weight:600; font-size:.9rem; border:1px solid var(--line); color:var(--muted)}
 .pd-dn .opt.dia.on{background:#cfe6ff; color:#1c4e80; border-color:#cfe6ff}
@@ -1189,9 +1197,9 @@ function armarCalc(){
     if(t){ const cp=comboP(it.categoria,t,it.ml); if(cp!=null) pu=cp/t; }
     total+=pu;
   });
-  subtotal=Math.round(subtotal*100)/100;
-  total=Math.round(total*100)/100;
-  const desc=Math.max(0, Math.round((subtotal-total)*100)/100);
+  subtotal=Math.round(subtotal);
+  total=Math.round(total);
+  const desc=Math.max(0, subtotal-total);
   return { subtotal, desc, total, n, pct: subtotal>0?Math.round(desc/subtotal*100):0, tierByCat };
 }
 
@@ -2188,6 +2196,32 @@ function render(){
 /* ================= Ficha de producto (pantalla completa) ================= */
 let selSize=null, curProduct=null, prodQty=1;
 function _tieneKw(txt,kws){ const t=String(txt||'').toLowerCase(); return kws.some(k=>t.includes(k)); }
+/* ===== Perfil olfativo: barras visuales ===== */
+function longevidadFrac(txt){
+  const m=String(txt||'').match(/\d+(\.\d+)?/g);
+  if(!m){ const t=String(txt||'').toLowerCase();
+    if(/eterna|muy larga|larguísima/.test(t)) return 1;
+    if(/larga|alta|excelente/.test(t)) return .8;
+    if(/moderada|media/.test(t)) return .55;
+    if(/baja|corta|poca/.test(t)) return .3; return .5; }
+  const nums=m.map(Number); const h=nums.reduce((a,b)=>a+b,0)/nums.length;
+  return Math.max(.12, Math.min(1, h/12));   // 12h = barra llena
+}
+function estelaFrac(txt){
+  const t=String(txt||'').toLowerCase();
+  const map=[['muy fuerte',1],['bestial',1],['enorme',1],['intensa',.95],['fuerte',.9],['envolvente',.9],['moderada-alta',.7],['moderada alta',.7],['alta',.85],['moderada',.5],['media',.5],['ligera',.3],['suave',.28],['íntima',.22],['intima',.22],['baja',.28],['cercana',.25],['discreta',.3]];
+  for(const [k,v] of map){ if(t.includes(k)) return v; }
+  return .5;
+}
+function _nivelTxt(f){ return f>=.85?'Muy alta':f>=.65?'Alta':f>=.45?'Media':f>=.28?'Baja':'Muy baja'; }
+function perfilBar(icon,label,texto,frac){
+  const pct=Math.round(frac*100);
+  return `<div class="pm">
+    <div class="pm-top"><span class="pm-ic">${icon}</span><span class="pm-lbl">${esc(label)}</span><span class="pm-niv">${_nivelTxt(frac)}</span></div>
+    <div class="pm-bar"><span style="width:${pct}%"></span></div>
+    <div class="pm-txt">${esc(texto)}</div>
+  </div>`;
+}
 function _notaColor(name){ let h=0; const s=String(name||''); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))%360; const hue=(h%50)+20; return `hsl(${hue} 45% 55%)`; }
 const OCASION_EMOJIS = [
   ['romántic','❤️'],['cita','❤️'],['seducc','🔥'],['discoteca','🕺'],['antro','🕺'],['fiesta','🎉'],['cena','🍽️'],
@@ -2263,9 +2297,9 @@ function openProduct(id){
         <div class="pd-desc">${p.genero?`<b>${esc(p.genero)}</b> · `:''}${esc(p.descripcion||'')}</div>
         <div class="pd-tags">${catChip?`<span class="pd-tag">${esc(catChip)}</span>`:''}${stockHtml}</div>
 
-        ${(p.longevidad||p.estela)?`<div class="pd-block"><h4>Perfil olfativo</h4><div class="pd-perfil">
-          <div class="cell"><div class="k">⏳ Longevidad</div><div class="v">${esc(p.longevidad||'—')}</div></div>
-          <div class="cell"><div class="k">〰️ Estela</div><div class="v">${esc(p.estela||'—')}</div></div>
+        ${(p.longevidad||p.estela)?`<div class="pd-block"><h4>Perfil olfativo</h4><div class="pd-metrics">
+          ${p.longevidad?perfilBar('⏳','Longevidad',p.longevidad,longevidadFrac(p.longevidad)):''}
+          ${p.estela?perfilBar('〰️','Estela',p.estela,estelaFrac(p.estela)):''}
         </div></div>`:''}
 
         ${dnAny?`<div class="pd-block"><h4>Uso</h4><div class="pd-dn">

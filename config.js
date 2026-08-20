@@ -124,6 +124,14 @@ const CONFIG = {
     // "Nicho":     "https://.../nicho.jpg",
   },
 
+  // Presentaciones que se cargan AUTOMÁTICAMENTE al crear un producto nuevo, según su categoría.
+  //  (talla, precio, antes = precio tachado). Edítalas a tu gusto.
+  PRESET_PRESENTACIONES: {
+    "Árabe":     [ {ml:"2",precio:10,antes:12}, {ml:"3",precio:15,antes:18}, {ml:"5",precio:20,antes:25}, {ml:"10",precio:35,antes:40} ],
+    "Diseñador": [ {ml:"2",precio:18,antes:22}, {ml:"3",precio:25,antes:35}, {ml:"5",precio:40,antes:55}, {ml:"10",precio:75,antes:85} ],
+    "Nicho":     [ {ml:"2",precio:30,antes:36}, {ml:"3",precio:40,antes:50}, {ml:"5",precio:79,antes:95}, {ml:"10",precio:110,antes:130} ],
+  },
+
   // ============================================================
   //  ARMA TU COMBO — el cliente elige categoría + tamaño + perfumes y arma su set.
   //  Los precios son POR CATEGORÍA Y TAMAÑO (no por perfume). Edítalos aquí.

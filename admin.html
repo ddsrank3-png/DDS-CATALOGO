@@ -472,7 +472,10 @@ function renderProductos(){
 function prodForm(id){
   const p = id ? PRODUCTOS.find(x=>x.id===id) : {};
   let imgs = imgsOf(p).slice();
-  let pres = (p.presentaciones && p.presentaciones.length) ? JSON.parse(JSON.stringify(p.presentaciones)) : [{ml:'5',precio:'',antes:'',activo:true},{ml:'10',precio:'',antes:'',activo:true}];
+  const presetDe=(cat)=>{ const base=(CONFIG.PRESET_PRESENTACIONES&&CONFIG.PRESET_PRESENTACIONES[cat])||[]; return base.map(x=>({ml:String(x.ml),precio:x.precio,precio_may:0,antes:(x.antes??''),stock:'',activo:true})); };
+  let pres = (p.presentaciones && p.presentaciones.length)
+    ? JSON.parse(JSON.stringify(p.presentaciones))
+    : (presetDe(p.categoria||cats[0]).length ? presetDe(p.categoria||cats[0]) : [{ml:'5',precio:'',antes:'',activo:true},{ml:'10',precio:'',antes:'',activo:true}]);
   let selNotas = new Set(notasDe(id).map(n=>n.id));
   const cats=CONFIG.CATEGORIAS||['Árabe','Diseñador','Nicho'];
   const gens=CONFIG.GENEROS||['Hombre','Mujer','Unisex'];
@@ -561,6 +564,8 @@ function prodForm(id){
   }
   renderPres();
   document.querySelectorAll('[data-addml]').forEach(b=>b.onclick=()=>{ pres.push({ml:b.dataset.addml,precio:'',antes:'',stock:'',activo:true}); renderPres(); });
+  // Producto nuevo: al cambiar la categoría, cargar automáticamente sus precios preset
+  if(!id && $('#pCat')){ $('#pCat').addEventListener('change', ()=>{ const pr=presetDe($('#pCat').value); if(pr.length){ pres.length=0; pr.forEach(x=>pres.push(x)); renderPres(); } }); }
 
   // Vista previa de emojis según la ocasión escrita
   const OCASION_EMOJIS=[['romántic','❤️'],['cita','❤️'],['seducc','🔥'],['discoteca','🕺'],['antro','🕺'],['fiesta','🎉'],['cena','🍽️'],['boda','💍'],['evento','👔'],['gala','👔'],['elegan','🥂'],['reunion','🥂'],['reunión','🥂'],['oficina','💼'],['trabajo','💼'],['universidad','🎓'],['estudio','🎓'],['gym','🏋️'],['deporte','🏋️'],['playa','🏖️'],['vacacion','🌴'],['aire libre','🏞️'],['paseo','🏞️'],['casual','🚶'],['nocturn','🌙'],['noche','🌙'],['fresc','❄️'],['frío','❄️'],['frio','❄️'],['invierno','❄️'],['clima cál','🌡️'],['cálid','☀️'],['calid','☀️'],['diario','☀️'],['día','☀️'],['dia','☀️'],['calor','☀️'],['verano','☀️'],['primavera','🌸'],['otoño','🍂'],['otono','🍂'],['dulce','🍬'],['intenso','🔥'],['salida','🚶']];

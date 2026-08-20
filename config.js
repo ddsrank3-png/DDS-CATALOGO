@@ -131,6 +131,7 @@ const CONFIG = {
     activo: true,
     ml: "2",           // talla del regalo
     meta: 60,          // puntos por cada regalo
+    sellado_pts: 60,   // un perfume sellado = 1 regalo (2 sellados = 2 regalos, etc.)
     puntos: {
       "Árabe":     { "2":12, "3":15, "5":20, "10":30 },
       "Diseñador": { "2":15, "3":20, "5":30, "10":48 },

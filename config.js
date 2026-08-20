@@ -124,6 +124,10 @@ const CONFIG = {
     // "Nicho":     "https://.../nicho.jpg",
   },
 
+  // Descuento por perfumes SELLADOS: desde 'desde' unidades, S/'por_unidad' menos por cada sellado.
+  //  incremento>0 hace que el descuento por unidad crezca con la cantidad (0 = fijo).
+  SELLADO_DESC: { activo:true, desde:2, por_unidad:5, incremento:0 },
+
   // Regalo por combo: cada decant suma PUNTOS según su talla; cada "meta" puntos = 1 regalo (2ml gratis).
   //  5 árabe 2ml=60, 4 árabe 3ml=60, 3 árabe 5ml=60, 2 árabe 10ml=60 · 4 dis 2ml, 3 dis 3ml, 2 dis 5ml, 1 dis 10ml+1 · 3 nicho 2ml, 2 nicho 3ml, 1 nicho 5ml.
   //  Mezclando categorías/tallas los puntos se suman (un diseñador vale ~2 árabes, un nicho ~2 diseñador).

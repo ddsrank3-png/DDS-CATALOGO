@@ -179,6 +179,7 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .combo-nudge:hover{filter:brightness(.98)}
 @keyframes nudgeShake{0%,88%,100%{transform:translateX(0) rotate(0)}90%{transform:translateX(-2px) rotate(-.6deg)}92%{transform:translateX(3px) rotate(.6deg)}94%{transform:translateX(-3px) rotate(-.5deg)}96%{transform:translateX(2px) rotate(.4deg)}98%{transform:translateX(-1px) rotate(0)}}
 @media(prefers-reduced-motion:reduce){ .combo-nudge{animation:none} }
+.gift-falta{font-size:.78rem; color:var(--gold-deep); margin-top:8px}
 .drawer{position:fixed; top:0; right:0; height:100%; width:100%; max-width:420px; z-index:70; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border-left:1px solid var(--line); transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column}
 .drawer.open{transform:none}
 .drawer .top{display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--line-soft)}
@@ -2502,22 +2503,27 @@ function addToCart(){
 }
 function saveCart(){ localStorage.setItem('cart_'+CONFIG.TIENDA_NOMBRE, JSON.stringify(CART)); renderCart(); }
 
-/* Regalo por COMBO: 4 árabe / 2 diseñador / 1 nicho (config) → un decant de 2ml gratis */
+/* Regalo por COMBO: puntos por talla; cada meta puntos = 1 regalo (2ml gratis). Mezcla = suma de puntos. */
 function regaloComboEstado(){
   const cfg=CONFIG.REGALO_COMBO||{};
-  if(cfg.activo===false) return {activo:false, disponible:false};
-  const cond=cfg.condiciones||{ "Árabe":4, "Diseñador":2, "Nicho":1 };
+  if(cfg.activo===false) return {activo:false, gifts:0, chosen:0, porElegir:0};
+  const puntos=cfg.puntos||{};
+  const meta=Number(cfg.meta)||60;
   const gml=String(cfg.ml||'2');
-  const cnt={};
-  CART.forEach(i=>{ if(i.tipo==='regalo'||i.tipo==='addon') return; if(String(i.ml||'').toLowerCase()==='sellado') return; const c=i.categoria; if(!c||!(c in cond)) return; cnt[c]=(cnt[c]||0)+(i.qty||1); });
-  let disponible=false; Object.keys(cond).forEach(c=>{ if((cnt[c]||0)>=Number(cond[c])) disponible=true; });
+  let pts=0, nd=0;
+  CART.forEach(i=>{ if(i.tipo==='regalo'||i.tipo==='addon') return; const v=(puntos[i.categoria]||{})[String(i.ml)]; if(v==null) return; pts+=v*(i.qty||1); nd+=(i.qty||1); });
+  const gifts=Math.floor((pts+1e-6)/meta);
+  const chosenLines=CART.filter(i=>i.tipo==='regalo'&&i.promoId==='__comboregalo__');
+  const chosen=chosenLines.length;
+  const porElegir=Math.max(0, gifts-chosen);
+  const remaining = pts===0 ? meta : (pts%meta===0 ? 0 : meta-(pts%meta));   // puntos para el próximo regalo
+  const avg = nd>0 ? pts/nd : 20;
+  const faltanDecants = remaining>0 ? Math.max(1, Math.ceil(remaining/(avg||20))) : 0;
   const opciones=(PRODUCTS||[]).filter(p=>p.regalo_permitido && p.visible!==false).map(p=>({id:p.id,nombre:p.nombre,img:imgsOf(p)[0]||''}));
-  const elegido=CART.find(i=>i.tipo==='regalo'&&i.promoId==='__comboregalo__');
-  return { activo:true, disponible, opciones, elegido, gml, cnt, cond };
+  return { activo:true, gifts, chosen, porElegir, remaining, faltanDecants, opciones, elegido:chosenLines[0], gml, pts, meta };
 }
 function addGiftCombo(pid){
-  const st=regaloComboEstado(); if(!st.disponible) return;
-  if(st.elegido){ toast('Ya elegiste tu regalo'); return; }
+  const st=regaloComboEstado(); if(st.porElegir<=0){ toast('Aún no tienes un regalo por elegir'); return; }
   const p=PROD_BY_ID[pid]; if(!p){ toast('Elige un perfume'); return; }
   CART.push({ key:'regalo___combo___'+pid+'_'+Date.now(), id:pid, tipo:'regalo', promoId:'__comboregalo__', nombre:p.nombre, marca:'Regalo', img:imgsOf(p)[0]||'', ml:st.gml, precio:0, qty:1 });
   saveCart(); toast('🎁 ¡Regalo agregado!');
@@ -2575,11 +2581,12 @@ function renderCart(){
   if(giftChanged){ localStorage.setItem('cart_'+CONFIG.TIENDA_NOMBRE, JSON.stringify(CART)); R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS); }
   GIFT_STATUS = R.regalos || [];
 
-  // Regalo por combo (condición por categoría): reconciliar
+  // Regalo por combo (puntos por talla): reconciliar a la cantidad ganada
   const rce = regaloComboEstado();
-  if(!(rce.activo && rce.disponible)){
-    const before=CART.length; CART=CART.filter(i=>!(i.tipo==='regalo'&&i.promoId==='__comboregalo__'));
-    if(CART.length!==before){ saveCart(); R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS); }
+  if(rce.activo && rce.chosen > rce.gifts){
+    const extra = CART.filter(i=>i.tipo==='regalo'&&i.promoId==='__comboregalo__').slice(rce.gifts);
+    const setx=new Set(extra); CART=CART.filter(i=>!setx.has(i));
+    saveCart(); R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS);
   }
 
   const itemsHtml = R.lines.map(i => {
@@ -2632,19 +2639,22 @@ function renderCart(){
   const hayDecantSuelto = CART.some(i=>i.tipo!=='regalo'&&i.tipo!=='addon'&&i.tipo!=='combo' && String(i.ml||'').toLowerCase()!=='sellado');
   const nudgeHtml = (armarOn && hayDecantSuelto) ? `<button class="combo-nudge" id="comboNudge">🧩 <span>¡Arma tu combo y obtén <b>mejores precios</b>!</span></button>` : '';
 
-  // Bloque de regalo por combo
+  // Bloque de regalo por combo (puntos)
   const rc = regaloComboEstado();
   let comboGiftHtml='';
-  if(rc.activo && rc.disponible){
-    if(rc.elegido){
-      comboGiftHtml=`<div class="gift-box"><div class="gift-h">🎁 Regalo agregado: ${esc(rc.elegido.nombre)} · ${esc(mlLabel(rc.gml))}</div></div>`;
-    } else if(rc.opciones.length){
-      comboGiftHtml=`<div class="gift-box">
-        <div class="gift-h">🎁 ¡Ganaste un regalo! Elige un decant de ${esc(mlLabel(rc.gml))} <b>gratis</b></div>
-        <div class="gift-row"><select id="comboGiftSel">${rc.opciones.map(o=>`<option value="${esc(o.id)}">${esc(o.nombre)}</option>`).join('')}</select><button id="comboGiftAdd">Agregar</button></div>
-      </div>`;
-    } else {
-      comboGiftHtml=`<div class="upsell">🎁 ¡Ganaste un regalo! (Admin: marca perfumes como "permitido para regalo".)</div>`;
+  if(rc.activo){
+    if(rc.porElegir>0){
+      if(rc.opciones.length){
+        comboGiftHtml=`<div class="gift-box">
+          <div class="gift-h">🎁 ¡Tienes ${rc.porElegir} regalo${rc.porElegir>1?'s':''} por elegir! Un decant de ${esc(mlLabel(rc.gml))} <b>gratis</b>${rc.porElegir>1?' (elige uno a la vez)':''}</div>
+          <div class="gift-row"><select id="comboGiftSel">${rc.opciones.map(o=>`<option value="${esc(o.id)}">${esc(o.nombre)}</option>`).join('')}</select><button id="comboGiftAdd">Agregar</button></div>
+          ${rc.remaining>0?`<div class="gift-falta">🛍️ Agrega ~${rc.faltanDecants} decant${rc.faltanDecants>1?'s':''} más para otro regalo</div>`:''}
+        </div>`;
+      } else {
+        comboGiftHtml=`<div class="upsell">🎁 ¡Ganaste ${rc.porElegir} regalo${rc.porElegir>1?'s':''}! (Admin: marca perfumes como "permitido para regalo".)</div>`;
+      }
+    } else if(rc.pts>0 && rc.remaining>0){
+      comboGiftHtml=`<div class="upsell">🎁 Te falta${rc.faltanDecants>1?'n':''} ~<b>${rc.faltanDecants}</b> decant${rc.faltanDecants>1?'s':''} más para llevarte un <b>regalo</b> de ${esc(mlLabel(rc.gml))} gratis</div>`;
     }
   }
 

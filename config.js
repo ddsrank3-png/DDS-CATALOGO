@@ -124,11 +124,18 @@ const CONFIG = {
     // "Nicho":     "https://.../nicho.jpg",
   },
 
-  // Regalo por combo: si el carrito llega a estas cantidades por categoría, el cliente elige un decant gratis.
+  // Regalo por combo: cada decant suma PUNTOS según su talla; cada "meta" puntos = 1 regalo (2ml gratis).
+  //  5 árabe 2ml=60, 4 árabe 3ml=60, 3 árabe 5ml=60, 2 árabe 10ml=60 · 4 dis 2ml, 3 dis 3ml, 2 dis 5ml, 1 dis 10ml+1 · 3 nicho 2ml, 2 nicho 3ml, 1 nicho 5ml.
+  //  Mezclando categorías/tallas los puntos se suman (un diseñador vale ~2 árabes, un nicho ~2 diseñador).
   REGALO_COMBO: {
     activo: true,
-    condiciones: { "Árabe": 4, "Diseñador": 2, "Nicho": 1 },   // 4 árabes, o 2 diseñador, o 1 nicho (o más)
-    ml: "2",                                                     // talla del regalo
+    ml: "2",           // talla del regalo
+    meta: 60,          // puntos por cada regalo
+    puntos: {
+      "Árabe":     { "2":12, "3":15, "5":20, "10":30 },
+      "Diseñador": { "2":15, "3":20, "5":30, "10":48 },
+      "Nicho":     { "2":20, "3":30, "5":60, "10":60 },
+    },
   },
 
   // Presentaciones que se cargan AUTOMÁTICAMENTE al crear un producto nuevo, según su categoría.

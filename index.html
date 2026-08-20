@@ -264,6 +264,18 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .combos-grid .imgwrap{padding:16px}
 
 /* ===== Modal combo: incluye + tallas con sprays + combínalo y ahorra ===== */
+.sheet .hd.big{padding:20px 24px 30px}
+.sheet .hd.big img{max-height:440px}
+.gallery.big{padding:16px 20px 6px; gap:12px}
+.gallery.big .gthumb{width:74px; height:74px; border-radius:12px}
+.combo-sub{font-style:italic; color:var(--gold-deep); font-size:1rem; margin:2px 0 8px; font-weight:600}
+.combo-info{margin-top:16px; background:var(--panel-2); border:1px solid var(--line-soft); border-radius:14px; padding:14px 16px}
+.combo-info .ci-h{font-weight:800; font-size:.82rem; letter-spacing:.08em; text-transform:uppercase; color:var(--gold-deep); margin-bottom:6px}
+.combo-info p{margin:0; color:var(--cream); font-size:.92rem; line-height:1.55}
+.ini-hero-sub{font-style:italic; color:var(--gold-deep); font-weight:600; margin-bottom:6px}
+.ini-hero-oca{display:flex; flex-wrap:wrap; gap:7px; margin:10px 0 4px}
+.ini-hero-oca span{font-size:.76rem; background:var(--panel-2); border:1px solid var(--line-soft); border-radius:999px; padding:4px 10px; color:var(--cream)}
+.ini-coca{font-size:.95rem; letter-spacing:.06em; margin:2px 0 4px}
 .incluye{display:flex; flex-wrap:wrap; gap:7px; margin-top:4px}
 .incluye .it{font-size:.76rem; color:var(--cream); background:var(--panel-2); border:1px solid var(--line-soft); border-radius:999px; padding:4px 11px}
 .tallas .talla .spr{font-size:.66rem; color:var(--muted); margin-top:2px}
@@ -1044,6 +1056,12 @@ async function load(){
 /* ================= Combos / Promociones ================= */
 function tallasActivas(c){ return (c.tallas||[]).filter(t=>t&&t.activo!==false&&Number(t.precio)>0).sort((a,b)=>Number(a.precio)-Number(b.precio)); }
 function comboDesde(c){ const t=tallasActivas(c); return t.length?Number(t[0].precio):null; }
+function comboMeta(c){ const d=(c&&c.data)||{}; return {
+  subtitulo: (d.subtitulo||c.subtitulo||'').trim(),
+  por_que: (d.por_que||'').trim(),
+  perfecto_para: (d.perfecto_para||'').trim(),
+  ocasiones: (d.ocasiones||c.ocasion||'').trim(),
+}; }
 function comboAntesDesde(c){ const t=tallasActivas(c); if(!t.length) return null; const a=Number(t[0].antes); return (a&&a>Number(t[0].precio))?a:null; }
 
 function setView(v){
@@ -1084,11 +1102,15 @@ function renderInicio(){
     const img=imgsOf(destacado)[0]; const desde=comboDesde(destacado); const antes=comboAntesDesde(destacado);
     const off=(antes&&desde)?Math.round((1-desde/antes)*100):0;
     const incluye=Array.isArray(destacado.incluye)?destacado.incluye.slice(0,3).join(' | '):'';
+    const dm=comboMeta(destacado);
+    const ocaChips=ocasionItems(dm.ocasiones).slice(0,4);
     heroHtml=`<div class="ini-hero">
       <div class="ini-hero-copy">
         <span class="tag-vendido">★ MÁS VENDIDO</span>
         <h2 class="ini-hero-title">${esc(destacado.nombre)}</h2>
+        ${dm.subtitulo?`<div class="ini-hero-sub">${esc(dm.subtitulo)}</div>`:''}
         ${incluye?`<div class="ini-hero-inc">${esc(incluye)}</div>`:''}
+        ${ocaChips.length?`<div class="ini-hero-oca">${ocaChips.map(o=>`<span>${o.emoji} ${esc(o.txt)}</span>`).join('')}</div>`:''}
         <div class="ini-hero-price">${desde!=null?fmt(desde):''}${off?`<span class="ini-off">-${off}%</span>`:''}</div>
         ${antes?`<div class="ini-hero-antes">${fmt(antes)}</div>`:''}
         <button class="ini-cta" data-combo="${destacado.id}">Comprar ahora</button>
@@ -1104,9 +1126,11 @@ function renderInicio(){
   if(combos.length){
     carHtml=`<div class="ini-sec"><h3 class="ini-h">Más Vendidos</h3><div class="ini-carousel">${combos.map(c=>{
       const img=imgsOf(c)[0]; const d=comboDesde(c); const a=comboAntesDesde(c);
+      const oc=ocasionItems(comboMeta(c).ocasiones).slice(0,3);
       return `<button class="ini-ccard" data-combo="${c.id}"><span class="badge-oferta">Oferta</span>
         <div class="ini-cimg">${img?`<img src="${esc(img)}" loading="lazy">`:`<span class="ph">${esc((c.nombre||'?')[0])}</span>`}</div>
         <div class="ini-cname">${esc(c.nombre)}</div>
+        ${oc.length?`<div class="ini-coca">${oc.map(o=>o.emoji).join(' ')}</div>`:''}
         <div class="ini-cprice">${d!=null?fmt(d):''}${a?`<span class="antes">${fmt(a)}</span>`:''}</div></button>`;
     }).join('')}</div></div>`;
   }
@@ -2476,20 +2500,27 @@ function openCombo(id){
   const tallas=tallasActivas(c);
   const incluye=Array.isArray(c.incluye)?c.incluye.filter(Boolean):[];
   const addons=Array.isArray(c.addons)?c.addons.filter(a=>a&&a.nombre&&Number(a.precio)>0):[];
+  const meta=comboMeta(c);
 
   $('#sheet').innerHTML = `
-    <div class="hd">
+    <div class="hd big combo-hero">
       <button class="close" id="closeSheet" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>
       ${mainImg ? `<img id="mainImg" src="${esc(mainImg)}" alt="${esc(c.nombre)}">` : `<div class="ph" style="font-size:4rem">${esc((c.nombre||'?')[0])}</div>`}
     </div>
-    ${imgs.length>1 ? `<div class="gallery">${imgs.map((u,i)=>`<button class="gthumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : ''}
+    ${imgs.length>1 ? `<div class="gallery big">${imgs.map((u,i)=>`<button class="gthumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : ''}
     <div class="bd">
       <div class="marca">Promoción</div>
       <h2>${esc(c.nombre)}</h2>
+      ${meta.subtitulo?`<div class="combo-sub">${esc(meta.subtitulo)}</div>`:''}
       ${c.descripcion?`<div class="genero">${esc(c.descripcion)}</div>`:''}
 
       ${incluye.length ? `<div class="section-t">Incluye</div>
         <div class="incluye">${incluye.map(n=>`<span class="it">${esc(n)}</span>`).join('')}</div>` : ''}
+
+      ${meta.ocasiones?`<div class="section-t">Ocasiones y momentos</div>${ocasionListHTML(meta.ocasiones)}`:''}
+
+      ${meta.por_que?`<div class="combo-info"><div class="ci-h">¿Por qué estos?</div><p>${esc(meta.por_que)}</p></div>`:''}
+      ${meta.perfecto_para?`<div class="combo-info"><div class="ci-h">Perfecto para</div><p>${esc(meta.perfecto_para)}</p></div>`:''}
 
       <div class="section-t">Tamaños</div>
       <div class="tallas" id="tallas">

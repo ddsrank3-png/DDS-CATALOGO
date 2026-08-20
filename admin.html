@@ -880,20 +880,33 @@ function comboForm(id){
     : [{ml:'3',sprays:'50',precio:'',antes:'',mas_vendido:false,activo:true},{ml:'5',sprays:'90',precio:'',antes:'',mas_vendido:true,activo:true},{ml:'10',sprays:'180',precio:'',antes:'',mas_vendido:false,activo:true}];
   let addons = (c.addons && c.addons.length) ? JSON.parse(JSON.stringify(c.addons)) : [];
   const incluyeTxt = (Array.isArray(c.incluye)?c.incluye:[]).join('\n');
+  const cd = (c.data)||{};
 
   $('#modal').innerHTML = `
     <h3>${id?'Editar':'Nuevo'} combo</h3>
-    <div class="field"><label>Nombre del combo</label><input id="cNombre" value="${esc(c.nombre||'')}" placeholder="Ej. ROMPE CUELLOS"></div>
-    <div class="field"><label>Descripción (opcional)</label><input id="cDesc" value="${esc(c.descripcion||'')}" placeholder="Ej. Los 3 más potentes para arrasar"></div>
+    <div class="field"><label>Nombre del combo</label><input id="cNombre" value="${esc(c.nombre||'')}" placeholder="Ej. COMBO HOMBRE 24/7"></div>
+    <div class="field"><label>Subtítulo (opcional)</label><input id="cSub" value="${esc(cd.subtitulo||'')}" placeholder="Ej. Día fresco + día elegante + noche seductora"></div>
+    <div class="field"><label>Descripción corta (opcional)</label><input id="cDesc" value="${esc(c.descripcion||'')}" placeholder="Ej. Los 3 más potentes para arrasar"></div>
 
-    <div class="field"><label>Imágenes</label>
+    <div class="field"><label>Imágenes (puedes subir varias; se ven grandes en la ficha)</label>
       <input id="cFiles" type="file" accept="image/*" multiple>
       <div class="imgs" id="cImgList"></div>
     </div>
 
     <div class="field"><label>Perfumes que incluye (uno por línea)</label>
-      <textarea id="cIncluye" rows="3" placeholder="Erba Pura&#10;Valentino Uomo&#10;Stronger With You">${esc(incluyeTxt)}</textarea>
+      <textarea id="cIncluye" rows="3" placeholder="→ 9AM Dive&#10;→ Club de Nuit Urban Elixir&#10;→ Valentino Born in Roma Intense">${esc(incluyeTxt)}</textarea>
       <div class="hint">Se muestran como etiquetas en el detalle del combo.</div>
+    </div>
+
+    <div class="field"><label>Ocasiones y momentos (separadas por coma)</label>
+      <input id="cOcasiones" value="${esc(cd.ocasiones||'')}" placeholder="Día, trabajo, citas, noche, clima cálido">
+      <div class="hint">Se muestran con emojis automáticos en el inicio y en la ficha.</div>
+    </div>
+    <div class="field"><label>¿Por qué estos? (opcional)</label>
+      <textarea id="cPorQue" rows="3" placeholder="Cada uno cumple una función distinta: 9AM Dive para el día...">${esc(cd.por_que||'')}</textarea>
+    </div>
+    <div class="field"><label>Perfecto para (opcional)</label>
+      <textarea id="cPerfecto" rows="2" placeholder="Quien quiere un pequeño armario que cubra toda la semana.">${esc(cd.perfecto_para||'')}</textarea>
     </div>
 
     <div class="field"><label>Tamaños (talla · sprays · precio · antes · ⭐más vendido · ✓visible)</label>
@@ -984,10 +997,16 @@ function comboForm(id){
     const addonsLimpio = addons.filter(a=>String(a.nombre).trim() && Number(a.precio)>0)
       .map(a=>({nombre:String(a.nombre).trim(), ml:String(a.ml||'').trim()||null, precio:Number(a.precio), antes:a.antes?Number(a.antes):null, mas_vendido:!!a.mas_vendido, imagen_url:a.imagen_url||null}));
     const incluye = $('#cIncluye').value.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+    const dataMeta = {
+      subtitulo: $('#cSub').value.trim(),
+      ocasiones: $('#cOcasiones').value.trim(),
+      por_que: $('#cPorQue').value.trim(),
+      perfecto_para: $('#cPerfecto').value.trim(),
+    };
     const payload = {
       nombre, descripcion:$('#cDesc').value.trim()||null,
       imagenes:imgs, imagen_url:imgs[0]||null,
-      tallas:tallasLimpio, incluye, addons:addonsLimpio,
+      tallas:tallasLimpio, incluye, addons:addonsLimpio, data:dataMeta,
       destacado:$('#cDest').checked, visible:$('#cVis').checked, orden:parseInt($('#cOrden').value)||0,
     };
     const {error}= id ? await sb.from('combos').update(payload).eq('id',id) : await sb.from('combos').insert(payload);

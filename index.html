@@ -223,45 +223,43 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .asesor-launch .al-ic{font-size:1.6rem}
 .asesor-launch .al-tx{display:flex; flex-direction:column; line-height:1.3} .asesor-launch .al-tx b{font-size:1rem} .asesor-launch .al-tx small{opacity:.8; font-size:.82rem}
 .asesor-launch .al-go{margin-left:auto; background:#fff; color:#111; font-weight:700; font-size:.82rem; padding:8px 14px; border-radius:999px; white-space:nowrap}
-/* Overlay asesor */
-.asesor-ov{position:fixed; inset:0; z-index:120; background:rgba(20,10,25,.55); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:16px}
-.asesor-card{background:var(--panel); color:var(--cream); width:100%; max-width:560px; max-height:92vh; overflow-y:auto; border-radius:22px; padding:22px 22px 18px; box-shadow:0 20px 60px rgba(0,0,0,.4)}
-.asesor-top{display:flex; align-items:center; gap:10px; margin-bottom:16px}
-.asesor-x{font-size:1.1rem; color:var(--muted-2); cursor:pointer; order:3}
-.asesor-prog{flex:1; height:7px; background:var(--panel-2); border-radius:999px; overflow:hidden; order:1}
-.asesor-prog span{display:block; height:100%; background:linear-gradient(90deg,#7b2ff7,#f107a3); border-radius:999px; transition:width .3s}
-.asesor-step{font-size:.72rem; color:var(--muted-2); order:2; white-space:nowrap}
-.asesor-q{font-family:'Cormorant Garamond',serif; font-size:1.5rem; margin:0 0 2px}
-.asesor-sub{color:var(--muted-2); font-size:.82rem; margin-bottom:14px}
-.asesor-opts{display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:18px}
-.asesor-opts.cols{grid-template-columns:1fr 1fr}
-.asesor-opt{display:flex; align-items:center; gap:9px; text-align:left; padding:13px 14px; border:1.5px solid var(--line); border-radius:13px; background:var(--panel-2); color:var(--cream); cursor:pointer; font-size:.9rem; transition:.15s}
-.asesor-opt .ao-e{font-size:1.15rem}
-.asesor-opt:hover{border-color:var(--gold-3)}
-.asesor-opt.on{border-color:#f107a3; background:rgba(241,7,163,.12); box-shadow:0 0 0 2px rgba(241,7,163,.18) inset}
-.asesor-nav{display:flex; align-items:center; gap:10px; margin-top:4px}
-.asesor-nav.center{justify-content:center}
-.asesor-back{color:var(--muted-2); cursor:pointer; font-size:.86rem}
-.asesor-skip{margin-left:auto; color:var(--muted-2); cursor:pointer; font-size:.86rem; text-decoration:underline}
-.asesor-next{background:#111; color:#fff; font-weight:700; padding:11px 20px; border-radius:999px; cursor:pointer; font-size:.9rem}
-.asesor-best{margin:6px 0 4px}
-.ab-badge{font-weight:800; font-size:.78rem; letter-spacing:.06em; color:var(--gold-deep); margin-bottom:8px}
-.ab-card{display:flex; gap:14px; background:var(--panel-2); border:1px solid var(--gold-3); border-radius:16px; padding:14px}
-.ab-img{width:96px; height:120px; border-radius:12px; overflow:hidden; background:#fff; flex-shrink:0; display:flex; align-items:center; justify-content:center}
-.ab-img img{width:100%; height:100%; object-fit:contain}
-.ab-name{font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:700}
-.ab-pct{color:#12833f; font-weight:700; font-size:.9rem; margin:2px 0 6px}
-.ab-chips{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px}
-.ab-chips span{font-size:.7rem; background:var(--panel); border:1px solid var(--line-soft); border-radius:999px; padding:3px 8px; color:var(--muted)}
-.ab-ver{background:#111; color:#fff; font-weight:700; font-size:.82rem; padding:9px 14px; border-radius:999px; cursor:pointer}
-.asesor-alsoh{font-size:.78rem; color:var(--muted-2); text-transform:uppercase; letter-spacing:.08em; margin:16px 0 8px}
-.asesor-also{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px}
-.al-card{background:var(--panel-2); border:1px solid var(--line); border-radius:13px; padding:10px; cursor:pointer; text-align:center}
-.al-img{height:90px; border-radius:9px; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center; margin-bottom:6px}
-.al-img img{height:100%; object-fit:contain}
-.al-name{font-size:.82rem; font-weight:600; line-height:1.2}
-.al-pct{color:#12833f; font-weight:700; font-size:.8rem}
-.asesor-empty{text-align:center; color:var(--muted); padding:26px 10px; line-height:1.6}
+/* Overlay asesor EN VIVO (preguntas + catálogo que se ordena solo) */
+.asesor-ov{position:fixed; inset:0; z-index:120; background:rgba(20,10,25,.55); backdrop-filter:blur(4px); display:none; padding:0}
+.asesor2{background:var(--bg); color:var(--cream); width:100%; height:100%; display:flex; flex-direction:column}
+.asesor2-head{position:relative; padding:16px 20px; border-bottom:1px solid var(--line); text-align:center; flex-shrink:0}
+.a2-ttl{font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700}
+.a2-spark{color:#f107a3}
+.a2-sub{color:var(--muted-2); font-size:.82rem; margin-top:2px}
+.asesor-x{position:absolute; top:14px; right:16px; font-size:1.2rem; color:var(--muted-2); cursor:pointer}
+.asesor2-body{flex:1; min-height:0; display:grid; grid-template-columns:360px 1fr; overflow:hidden}
+.asesor2-q{order:1; overflow-y:auto; padding:16px 18px; border-right:1px solid var(--line)}
+.asesor2-res{order:2; overflow-y:auto; padding:16px 18px; background:var(--panel)}
+.a2-block{margin-bottom:16px}
+.a2-qh{font-weight:700; font-size:.92rem; margin-bottom:8px} .a2-qh small{color:var(--muted-2); font-weight:400}
+.a2-opts{display:flex; flex-wrap:wrap; gap:7px}
+.a2-opt{display:inline-flex; align-items:center; gap:5px; padding:8px 12px; border:1.5px solid var(--line); border-radius:999px; background:var(--panel-2); color:var(--cream); cursor:pointer; font-size:.82rem; transition:.12s}
+.a2-opt:hover{border-color:var(--gold-3)}
+.a2-opt.on{border-color:#f107a3; background:rgba(241,7,163,.14); font-weight:700}
+.a2-reset{margin:6px 0 20px; color:var(--muted-2); text-decoration:underline; cursor:pointer; font-size:.82rem}
+.a2-res-head{font-size:.8rem; color:var(--muted-2); margin-bottom:12px; position:sticky; top:0; background:var(--panel); padding-bottom:6px; z-index:1}
+.a2-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
+.a2-card{position:relative; background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:10px; cursor:pointer; text-align:center; transition:.15s}
+.a2-card:hover{transform:translateY(-2px); border-color:var(--gold-3)}
+.a2-card.top{border-color:var(--gold-3); box-shadow:0 0 0 2px rgba(212,150,50,.25)}
+.a2-crown{display:block; font-size:.62rem; font-weight:800; color:var(--gold-deep); margin-bottom:4px}
+.a2-pct{position:absolute; top:8px; right:8px; font-size:.7rem; font-weight:800; padding:3px 7px; border-radius:999px; color:#fff; background:#9aa}
+.a2-pct.hi{background:#12833f} .a2-pct.mid{background:#d4913a} .a2-pct.lo{background:#9098a5}
+.a2-img{height:120px; border-radius:10px; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center; margin-bottom:8px}
+.a2-img img{height:100%; width:100%; object-fit:contain}
+.a2-name{font-size:.86rem; font-weight:700; line-height:1.2}
+.a2-meta{font-size:.7rem; color:var(--muted-2); margin-top:2px}
+@media(max-width:760px){
+  .asesor2-body{grid-template-columns:1fr; overflow-y:auto}
+  .asesor2-res{order:1; position:sticky; top:0; z-index:2; max-height:42vh; border-bottom:1px solid var(--line); box-shadow:0 6px 14px rgba(0,0,0,.15)}
+  .asesor2-q{order:2; border-right:none; overflow:visible}
+  .a2-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:9px}
+  .a2-img{height:96px}
+}
 .drawer{position:fixed; top:0; right:0; height:100%; width:100%; max-width:420px; z-index:70; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border-left:1px solid var(--line); transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column}
 .drawer.open{transform:none}
 .drawer .top{display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--line-soft)}
@@ -1190,83 +1188,90 @@ function asesorScore(p,ans){
   const blob=_pBlob(p);
   if(ans.genero && ans.genero!=='regalo' && ans.genero!=='Unisex'){ if(p.genero && p.genero!==ans.genero && p.genero!=='Unisex') return null; }
   let score=0,max=0; const hit=(kws)=>kws&&kws.some(k=>blob.includes(_norm(k)));
+  const famP = Array.isArray(p.familia)&&p.familia.length ? p.familia.map(_norm) : null;
+  const estP = Array.isArray(p.estilo)&&p.estilo.length ? p.estilo.map(_norm) : null;
+  // Ocasión (texto)
   if(ans.ocasion&&ans.ocasion.length) ans.ocasion.forEach(i=>{const o=ASESOR_Q[1].opts[i]; if(!o)return; max+=2; if(!o.kw.length||hit(o.kw))score+=2;});
-  if(ans.momento!=null){const o=ASESOR_Q[2].opts[ans.momento]; if(o){max+=2; if(!o.kw.length||hit(o.kw))score+=2;}}
-  if(ans.familia&&ans.familia.length) ans.familia.forEach(i=>{const o=ASESOR_Q[3].opts[i]; if(!o)return; max+=3; if(hit(o.kw))score+=3;});
-  if(ans.dulzura!=null){max+=2; const diff=Math.abs(_dulzuraDe(blob)-ans.dulzura); score+=Math.max(0,2-diff*0.6);}
-  if(ans.intensidad!=null){max+=2; const diff=Math.abs(estelaFrac(p.estela)-ans.intensidad); score+=Math.max(0,2-diff*3);}
-  if(ans.busca&&ans.busca.length) ans.busca.forEach(i=>{const o=ASESOR_Q[6].opts[i]; if(!o)return; max+=1.5; let h=false; if(o.campo==='long')h=longevidadFrac(p.longevidad)>=.6; else if(o.campo==='estela')h=estelaFrac(p.estela)>=.6; else h=(!o.kw||!o.kw.length||hit(o.kw)); if(h)score+=1.5;});
-  if(ans.estilo!=null){const o=ASESOR_Q[7].opts[ans.estilo]; if(o){max+=2; if(hit(o.kw))score+=2;}}
+  // Momento: usa campo estructurado si existe
+  if(ans.momento!=null){const o=ASESOR_Q[2].opts[ans.momento]; if(o){ max+=2;
+    if(p.momento){ const m=_norm(p.momento); const okM = (ans.momento===0&&(m==='dia'||m==='ambos'))||(ans.momento===1&&(m==='noche'||m==='ambos'))||(ans.momento>=2); if(okM)score+=2; }
+    else if(!o.kw.length||hit(o.kw))score+=2; }}
+  // Familia: usa array estructurado si existe
+  if(ans.familia&&ans.familia.length) ans.familia.forEach(i=>{const o=ASESOR_Q[3].opts[i]; if(!o)return; max+=3;
+    if(famP){ if(famP.includes(_norm(o.l)))score+=3; } else if(hit(o.kw))score+=3; });
+  // Dulzura: campo estructurado (1-5) o inferido
+  if(ans.dulzura!=null){max+=2; const sw = (p.dulzura?Number(p.dulzura):_dulzuraDe(blob)); const diff=Math.abs(sw-ans.dulzura); score+=Math.max(0,2-diff*0.6);}
+  // Intensidad: campo estructurado (1-5 → frac) o estela
+  if(ans.intensidad!=null){max+=2; const est = (p.intensidad?Number(p.intensidad)/5:estelaFrac(p.estela)); const diff=Math.abs(est-ans.intensidad); score+=Math.max(0,2-diff*3);}
+  // Qué busca (texto/duración/estela)
+  if(ans.busca&&ans.busca.length) ans.busca.forEach(i=>{const o=ASESOR_Q[6].opts[i]; if(!o)return; max+=1.5; let h=false; if(o.campo==='long')h=longevidadFrac(p.longevidad)>=.6; else if(o.campo==='estela')h=(p.intensidad?Number(p.intensidad)/5:estelaFrac(p.estela))>=.6; else h=(!o.kw||!o.kw.length||hit(o.kw)); if(h)score+=1.5;});
+  // Estilo: array estructurado si existe
+  if(ans.estilo!=null){const o=ASESOR_Q[7].opts[ans.estilo]; if(o){ max+=2;
+    if(estP){ if(estP.includes(_norm(o.l)))score+=2; } else if(hit(o.kw))score+=2; }}
   const pct=max>0?Math.round(score/max*100):0;
   return {score,max,pct};
 }
-function openAsesor(){ ASESOR={step:0,ans:{}}; $('#asesorOv').style.display='flex'; document.body.style.overflow='hidden'; renderAsesor(); }
+function openAsesor(){ ASESOR={ans:{}}; $('#asesorOv').style.display='block'; document.body.style.overflow='hidden'; renderAsesor(); }
 function closeAsesor(){ $('#asesorOv').style.display='none'; document.body.style.overflow=''; }
 function renderAsesor(){
-  const ov=$('#asesorOv'); const total=ASESOR_Q.length;
-  if(ASESOR.step>=total){ return asesorResultados(); }
-  const Q=ASESOR_Q[ASESOR.step]; const cur=ASESOR.ans[Q.key];
-  const isSel=(i)=> Q.tipo==='multi' ? (Array.isArray(cur)&&cur.includes(i)) : (cur!=null && (Q.opts[i].v!=null? cur===Q.opts[i].v : cur===i));
-  ov.innerHTML=`<div class="asesor-card">
-    <div class="asesor-top">
-      <button class="asesor-x" id="asX">✕</button>
-      <div class="asesor-prog"><span style="width:${Math.round((ASESOR.step)/total*100)}%"></span></div>
-      <div class="asesor-step">Paso ${ASESOR.step+1} de ${total}</div>
-    </div>
-    <h2 class="asesor-q">${esc(Q.q)}</h2>
-    ${Q.sub?`<div class="asesor-sub">${esc(Q.sub)}</div>`:''}
-    <div class="asesor-opts ${Q.opts.length>6?'cols':''}">
-      ${Q.opts.map((o,i)=>`<button class="asesor-opt ${isSel(i)?'on':''}" data-i="${i}">${o.e?`<span class="ao-e">${o.e}</span>`:''}<span class="ao-l">${esc(o.l)}</span></button>`).join('')}
-    </div>
-    <div class="asesor-nav">
-      ${ASESOR.step>0?`<button class="asesor-back" id="asBack">← Atrás</button>`:'<span></span>'}
-      <button class="asesor-skip" id="asSkip">Omitir</button>
-      <button class="asesor-next" id="asNext">${ASESOR.step===total-1?'Ver resultados ✨':'Siguiente →'}</button>
-    </div>
-  </div>`;
-  ov.querySelectorAll('.asesor-opt').forEach(b=>b.onclick=()=>{
-    const i=+b.dataset.i; const o=Q.opts[i];
-    if(Q.tipo==='multi'){ let arr=Array.isArray(cur)?cur.slice():[]; if(arr.includes(i)) arr=arr.filter(x=>x!==i); else { if(Q.max&&arr.length>=Q.max){ toast('Máximo '+Q.max); return; } arr.push(i);} ASESOR.ans[Q.key]=arr; renderAsesor(); }
-    else { ASESOR.ans[Q.key]= (o.v!=null?o.v:i); ASESOR.step++; renderAsesor(); }
-  });
-  $('#asX').onclick=closeAsesor;
-  const nx=$('#asNext'); if(nx) nx.onclick=()=>{ ASESOR.step++; renderAsesor(); };
-  const sk=$('#asSkip'); if(sk) sk.onclick=()=>{ delete ASESOR.ans[Q.key]; ASESOR.step++; renderAsesor(); };
-  const bk=$('#asBack'); if(bk) bk.onclick=()=>{ ASESOR.step=Math.max(0,ASESOR.step-1); renderAsesor(); };
-}
-function asesorResultados(){
   const ov=$('#asesorOv');
-  const base=(PRODUCTS||[]).filter(p=>p.visible!==false);
-  let res=base.map(p=>{const s=asesorScore(p,ASESOR.ans); return s?{p,...s}:null;}).filter(r=>r && r.max>0);
-  res.sort((a,b)=> b.pct-a.pct || b.score-a.score);
-  const top=res.slice(0,3);
-  const chips=(p)=>{ const c=[p.categoria,p.genero].filter(Boolean); const oc=ocasionItems(p.ocasion).slice(0,2).map(o=>o.txt); return c.concat(oc).slice(0,4); };
-  ov.innerHTML=`<div class="asesor-card res">
-    <div class="asesor-top"><button class="asesor-x" id="asX">✕</button><div class="asesor-step">✨ Tu resultado</div></div>
-    ${top.length?`
-      <div class="asesor-best">
-        <div class="ab-badge">🏆 TU MEJOR COINCIDENCIA</div>
-        <div class="ab-card">
-          <div class="ab-img">${imgsOf(top[0].p)[0]?`<img src="${esc(imgsOf(top[0].p)[0])}">`:`<span class="ph">${esc((top[0].p.nombre||'?')[0])}</span>`}</div>
-          <div class="ab-info"><div class="ab-name">${esc(top[0].p.nombre)}</div><div class="ab-pct">${top[0].pct}% de coincidencia</div>
-          <div class="ab-chips">${chips(top[0].p).map(c=>`<span>${esc(c)}</span>`).join('')}</div>
-          <button class="ab-ver" data-id="${top[0].p.id}">Ver perfume →</button></div>
-        </div>
-      </div>
-      ${top.length>1?`<div class="asesor-alsoh">También podría gustarte</div>
-      <div class="asesor-also">${top.slice(1).map(r=>`<button class="al-card" data-id="${r.p.id}">
-        <div class="al-img">${imgsOf(r.p)[0]?`<img src="${esc(imgsOf(r.p)[0])}">`:`<span class="ph">${esc((r.p.nombre||'?')[0])}</span>`}</div>
-        <div class="al-name">${esc(r.p.nombre)}</div><div class="al-pct">${r.pct}%</div></button>`).join('')}</div>`:''}
-    ` : `<div class="asesor-empty">No encontramos una coincidencia clara 😅<br>Prueba con menos filtros o mira el catálogo completo.</div>`}
-    <div class="asesor-nav center">
-      <button class="asesor-back" id="asRe">↺ Repetir</button>
-      <button class="asesor-next" id="asCat">Ver catálogo completo</button>
+  ov.innerHTML=`<div class="asesor2">
+    <div class="asesor2-head">
+      <div class="a2-ttl"><span class="a2-spark">✨</span> Encuentra tu perfume ideal</div>
+      <div class="a2-sub">Responde lo que quieras — el catálogo se ordena solo por coincidencia</div>
+      <button class="asesor-x" id="asX" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="asesor2-body">
+      <div class="asesor2-res" id="a2res"></div>
+      <div class="asesor2-q" id="a2q">${asesorQuestionsHTML()}</div>
     </div>
   </div>`;
   $('#asX').onclick=closeAsesor;
-  $('#asRe').onclick=openAsesor;
-  $('#asCat').onclick=()=>{ closeAsesor(); filterCat='Todos'; filterTipo='Todos'; setView('catalogo'); };
-  ov.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{ const id=b.dataset.id; closeAsesor(); openProduct(id); });
+  wireAsesorQ();
+  asesorRenderRes();
+}
+function asesorQuestionsHTML(){
+  return ASESOR_Q.map((Q,qi)=>`<div class="a2-block">
+     <div class="a2-qh">${esc(Q.q)}${Q.max?` <small>(máx ${Q.max})</small>`:(Q.tipo==='multi'?' <small>(varias)</small>':'')}</div>
+     <div class="a2-opts">${Q.opts.map((o,i)=>`<button class="a2-opt" data-q="${qi}" data-i="${i}">${o.e?`<span class="a2-e">${o.e}</span>`:''}${esc(o.l)}</button>`).join('')}</div>
+   </div>`).join('') + `<button class="a2-reset" id="a2reset">↺ Reiniciar respuestas</button>`;
+}
+function wireAsesorQ(){
+  $('#a2q').querySelectorAll('.a2-opt').forEach(b=>b.onclick=()=>{
+    const qi=+b.dataset.q, i=+b.dataset.i, Q=ASESOR_Q[qi], o=Q.opts[i], cur=ASESOR.ans[Q.key];
+    if(Q.tipo==='multi'){
+      let arr=Array.isArray(cur)?cur.slice():[];
+      if(arr.includes(i)){ arr=arr.filter(x=>x!==i); b.classList.remove('on'); }
+      else { if(Q.max&&arr.length>=Q.max){ toast('Máximo '+Q.max); return; } arr.push(i); b.classList.add('on'); }
+      ASESOR.ans[Q.key]=arr; if(!arr.length) delete ASESOR.ans[Q.key];
+    } else {
+      const val=(o.v!=null?o.v:i);
+      if(cur===val){ delete ASESOR.ans[Q.key]; b.classList.remove('on'); }
+      else { ASESOR.ans[Q.key]=val; b.parentElement.querySelectorAll('.a2-opt').forEach(x=>x.classList.remove('on')); b.classList.add('on'); }
+    }
+    asesorRenderRes();
+  });
+  const rs=$('#a2reset'); if(rs) rs.onclick=()=>{ ASESOR.ans={}; renderAsesor(); };
+}
+function asesorRenderRes(){
+  const cont=$('#a2res'); if(!cont) return;
+  const base=(PRODUCTS||[]).filter(p=>p.visible!==false);
+  let res=base.map(p=>{const s=asesorScore(p,ASESOR.ans); return s?{p,...s}:null;}).filter(Boolean);
+  const scoring = res.some(r=>r.max>0);
+  if(scoring) res.sort((a,b)=> b.pct-a.pct || b.score-a.score);
+  const head = res.length
+    ? (scoring?`✨ Ordenados por coincidencia · ${res.length} perfumes`:`${res.length} perfumes — responde para ordenarlos`)
+    : 'Ningún perfume coincide con ese filtro 😅';
+  const list=res.slice(0,30);
+  cont.innerHTML=`<div class="a2-res-head">${head}</div>
+    <div class="a2-grid">${list.map((r,idx)=>`<button class="a2-card ${scoring&&idx===0?'top':''}" data-id="${r.p.id}">
+      ${scoring&&idx===0?`<span class="a2-crown">🏆 Mejor coincidencia</span>`:''}
+      ${scoring?`<span class="a2-pct ${r.pct>=70?'hi':(r.pct>=40?'mid':'lo')}">${r.pct}%</span>`:''}
+      <div class="a2-img">${imgsOf(r.p)[0]?`<img src="${esc(imgsOf(r.p)[0])}" loading="lazy">`:`<span class="ph">${esc((r.p.nombre||'?')[0])}</span>`}</div>
+      <div class="a2-name">${esc(r.p.nombre)}</div>
+      <div class="a2-meta">${esc(r.p.categoria||'')}${r.p.genero?' · '+esc(r.p.genero):''}</div>
+    </button>`).join('')}</div>`;
+  cont.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{ closeAsesor(); openProduct(b.dataset.id); });
 }
 
 /* ================= INICIO (hero + más vendidos + testimonios + categorías) ================= */

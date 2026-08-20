@@ -53,6 +53,11 @@ img{display:block;max-width:100%}
 .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
 .field{margin-bottom:14px}
 .hint{font-size:.76rem; color:var(--muted); margin:-6px 0 10px}
+.asesor-fields{border:1px dashed var(--line,#ccc); border-radius:12px; padding:14px; margin:6px 0 14px; background:rgba(241,7,163,.03)}
+.af-title{font-weight:700; font-size:.9rem; margin-bottom:12px} .af-title span{font-weight:400; color:var(--muted); font-size:.78rem}
+.chipset{display:flex; flex-wrap:wrap; gap:7px}
+.chip-sel{padding:7px 12px; border:1.5px solid var(--line,#ccc); border-radius:999px; background:#fff; cursor:pointer; font-size:.82rem}
+.chip-sel.on{border-color:#f107a3; background:rgba(241,7,163,.12); font-weight:700; color:#b1067a}
 .check{display:flex; align-items:center; gap:9px; margin-bottom:12px}
 .check input{width:auto}
 .check label{margin:0; text-transform:none; letter-spacing:0; color:var(--cream); font-size:.88rem}
@@ -275,6 +280,8 @@ const BUCKET = CONFIG.BUCKET || 'catalogo';
 const $ = s => document.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const MLS = ['2','3','5','10','30','Sellado'];
+const FAMILIAS = ['Cítricos / frescos','Frutales','Florales','Dulces','Aromáticos','Amaderados','Especiados','Limpios','Cremosos / avainillados','Intensos / orientales'];
+const ESTILOS  = ['Casual','Elegante','Seductor','Profesional','Juvenil','Misterioso','Sofisticado','Fresco / deportivo'];
 const MAYOR_MIN = Number(CONFIG.MAYOR_MIN)||0;
 $('#loginStore').textContent = CONFIG.TIENDA_NOMBRE;
 $('#storeTitle').textContent = CONFIG.TIENDA_NOMBRE;
@@ -523,7 +530,21 @@ function prodForm(id){
       <div class="field"><label>Ocasión</label><input id="pOcasion" value="${esc(p.ocasion||'')}" placeholder="Ej. Cita, Fiesta, Noche fresca (separa con comas)"><div id="ocasionPrev" class="hint" style="margin-top:6px"></div></div>
     </div>
 
-    <div class="check"><input type="checkbox" id="pDest" ${p.destacado?'checked':''}><label for="pDest">Destacado (aparece con etiqueta)</label></div>
+    <div class="asesor-fields">
+      <div class="af-title">🎯 Datos para el Asesor de Perfumes <span>(mejoran la recomendación automática)</span></div>
+      <div class="grid3">
+        <div class="field"><label>Dulzura</label>
+          <select id="pDulzura">${[['','—'],['1','1 · Nada dulce'],['2','2 · Poco'],['3','3 · Equilibrado'],['4','4 · Bastante'],['5','5 · Muy dulce']].map(([v,l])=>`<option value="${v}" ${String(p.dulzura||'')===v?'selected':''}>${l}</option>`).join('')}</select></div>
+        <div class="field"><label>Intensidad</label>
+          <select id="pIntensidad">${[['','—'],['1','1 · Suave'],['2','2 · Ligera'],['3','3 · Moderada'],['4','4 · Fuerte'],['5','5 · Muy intensa']].map(([v,l])=>`<option value="${v}" ${String(p.intensidad||'')===v?'selected':''}>${l}</option>`).join('')}</select></div>
+        <div class="field"><label>Momento</label>
+          <select id="pMomento">${[['','—'],['dia','☀️ Día'],['noche','🌙 Noche'],['ambos','🔄 Día y noche']].map(([v,l])=>`<option value="${v}" ${String(p.momento||'')===v?'selected':''}>${l}</option>`).join('')}</select></div>
+      </div>
+      <div class="field"><label>Familia olfativa</label>
+        <div class="chipset" id="pFamilia">${FAMILIAS.map(f=>`<button type="button" class="chip-sel ${(Array.isArray(p.familia)&&p.familia.includes(f))?'on':''}" data-v="${esc(f)}">${esc(f)}</button>`).join('')}</div></div>
+      <div class="field"><label>Estilo / personalidad</label>
+        <div class="chipset" id="pEstilo">${ESTILOS.map(s=>`<button type="button" class="chip-sel ${(Array.isArray(p.estilo)&&p.estilo.includes(s))?'on':''}" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
+    </div>
     <div class="check"><input type="checkbox" id="pVis" ${p.visible!==false?'checked':''}><label for="pVis">Visible en el catálogo</label></div>
     <div class="check"><input type="checkbox" id="pRegalo" ${p.regalo_permitido?'checked':''}><label for="pRegalo">🎁 Permitido como regalo de combo (se ofrece su decant de 2ml gratis)</label></div>
 
@@ -577,6 +598,8 @@ function prodForm(id){
     el.innerHTML = items.length ? ('Se verá así: '+items.map(s=>`${emojiDe(s)} ${esc(s)}`).join('   ')) : 'Escribe las ocasiones separadas por comas y saldrán con su emoji automático.';
   }
   if($('#pOcasion')){ $('#pOcasion').oninput=renderOcasionPrev; renderOcasionPrev(); }
+  // Chips seleccionables (familia / estilo)
+  document.querySelectorAll('#pFamilia .chip-sel, #pEstilo .chip-sel').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
 
   // Auto-seleccionar notas de la biblioteca según lo escrito en salida/corazón/fondo
   function normNota(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
@@ -610,6 +633,11 @@ function prodForm(id){
       imagenes:imgs, imagen_url:imgs[0]||null, presentaciones:presLimpio,
       notas_salida:$('#pSalida').value.trim()||null, notas_corazon:$('#pCorazon').value.trim()||null, notas_fondo:$('#pFondo').value.trim()||null,
       longevidad:$('#pLong').value.trim()||null, estela:$('#pEstela').value.trim()||null, ocasion:$('#pOcasion').value.trim()||null,
+      dulzura: $('#pDulzura').value?parseInt($('#pDulzura').value):null,
+      intensidad: $('#pIntensidad').value?parseInt($('#pIntensidad').value):null,
+      momento: $('#pMomento').value||null,
+      familia: [...document.querySelectorAll('#pFamilia .chip-sel.on')].map(b=>b.dataset.v),
+      estilo:  [...document.querySelectorAll('#pEstilo .chip-sel.on')].map(b=>b.dataset.v),
       destacado:$('#pDest').checked, visible:$('#pVis').checked, regalo_permitido:$('#pRegalo').checked,
     };
     let pid=id, error;

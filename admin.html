@@ -508,14 +508,14 @@ function prodForm(id){
       <div class="chips" style="margin-top:8px">${MLS.map(m=>`<button class="np" data-addml="${m}">+ ${mlLabel(m)}</button>`).join('')}</div>
     </div>
 
-    <div class="field"><label>Notas aromáticas (biblioteca)</label>
-      <div class="chips" id="notasPick">${NOTAS.length?NOTAS.map(n=>`<button class="np ${selNotas.has(n.id)?'sel':''}" data-nota="${n.id}">${esc(n.nombre)}</button>`).join(''):'<span class="hint">No hay notas aún. Créalas en la pestaña Notas.</span>'}</div>
-    </div>
-
     <div class="grid3">
       <div class="field"><label>Notas de salida</label><input id="pSalida" value="${esc(p.notas_salida||'')}"></div>
       <div class="field"><label>Notas de corazón</label><input id="pCorazon" value="${esc(p.notas_corazon||'')}"></div>
       <div class="field"><label>Notas de fondo</label><input id="pFondo" value="${esc(p.notas_fondo||'')}"></div>
+    </div>
+    <div class="field"><label>Notas que se mostrarán (detectadas automáticamente)</label>
+      <div id="notasPrev" class="chips"></div>
+      <div class="hint">Se toman de lo que escribas arriba y se cruzan con tu biblioteca de notas (solo esas salen con su ícono en la ficha).</div>
     </div>
     <div class="grid3">
       <div class="field"><label>Duración</label><input id="pLong" value="${esc(p.longevidad||'')}" placeholder="Ej. 8-10 h"></div>
@@ -579,18 +579,16 @@ function prodForm(id){
 
   // Auto-seleccionar notas de la biblioteca según lo escrito en salida/corazón/fondo
   function normNota(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
-  function autoSelectNotas(){
+  function notasDetectadas(){
     const txt=[$('#pSalida').value,$('#pCorazon').value,$('#pFondo').value].join(',');
     const tokens=txt.split(/[,;/·|\n]+/).map(normNota).filter(Boolean);
-    NOTAS.forEach(n=>{
-      const nn=normNota(n.nombre); if(nn.length<2) return;
-      const hit=tokens.some(t=> t===nn || (nn.length>=3 && t.includes(nn)) );
-      if(hit && !selNotas.has(n.id)){
-        selNotas.add(n.id);
-        const btn=$('#notasPick').querySelector(`[data-nota="${n.id}"]`);
-        if(btn) btn.classList.add('sel');
-      }
-    });
+    return NOTAS.filter(n=>{ const nn=normNota(n.nombre); if(nn.length<2) return false; return tokens.some(t=> t===nn || (nn.length>=3 && t.includes(nn)) ); });
+  }
+  function autoSelectNotas(){
+    const hits=notasDetectadas();
+    selNotas = new Set(hits.map(n=>n.id));
+    const prev=$('#notasPrev');
+    if(prev) prev.innerHTML = hits.length ? hits.map(n=>`<span class="np sel">${esc(n.nombre)}</span>`).join('') : '<span class="hint">Escribe las notas arriba y aquí verás las que se mostrarán.</span>';
   }
   ['#pSalida','#pCorazon','#pFondo'].forEach(sel=>{ const el=$(sel); if(el) el.addEventListener('input', autoSelectNotas); });
   autoSelectNotas();
@@ -600,9 +598,13 @@ function prodForm(id){
     const nombre=$('#pNombre').value.trim(); if(!nombre){ toast('Ponle un nombre',true); return; }
     const presLimpio = pres.filter(x=>String(x.ml).trim() && Number(x.precio)>0)
       .map(x=>({ml:String(x.ml).trim(), precio:Number(x.precio), precio_may:x.precio_may?Number(x.precio_may):0, antes:x.antes?Number(x.antes):null, stock:(x.stock===''||x.stock==null)?null:(parseInt(x.stock)||0), activo:x.activo!==false}));
+    const precioBase = presLimpio.length ? Math.min(...presLimpio.map(x=>x.precio)) : 0;
+    // Notas: se derivan automáticamente de lo escrito en salida/corazón/fondo (match con la biblioteca)
+    selNotas = new Set(notasDetectadas().map(n=>n.id));
     const payload = {
       marca:$('#pMarca').value.trim(), nombre, tipo:$('#pTipo').value, categoria:$('#pCat').value, genero:$('#pGen').value,
       orden:parseInt($('#pOrden').value)||0, descripcion:$('#pDesc').value.trim(),
+      precio: precioBase,
       stock: (()=>{ const ss=presLimpio.map(x=>x.stock).filter(v=>v!=null); return ss.length? ss.reduce((a,b)=>a+Number(b),0) : null; })(),
       imagenes:imgs, imagen_url:imgs[0]||null, presentaciones:presLimpio,
       notas_salida:$('#pSalida').value.trim()||null, notas_corazon:$('#pCorazon').value.trim()||null, notas_fondo:$('#pFondo').value.trim()||null,

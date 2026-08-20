@@ -133,15 +133,29 @@ const CONFIG = {
     titulo: "Arma tu combo",
     subtitulo: "Elige tus decants favoritos y ahorra automáticamente",
     envio_gratis_desde: 200,           // "Te faltan S/X para envío gratis" (0 = ocultar)
-    // Precio base por (categoría, talla). Si el producto tiene su propio precio en esa talla, se usa ese.
+    // Precio base por (categoría, talla) — imagen 1.
     precios: {
-      "Árabe":     { "2": 12, "3": 15, "5": 18, "10": 30, "30": 80 },
-      "Diseñador": { "2": 20, "3": 24, "5": 39, "10": 75, "30": 180 },
-      "Nicho":     { "2": 34, "3": 39, "5": 65, "10": 110 },
+      "Árabe":     { "2": 10, "3": 15, "5": 20, "10": 35 },
+      "Diseñador": { "2": 18, "3": 25, "5": 40, "10": 75 },
+      "Nicho":     { "2": 30, "3": 40, "5": 79, "10": 110 },
     },
-    // Descuento por CANTIDAD (conteo efectivo) — tramos universales:
-    pct_tramos: [ { n:2, pct:5 }, { n:3, pct:10 }, { n:5, pct:15 } ],
-    // Tope de % que alcanza cada categoría POR SÍ SOLA (se rompe si hay un decant más caro en el combo):
-    topes: { "Árabe": 15, "Diseñador": 10, "Nicho": 5 },
+    // Tablas de COMBO: N unidades de una talla por un precio TOTAL (imágenes 2, 3 y 4).
+    combos: {
+      "Árabe": [
+        { cant:2, ml:"2", precio:18 }, { cant:2, ml:"3", precio:26 }, { cant:2, ml:"5", precio:32 }, { cant:2, ml:"10", precio:60 },
+        { cant:3, ml:"2", precio:26 }, { cant:3, ml:"3", precio:37 }, { cant:3, ml:"5", precio:50 }, { cant:3, ml:"10", precio:90 },
+        { cant:5, ml:"2", precio:40 }, { cant:5, ml:"3", precio:60 }, { cant:5, ml:"5", precio:82 }, { cant:5, ml:"10", precio:150 },
+      ],
+      "Diseñador": [
+        { cant:2, ml:"2", precio:32 }, { cant:2, ml:"3", precio:44 }, { cant:2, ml:"5", precio:72 }, { cant:2, ml:"10", precio:140 },
+        { cant:3, ml:"2", precio:46 }, { cant:3, ml:"3", precio:65 }, { cant:3, ml:"5", precio:105 }, { cant:3, ml:"10", precio:205 },
+        { cant:5, ml:"2", precio:80 }, { cant:5, ml:"3", precio:110 }, { cant:5, ml:"5", precio:175 }, { cant:5, ml:"10", precio:325 },
+      ],
+      "Nicho": [
+        { cant:2, ml:"2", precio:55 }, { cant:2, ml:"3", precio:70 }, { cant:2, ml:"5", precio:125 }, { cant:2, ml:"10", precio:200 },
+        { cant:3, ml:"2", precio:80 }, { cant:3, ml:"3", precio:105 }, { cant:3, ml:"5", precio:190 }, { cant:3, ml:"10", precio:305 },
+        { cant:5, ml:"2", precio:135 }, { cant:5, ml:"3", precio:180 }, { cant:5, ml:"5", precio:325 }, { cant:5, ml:"10", precio:500 },
+      ],
+    },
   },
 };

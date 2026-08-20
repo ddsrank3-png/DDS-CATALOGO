@@ -1154,39 +1154,45 @@ function armarDesdeDe(cat){ const v=Object.values(armarPrecios()[cat]||{}).map(N
 function armarCalc(){
   const cfg=armarCfg();
   const precios=cfg.precios||{};
+  const combos=cfg.combos||{};
   const items=armarSel;
   const n=items.length;
-  // Base = el precio con el que se agregó cada decant (precio registrado del producto; fallback a la tabla).
-  const baseDe=(it)=>{ const v=Number(it.precio); if(v>0) return v; const p=(precios[it.categoria]||{})[String(it.ml)]; return p!=null?Number(p):0; };
-  // Rango GLOBAL de cada categoría por precio promedio (1 = más barata)
+  // Precio base = precio registrado del producto; si no, la tabla base
+  const base=(it)=>{ const v=Number(it.precio); if(v>0) return v; const p=(precios[it.categoria]||{})[String(it.ml)]; return p!=null?Number(p):0; };
+  // Rango global por precio mínimo (0 = más barata)
   const rankOf=(cat)=>{ const vals=Object.values(precios[cat]||{}).map(Number).filter(x=>x>0); return vals.length?Math.min(...vals):0; };
   const allCats=Object.keys(precios);
   const sortedAll=[...allCats].sort((a,b)=>rankOf(a)-rankOf(b));
-  const rankIdx={}; sortedAll.forEach((c,i)=>rankIdx[c]=i+1);          // global: árabe=1, diseñador=2, nicho=3
+  const idx={}; sortedAll.forEach((c,i)=>idx[c]=i);       // 0=árabe,1=diseñador,2=nicho
   const cats=[...new Set(items.map(i=>i.categoria))];
   const cnt={}; cats.forEach(c=>cnt[c]=items.filter(i=>i.categoria===c).length);
-  // Tramos universales por conteo efectivo (redondeo hacia abajo)
-  const tramos=(cfg.pct_tramos||[{n:2,pct:5},{n:3,pct:10},{n:5,pct:15}]).slice().sort((a,b)=>a.n-b.n);
-  const pctDeEff=(eff)=>{ let p=0; for(const t of tramos){ if(eff>=t.n) p=t.pct; } return p; };
-  const topes=cfg.topes||{ "Árabe":15, "Diseñador":10, "Nicho":5 };
-  // Peso de un decant de categoría X hacia el tramo de la categoría C
-  const peso=(X,C)=>{ if(X===C) return 1; if(rankOf(X)<rankOf(C)) return 0.5; return 0.5+0.5*(rankIdx[X]||2); }; // más caro: diseñador 1.5, nicho 2
+  // Conversión: peso de un decant X hacia el tramo de C = 2^(nivel(X)-nivel(C))
+  //  (más caro suma más: dis→árabe=2, nicho→árabe=4, nicho→dis=2; más barato suma menos: árabe→dis=0.5, árabe→nicho=0.25)
+  const peso=(X,C)=> Math.pow(2, (idx[X]||0)-(idx[C]||0));
+  const tiersOf=(cat)=>{ const a=(combos[cat]||[]).map(x=>Number(x.cant)); return [...new Set(a)].sort((x,y)=>x-y); };
+  const comboP=(cat,cant,ml)=>{ const f=(combos[cat]||[]).find(x=>Number(x.cant)===cant && String(x.ml)===String(ml)); return f?Number(f.precio):null; };
 
-  const pctByCat={};
+  // Tramo (cantidad de combo) por categoría según el conteo convertido
+  const tierByCat={};
   cats.forEach(c=>{
-    let eff=0; cats.forEach(x=>{ eff += cnt[x]*peso(x,c); });
-    let pct=pctDeEff(eff);
-    const hayMasCaro = cats.some(x=>rankOf(x)>rankOf(c) && cnt[x]>0);
-    if(!hayMasCaro){ const tope=topes[c]!=null?topes[c]:15; pct=Math.min(pct,tope); }
-    pctByCat[c]=pct;
+    const tiers=tiersOf(c); if(!tiers.length){ tierByCat[c]=0; return; }
+    let eff=0; cats.forEach(x=>eff+=cnt[x]*peso(x,c));
+    let t=0; for(const x of tiers){ if(eff>=x) t=x; }
+    tierByCat[c]=t;   // 0 = sin combo (precio base)
   });
 
   let subtotal=0, total=0;
-  items.forEach(it=>{ const base=baseDe(it); subtotal+=base; total += base*(1-(pctByCat[it.categoria]||0)/100); });
+  items.forEach(it=>{
+    const b=base(it); subtotal+=b;
+    const t=tierByCat[it.categoria];
+    let pu=b;
+    if(t){ const cp=comboP(it.categoria,t,it.ml); if(cp!=null) pu=cp/t; }
+    total+=pu;
+  });
   subtotal=Math.round(subtotal*100)/100;
   total=Math.round(total*100)/100;
   const desc=Math.max(0, Math.round((subtotal-total)*100)/100);
-  return { subtotal, desc, total, n, pct: subtotal>0?Math.round(desc/subtotal*100):0, pctByCat };
+  return { subtotal, desc, total, n, pct: subtotal>0?Math.round(desc/subtotal*100):0, tierByCat };
 }
 
 function renderArmar(){

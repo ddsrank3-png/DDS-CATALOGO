@@ -124,6 +124,14 @@ const CONFIG = {
     // "Nicho":     "https://.../nicho.jpg",
   },
 
+  // Aviso del sistema de puntos (inicio + catálogo). Se muestra solo si REGALO_COMBO está activo.
+  PUNTOS_AVISO: {
+    activo: true,
+    inicio_titulo: "SISTEMA DE PUNTOS ACTIVO",
+    inicio_texto: "Completa puntos y llévate premios GRATIS. ¡Ven a conocerlo!",
+    catalogo_texto: "🎁 Completa puntos para llevarte premios gratis",
+  },
+
   // Descuento por perfumes SELLADOS: desde 'desde' unidades, S/'por_unidad' menos por cada sellado.
   //  incremento>0 hace que el descuento por unidad crezca con la cantidad (0 = fijo).
   SELLADO_DESC: { activo:true, desde:2, por_unidad:5, incremento:0 },

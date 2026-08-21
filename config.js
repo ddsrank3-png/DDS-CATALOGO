@@ -124,6 +124,9 @@ const CONFIG = {
     // "Nicho":     "https://.../nicho.jpg",
   },
 
+  // Empaque para envío (Shalom): si el pedido es menor a 'gratis_desde', se suma 'monto'. Cliente en Ica no paga empaque.
+  EMPAQUE: { activo:true, monto:5, gratis_desde:200 },
+
   // Aviso del sistema de puntos (inicio + catálogo). Se muestra solo si REGALO_COMBO está activo.
   PUNTOS_AVISO: {
     activo: true,

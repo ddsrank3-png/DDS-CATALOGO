@@ -657,6 +657,7 @@ function prodForm(id){
       <div class="field"><label>Perfil aromático / acordes <span style="font-weight:400;color:var(--muted)">(se usa en el asesor y en la ficha)</span></label>
         <input id="pPerfil" value="${esc(p.perfil||'')}" placeholder="Ej. Tropical · Coco · Higo · Verde · Cremoso · Dulce · Amaderado"></div>
     </div>
+    <div class="check"><input type="checkbox" id="pDest" ${p.destacado?'checked':''}><label for="pDest">Destacado (aparece con etiqueta)</label></div>
     <div class="check"><input type="checkbox" id="pVis" ${p.visible!==false?'checked':''}><label for="pVis">Visible en el catálogo</label></div>
     <div class="check"><input type="checkbox" id="pRegalo" ${p.regalo_permitido?'checked':''}><label for="pRegalo">🎁 Permitido como regalo de combo (se ofrece su decant de 2ml gratis)</label></div>
 
@@ -755,7 +756,7 @@ function prodForm(id){
       perfil: $('#pPerfil')?($('#pPerfil').value.trim()||null):null,
       familia: [...document.querySelectorAll('#pFamilia .chip-sel.on')].map(b=>b.dataset.v),
       estilo:  [...document.querySelectorAll('#pEstilo .chip-sel.on')].map(b=>b.dataset.v),
-      destacado:$('#pDest').checked, visible:$('#pVis').checked, regalo_permitido:$('#pRegalo').checked,
+      destacado:(($('#pDest')||{}).checked)||false, visible:($('#pVis')? $('#pVis').checked : true), regalo_permitido:(($('#pRegalo')||{}).checked)||false,
     };
     let pid=id, error;
     // Guardado robusto: si Supabase reporta una columna inexistente, la quita y reintenta.

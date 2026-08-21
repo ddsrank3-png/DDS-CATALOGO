@@ -216,9 +216,10 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .combo-nudge:hover{filter:brightness(1.05)}
 /* Cuadro de combo en el carrito */
 .combo-box{border:2px solid var(--gold-3); border-radius:14px; padding:8px 10px 4px; margin-bottom:12px; background:var(--gold-pale)}
-.combo-box-h{display:flex; justify-content:space-between; align-items:center; font-weight:800; letter-spacing:.06em; font-size:.82rem; color:var(--gold-deep); padding:4px 4px 8px}
-.combo-box-save{background:#12833f; color:#fff; font-size:.68rem; padding:3px 8px; border-radius:999px; letter-spacing:0}
-.combo-box .ci{background:#fff}
+.cart-combo{border:2px solid var(--gold-3); border-radius:14px; padding:8px 10px 4px; margin-bottom:12px; background:var(--gold-pale)}
+.cart-combo-h{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; font-weight:800; letter-spacing:.04em; font-size:.82rem; color:var(--gold-deep); padding:6px 4px 8px}
+.cart-combo-save{background:#12833f; color:#fff; font-size:.68rem; padding:3px 8px; border-radius:999px; letter-spacing:0; white-space:nowrap}
+.cart-combo .ci{background:#fff}
 @keyframes nudgeShake{0%,88%,100%{transform:translateX(0) rotate(0)}90%{transform:translateX(-2px) rotate(-.6deg)}92%{transform:translateX(3px) rotate(.6deg)}94%{transform:translateX(-3px) rotate(-.5deg)}96%{transform:translateX(2px) rotate(.4deg)}98%{transform:translateX(-1px) rotate(0)}}
 @media(prefers-reduced-motion:reduce){ .combo-nudge{animation:none} }
 .gift-falta{font-size:.78rem; color:var(--gold-deep); margin-top:8px}
@@ -672,6 +673,16 @@ header::after{background:var(--line); opacity:1}
 .pd-perfil .cell{border:1px solid var(--line); border-radius:10px; padding:10px 12px}
 .pd-perfil .k{font-size:.72rem; color:var(--muted-2)} .pd-perfil .v{font-weight:700; color:var(--cream); font-size:.95rem}
 .pd-metrics{display:flex; flex-direction:column; gap:14px}
+.pd-perfil-chips{display:flex; flex-wrap:wrap; gap:6px}
+.pd-perfil-chips span{font-size:.74rem; background:var(--gold-pale); border:1px solid var(--gold-3); color:var(--gold-deep); border-radius:999px; padding:4px 10px}
+.loadbrand{display:flex; flex-direction:column; align-items:center; gap:14px; animation:loadfade 1.2s ease}
+.loadbrand .loadlogo{width:74px; height:74px; object-fit:contain}
+.loadbrand .loadname{font-family:'Cormorant Garamond',serif; font-size:1.5rem; letter-spacing:.18em; color:var(--cream); text-transform:uppercase}
+.loadbrand .loaddots{display:flex; gap:6px}
+.loadbrand .loaddots span{width:7px; height:7px; border-radius:50%; background:var(--gold-3); animation:loaddot 1s infinite ease-in-out}
+.loadbrand .loaddots span:nth-child(2){animation-delay:.15s} .loadbrand .loaddots span:nth-child(3){animation-delay:.3s}
+@keyframes loadfade{from{opacity:0; transform:translateY(6px)}to{opacity:1}}
+@keyframes loaddot{0%,80%,100%{opacity:.25; transform:scale(.8)}40%{opacity:1; transform:scale(1)}}
 .pm-top{display:flex; align-items:center; gap:8px; margin-bottom:6px}
 .pm-ic{font-size:1.05rem}
 .pm-lbl{font-size:.8rem; color:var(--muted-2); text-transform:uppercase; letter-spacing:.08em; flex:1}
@@ -831,6 +842,9 @@ header::after{background:var(--line); opacity:1}
     <button class="cart-btn" id="loginBtn" aria-label="Ingresar" title="Ingresar a mi pedido">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.4 3.1-5.6 7-5.6s7 2.2 7 5.6" stroke-linecap="round"/></svg>
     </button>
+    <button class="cart-btn" id="shareBtn" aria-label="Compartir" title="Compartir catálogo · QR">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.9l7.8-4.4M8.1 13.1l7.8 4.4" stroke-linecap="round"/></svg>
+    </button>
     <button class="cart-btn" id="openCart" aria-label="Carrito">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M6 6h15l-1.5 9h-12z" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M6 6L5 3H3" stroke-linecap="round"/></svg>
       <span class="cart-count" id="cartCount" style="display:none">0</span>
@@ -919,18 +933,19 @@ const $ = s => document.querySelector(s);
 const fmt = n => CONFIG.MONEDA + ' ' + Number(n).toFixed(2);
 const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-/* Pantalla de carga: muestra el texto de CARGA_TEXTO (elegante). Si no hay, usa el logo o el nombre. */
+/* Pantalla de carga: logo + nombre de la tienda (elegante). */
 (function(){ const l=$('#loader'); if(!l) return;
+  const ciudad=CONFIG.CIUDAD?(' '+CONFIG.CIUDAD):'';
+  const logo=CONFIG.LOGO_CARGA||CONFIG.LOGO_URL||'';
   const txt=(CONFIG.CARGA_TEXTO || '').trim();
-  if(txt){
-    const w=txt.split(/\s+/);
-    const l1=esc(w.shift()||'');
-    const l2=esc(w.join(' '));
-    l.innerHTML='<div class="brandmark"><div class="l1">'+l1+'</div>'
-      +(l2?'<div class="l2">'+l2+'</div>':'')
-      +'<div class="rule"></div></div>';
-  } else if(CONFIG.LOGO_CARGA){
-    l.innerHTML='<img alt="">'; l.querySelector('img').src=CONFIG.LOGO_CARGA;
+  if(logo){
+    l.innerHTML='<div class="loadbrand"><img class="loadlogo" alt="">'
+      +'<div class="loadname">'+esc((CONFIG.TIENDA_NOMBRE||'')+ciudad)+'</div>'
+      +'<div class="loaddots"><span></span><span></span><span></span></div></div>';
+    l.querySelector('.loadlogo').src=logo;
+  } else if(txt){
+    const w=txt.split(/\s+/); const l1=esc(w.shift()||''); const l2=esc(w.join(' '));
+    l.innerHTML='<div class="brandmark"><div class="l1">'+l1+'</div>'+(l2?'<div class="l2">'+l2+'</div>':'')+'<div class="rule"></div></div>';
   } else {
     l.innerHTML='<div class="word">'+esc(CONFIG.TIENDA_NOMBRE||'')+'</div>';
   }
@@ -1212,7 +1227,7 @@ const ASESOR_Q=[
    opts:[{l:'Casual',e:'😎',kw:['casual','relaj']},{l:'Elegante',e:'👔',kw:['elegan']},{l:'Seductor',e:'🔥',kw:['seduc','sensual']},{l:'Profesional',e:'🧑‍💼',kw:['profesional','oficina','trabajo']},{l:'Juvenil',e:'🧢',kw:['juvenil','joven']},{l:'Misterioso',e:'🖤',kw:['misterio','oscur','oriental']},{l:'Sofisticado',e:'✨',kw:['sofistic','refinad']},{l:'Fresco / deportivo',e:'🌿',kw:['fresc','deport','acuatic']}] },
 ];
 function _norm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-function _pBlob(p){ return _norm([p.descripcion,p.ocasion,p.notas_salida,p.notas_corazon,p.notas_fondo,p.estela,p.longevidad].join(' ')); }
+function _pBlob(p){ return _norm([p.descripcion,p.ocasion,p.notas_salida,p.notas_corazon,p.notas_fondo,p.estela,p.longevidad,p.perfil].join(' ')); }
 function _dulzuraDe(blob){ const dulces=['vainilla','caramelo','toffee','azucar','miel','gourmand','dulce','chocolate','praline','coco']; const secos=['citric','amaderad','cuero','vetiver','marino','acuatic','fresc','aromatic','especia']; let d=0,s=0; dulces.forEach(k=>{if(blob.includes(k))d++;}); secos.forEach(k=>{if(blob.includes(k))s++;}); if(d>=3)return 5; if(d===2)return 4; if(d===1&&s===0)return 4; if(d===1)return 3; if(s>=2)return 1; if(s===1)return 2; return 3; }
 function asesorScore(p,ans){
   const blob=_pBlob(p);
@@ -1354,8 +1369,9 @@ function asesorRenderStep(){
   q.querySelectorAll('.a2-opt').forEach(b=>b.onclick=()=>{
     const k=+b.dataset.i, o=Q.opts[k];
     if(Q.tipo==='multi'){
-      let arr=Array.isArray(cur)?cur.slice():[];
-      if(arr.includes(k)){ arr=arr.filter(x=>x!==k); b.classList.remove('on'); }
+      let arr=Array.isArray(ASESOR.ans[Q.key])?ASESOR.ans[Q.key].slice():[];
+      const yaEsta=arr.includes(k);
+      if(yaEsta){ arr=arr.filter(x=>x!==k); b.classList.remove('on'); }
       else { if(Q.max&&arr.length>=Q.max){ toast('Máximo '+Q.max); return; } arr.push(k); b.classList.add('on'); }
       if(arr.length) ASESOR.ans[Q.key]=arr; else delete ASESOR.ans[Q.key];
       asesorRenderRes();
@@ -2729,8 +2745,10 @@ function openProduct(id){
       <div class="pd-info">
         <div class="pd-marca">${esc(p.marca||'')}</div>
         <h1 class="pd-name">${esc(p.nombre)}</h1>
-        <div class="pd-desc">${p.genero?`<b>${esc(p.genero)}</b> · `:''}${esc(p.descripcion||'')}</div>
+        <div class="pd-desc">${p.genero?`<b>${esc(p.genero)}</b> · `:''}${p.concentracion?esc(p.concentracion)+' · ':''}${esc(p.descripcion||'')}</div>
         <div class="pd-tags">${catChip?`<span class="pd-tag">${esc(catChip)}</span>`:''}${stockHtml}</div>
+
+        ${p.perfil?`<div class="pd-block"><h4>Perfil aromático</h4><div class="pd-perfil-chips">${String(p.perfil).split(/[·,;/|]+/).map(s=>s.trim()).filter(Boolean).map(s=>`<span>${esc(s)}</span>`).join('')}</div></div>`:''}
 
         ${(p.longevidad||p.estela)?`<div class="pd-block"><h4>Perfil olfativo</h4><div class="pd-metrics">
           ${p.longevidad?perfilBar('⏳','Longevidad',p.longevidad,longevidadFrac(p.longevidad)):''}
@@ -3053,8 +3071,8 @@ function renderCart(){
   if(comboLines.length){
     const cSub=comboLines.reduce((s,l)=>s+l.unit*l.qty,0);
     const cBase=comboLines.reduce((s,l)=>s+(l.unitOrig||l.unit)*l.qty,0);
-    comboBoxHtml=`<div class="combo-box">
-      <div class="combo-box-h">🧩 COMBO ARMADO ${cBase>cSub?`<span class="combo-box-save">ahorras ${fmt(cBase-cSub)}</span>`:''}</div>
+    comboBoxHtml=`<div class="cart-combo">
+      <div class="cart-combo-h">🧩 COMBO ARMADO ${cBase>cSub?`<span class="cart-combo-save">ahorras ${fmt(cBase-cSub)}</span>`:''}</div>
       ${comboLines.map(lineHtml).join('')}
     </div>`;
   }
@@ -3153,6 +3171,7 @@ function openCart(){ renderCart(); $('#drawer').classList.add('open'); const sc=
 function closeCart(){ $('#drawer').classList.remove('open'); const sc=$('#drawerScrim'); if(sc) sc.classList.remove('open'); document.body.style.overflow=''; }
 (function(){ const sc=$('#drawerScrim'); if(sc) sc.onclick=closeCart; })();
 $('#openCart').onclick = openCart;
+{ const sb2=$('#shareBtn'); if(sb2) sb2.onclick = openShare; }
 document.querySelectorAll('[data-close-cart]').forEach(el=>el.onclick=closeCart);
 
 async function checkout(R){

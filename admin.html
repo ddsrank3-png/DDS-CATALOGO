@@ -58,6 +58,11 @@ img{display:block;max-width:100%}
 .chipset{display:flex; flex-wrap:wrap; gap:7px}
 .chip-sel{padding:7px 12px; border:1.5px solid var(--line,#ccc); border-radius:999px; background:#fff; cursor:pointer; font-size:.82rem}
 .chip-sel.on{border-color:#f107a3; background:rgba(241,7,163,.12); font-weight:700; color:#b1067a}
+.paste-box{border:2px dashed #f107a3; border-radius:12px; padding:14px; margin-bottom:16px; background:rgba(241,7,163,.04)}
+.paste-box .pb-h{font-weight:800; font-size:.95rem; margin-bottom:4px}
+.paste-box .pb-sub{font-size:.78rem; color:var(--muted); margin-bottom:10px}
+.paste-box textarea{width:100%; border:1px solid var(--line,#ccc); border-radius:10px; padding:10px; font-size:.86rem; resize:vertical}
+.paste-box .pb-btn{margin-top:10px; background:#111; color:#fff; font-weight:700; padding:10px 16px; border-radius:999px; cursor:pointer; font-size:.86rem}
 .check{display:flex; align-items:center; gap:9px; margin-bottom:12px}
 .check input{width:auto}
 .check label{margin:0; text-transform:none; letter-spacing:0; color:var(--cream); font-size:.88rem}
@@ -282,6 +287,81 @@ const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
 const MLS = ['2','3','5','10','30','Sellado'];
 const FAMILIAS = ['Cítricos / frescos','Frutales','Florales','Dulces','Aromáticos','Amaderados','Especiados','Limpios','Cremosos / avainillados','Intensos / orientales'];
 const ESTILOS  = ['Casual','Elegante','Seductor','Profesional','Juvenil','Misterioso','Sofisticado','Fresco / deportivo'];
+
+const _nrm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+function _escala10a5(s){
+  if(!s) return null;
+  const m=String(s).match(/(\d+(?:[.,]\d+)?)\s*\/\s*10/); if(m){ const n=parseFloat(m[1].replace(',','.')); return Math.max(1,Math.min(5,Math.round(n/2))); }
+  const t=_nrm(s);
+  if(/media-alta|moderada-alta|bastante/.test(t)) return 4;
+  if(/muy/.test(t)) return 5;
+  if(/(^|[^-])alta|intens|fuerte/.test(t)) return 4;
+  if(/media|moderad|equilibr/.test(t)) return 3;
+  if(/poc|baja|ligera|suave/.test(t)) return 2;
+  if(/nada/.test(t)) return 1;
+  return null;
+}
+function parseFicha(text){
+  const t=String(text).replace(/\r/g,''); const lines=t.split('\n').map(s=>s.trim());
+  const out={};
+  const val=(labels)=>{ for(const line of lines){ const m=line.match(/^([^:]{2,40}):\s*(.+)$/); if(m){ const key=_nrm(m[1]); if(labels.some(l=>{const nl=_nrm(l); return key===nl||key.startsWith(nl);})) return m[2].trim(); } } return ''; };
+  const seccion=(label)=>{ // lista bajo "Label:" (misma línea o siguientes)
+    const idx=lines.findIndex(l=>_nrm(l).startsWith(_nrm(label))); if(idx<0) return '';
+    let items=[]; const same=lines[idx].split(':').slice(1).join(':'); if(same&&same.trim()) items.push(same.trim());
+    for(let i=idx+1;i<lines.length;i++){ const ln=lines[i]; if(!ln){ if(items.length)break; else continue; }
+      const nl=_nrm(ln);
+      if(/^(notas de|duraci|estela|ocasi|dulzura|intensidad|familia|estilo|perfil|momento|sensaci|publico|versatil|acordes|concentr|genero|descrip|\d+\.)/.test(nl)) break;
+      if(/^[^:]{2,30}:/.test(ln)) break;
+      items.push(ln.replace(/^[-•\u2192\u2022]\s*/,'').trim());
+    }
+    return items.filter(Boolean).join(', ');
+  };
+  const region=(from,to)=>{ const a=lines.findIndex(l=>_nrm(l).includes(_nrm(from))); if(a<0) return ''; let end=lines.length; for(let i=a+1;i<lines.length;i++){ if(to.some(x=>_nrm(lines[i]).includes(_nrm(x)))){ end=i; break; } } return lines.slice(a,end).join(' '); };
+  const matchList=(txt,opts)=>{ const tt=_nrm(txt); const f=[]; opts.forEach(o=>{ const ws=_nrm(o).split(/[\s/]+/).filter(w=>w.length>3); if(ws.some(w=>tt.includes(w))) f.push(o); }); return f; };
+
+  out.marca=val(['marca']);
+  out.nombre=val(['nombre']);
+  out.concentracion=val(['concentracion']);
+  out.anio=val(['ano de lanzamiento','anio','año de lanzamiento','ano']);
+  const g=_nrm(val(['genero comercial','genero','género comercial','género'])); if(/hombre/.test(g))out.genero='Hombre'; else if(/mujer/.test(g))out.genero='Mujer'; else if(/unisex/.test(g))out.genero='Unisex';
+  out.descripcion=val(['descripcion corta','descripcion']);
+  out.notas_salida=seccion('notas de salida');
+  out.notas_corazon=seccion('notas de corazon');
+  out.notas_fondo=seccion('notas de fondo');
+  out.longevidad=val(['duracion estimada','duracion','duración']);
+  out.estela=val(['estela']);
+  out.perfil=val(['perfil aromatico','perfil','acordes predominantes','acordes']);
+  out.dulzura=_escala10a5(val(['dulzura']));
+  out.intensidad=_escala10a5(val(['intensidad']));
+  // momento
+  const momTxt=_nrm(val(['momento de uso','mejor momento','momento'])+' '+region('momento',['temperatura','familia','9.','8.']));
+  const hayDia=/(dia|tarde|manana|diurn)/.test(momTxt), hayNoche=/noche/.test(momTxt);
+  if(hayDia&&hayNoche)out.momento='ambos'; else if(hayDia)out.momento='dia'; else if(hayNoche)out.momento='noche';
+  // ocasión
+  out.ocasion=seccion('ocasion')||seccion('principalmente');
+  // familia (región) y estilo (región)
+  const famReg=region('familia',['estilo','personalidad','perfil','10.','11.'])+' '+(out.perfil||'')+' '+(out.descripcion||'');
+  out.familia=matchList(famReg,FAMILIAS);
+  const estReg=region('estilo',['perfil','sensacion','publico','11.','12.']);
+  out.estilo=matchList(estReg||('') ,ESTILOS);
+  return out;
+}
+function aplicarFicha(d){
+  let n=0; const set=(id,v)=>{ if(v!=null&&v!==''&&$(id)){ $(id).value=v; n++; } };
+  set('#pMarca',d.marca); set('#pNombre',d.nombre); set('#pConcentracion',d.concentracion); set('#pAnio',d.anio);
+  set('#pDesc',d.descripcion);
+  set('#pSalida',d.notas_salida); set('#pCorazon',d.notas_corazon); set('#pFondo',d.notas_fondo);
+  set('#pLong',d.longevidad); set('#pEstela',d.estela); set('#pOcasion',d.ocasion); set('#pPerfil',d.perfil);
+  if(d.genero&&$('#pGen')){ [...$('#pGen').options].forEach(o=>{ if(o.value===d.genero||o.text===d.genero)$('#pGen').value=o.value; }); n++; }
+  if(d.dulzura&&$('#pDulzura')){ $('#pDulzura').value=String(d.dulzura); n++; }
+  if(d.intensidad&&$('#pIntensidad')){ $('#pIntensidad').value=String(d.intensidad); n++; }
+  if(d.momento&&$('#pMomento')){ $('#pMomento').value=d.momento; n++; }
+  if(Array.isArray(d.familia)&&d.familia.length){ document.querySelectorAll('#pFamilia .chip-sel').forEach(b=>{ b.classList.toggle('on', d.familia.includes(b.dataset.v)); }); n++; }
+  if(Array.isArray(d.estilo)&&d.estilo.length){ document.querySelectorAll('#pEstilo .chip-sel').forEach(b=>{ b.classList.toggle('on', d.estilo.includes(b.dataset.v)); }); n++; }
+  // refrescar vistas previas (notas / ocasión)
+  ['#pSalida','#pCorazon','#pFondo','#pOcasion'].forEach(s=>{ const el=$(s); if(el) el.dispatchEvent(new Event('input',{bubbles:true})); });
+  return n;
+}
 const MAYOR_MIN = Number(CONFIG.MAYOR_MIN)||0;
 $('#loginStore').textContent = CONFIG.TIENDA_NOMBRE;
 $('#storeTitle').textContent = CONFIG.TIENDA_NOMBRE;
@@ -489,6 +569,14 @@ function prodForm(id){
 
   $('#modal').innerHTML = `
     <h3>${id?'Editar':'Nuevo'} producto</h3>
+
+    <div class="paste-box">
+      <div class="pb-h">📋 Pega la ficha completa y autocompleta</div>
+      <div class="pb-sub">Copia toda la información del perfume (con sus títulos: Marca, Nombre, Notas de salida, Duración, Dulzura, Familia, Estilo, etc.) y pégala aquí. Rellenaremos las casillas automáticamente.</div>
+      <textarea id="pPaste" rows="4" placeholder="Marca: Rasasi&#10;Nombre: Hawas Tropical&#10;Notas de salida: Agua de coco, Hoja de higo, Jengibre&#10;Duración: 8-10+ horas&#10;Dulzura: 7/10 ..."></textarea>
+      <button type="button" class="pb-btn" id="pAutofill">✨ Autocompletar campos</button>
+    </div>
+
     <div class="grid2">
       <div class="field"><label>Marca</label><input id="pMarca" value="${esc(p.marca||'')}"></div>
       <div class="field"><label>Nombre</label><input id="pNombre" value="${esc(p.nombre||'')}"></div>
@@ -501,7 +589,11 @@ function prodForm(id){
       <div class="field"><label>Categoría</label><select id="pCat">${cats.map(c=>`<option ${p.categoria===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
       <div class="field"><label>Género</label><select id="pGen">${gens.map(g=>`<option ${p.genero===g?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
     </div>
-    <div class="field" style="max-width:200px"><label>Orden</label><input id="pOrden" type="number" value="${p.orden??0}"></div>
+    <div class="grid3">
+      <div class="field" style="max-width:200px"><label>Orden</label><input id="pOrden" type="number" value="${p.orden??0}"></div>
+      <div class="field"><label>Concentración</label><input id="pConcentracion" value="${esc(p.concentracion||'')}" placeholder="Ej. Eau de Parfum (EDP)"></div>
+      <div class="field"><label>Año</label><input id="pAnio" value="${esc(p.anio||'')}" placeholder="Ej. 2025"></div>
+    </div>
     <div class="field"><label>Descripción corta</label><input id="pDesc" value="${esc(p.descripcion||'')}" placeholder="Ej. Fresco, amaderado, elegante"></div>
 
     <div class="field"><label>Imágenes</label>
@@ -544,6 +636,8 @@ function prodForm(id){
         <div class="chipset" id="pFamilia">${FAMILIAS.map(f=>`<button type="button" class="chip-sel ${(Array.isArray(p.familia)&&p.familia.includes(f))?'on':''}" data-v="${esc(f)}">${esc(f)}</button>`).join('')}</div></div>
       <div class="field"><label>Estilo / personalidad</label>
         <div class="chipset" id="pEstilo">${ESTILOS.map(s=>`<button type="button" class="chip-sel ${(Array.isArray(p.estilo)&&p.estilo.includes(s))?'on':''}" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
+      <div class="field"><label>Perfil aromático / acordes <span style="font-weight:400;color:var(--muted)">(se usa en el asesor y en la ficha)</span></label>
+        <input id="pPerfil" value="${esc(p.perfil||'')}" placeholder="Ej. Tropical · Coco · Higo · Verde · Cremoso · Dulce · Amaderado"></div>
     </div>
     <div class="check"><input type="checkbox" id="pVis" ${p.visible!==false?'checked':''}><label for="pVis">Visible en el catálogo</label></div>
     <div class="check"><input type="checkbox" id="pRegalo" ${p.regalo_permitido?'checked':''}><label for="pRegalo">🎁 Permitido como regalo de combo (se ofrece su decant de 2ml gratis)</label></div>
@@ -600,6 +694,8 @@ function prodForm(id){
   if($('#pOcasion')){ $('#pOcasion').oninput=renderOcasionPrev; renderOcasionPrev(); }
   // Chips seleccionables (familia / estilo)
   document.querySelectorAll('#pFamilia .chip-sel, #pEstilo .chip-sel').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+  // Autocompletar desde ficha pegada
+  const paf=$('#pAutofill'); if(paf) paf.onclick=()=>{ const txt=$('#pPaste').value||''; if(!txt.trim()){ toast('Pega la ficha primero',true); return; } const n=aplicarFicha(parseFicha(txt)); toast('✨ '+n+' campos completados'); };
 
   // Auto-seleccionar notas de la biblioteca según lo escrito en salida/corazón/fondo
   function normNota(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
@@ -636,6 +732,9 @@ function prodForm(id){
       dulzura: $('#pDulzura').value?parseInt($('#pDulzura').value):null,
       intensidad: $('#pIntensidad').value?parseInt($('#pIntensidad').value):null,
       momento: $('#pMomento').value||null,
+      concentracion: $('#pConcentracion')?($('#pConcentracion').value.trim()||null):null,
+      anio: $('#pAnio')?($('#pAnio').value.trim()||null):null,
+      perfil: $('#pPerfil')?($('#pPerfil').value.trim()||null):null,
       familia: [...document.querySelectorAll('#pFamilia .chip-sel.on')].map(b=>b.dataset.v),
       estilo:  [...document.querySelectorAll('#pEstilo .chip-sel.on')].map(b=>b.dataset.v),
       destacado:$('#pDest').checked, visible:$('#pVis').checked, regalo_permitido:$('#pRegalo').checked,

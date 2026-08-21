@@ -576,14 +576,14 @@ function renderProductos(){
 
 function prodForm(id){
   const p = id ? PRODUCTOS.find(x=>x.id===id) : {};
+  const cats=CONFIG.CATEGORIAS||['Árabe','Diseñador','Nicho'];
+  const gens=CONFIG.GENEROS||['Hombre','Mujer','Unisex'];
   let imgs = imgsOf(p).slice();
   const presetDe=(cat)=>{ const base=(CONFIG.PRESET_PRESENTACIONES&&CONFIG.PRESET_PRESENTACIONES[cat])||[]; return base.map(x=>({ml:String(x.ml),precio:x.precio,precio_may:0,antes:(x.antes??''),stock:'',activo:true})); };
   let pres = (p.presentaciones && p.presentaciones.length)
     ? JSON.parse(JSON.stringify(p.presentaciones))
     : (presetDe(p.categoria||cats[0]).length ? presetDe(p.categoria||cats[0]) : [{ml:'5',precio:'',antes:'',activo:true},{ml:'10',precio:'',antes:'',activo:true}]);
   let selNotas = new Set(notasDe(id).map(n=>n.id));
-  const cats=CONFIG.CATEGORIAS||['Árabe','Diseñador','Nicho'];
-  const gens=CONFIG.GENEROS||['Hombre','Mujer','Unisex'];
 
   $('#modal').innerHTML = `
     <h3>${id?'Editar':'Nuevo'} producto</h3>

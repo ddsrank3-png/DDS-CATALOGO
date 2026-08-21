@@ -298,6 +298,10 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .a2-img img{height:100%; width:100%; object-fit:contain}
 .a2-name{font-size:.86rem; font-weight:700; line-height:1.2}
 .a2-meta{font-size:.7rem; color:var(--muted-2); margin-top:2px}
+.a2-act{display:block; margin-top:8px; background:#111; color:#fff; font-weight:700; font-size:.72rem; padding:7px 6px; border-radius:8px}
+.a2-card.top .a2-act{background:linear-gradient(120deg,#7b2ff7,#f107a3)}
+@keyframes cardflash{0%,100%{box-shadow:0 0 0 0 rgba(212,150,50,0)}30%{box-shadow:0 0 0 4px rgba(212,150,50,.55)}}
+.card.flash{animation:cardflash 1.6s ease}
 @media(max-width:760px){
   .asesor2-body{grid-template-columns:1fr; overflow:hidden}
   .asesor2-res{order:1; border-right:none; border-bottom:1px solid var(--line); padding:10px 12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.12)}
@@ -710,8 +714,9 @@ header::after{background:var(--line); opacity:1}
 .pd-perfil .cell{border:1px solid var(--line); border-radius:10px; padding:10px 12px}
 .pd-perfil .k{font-size:.72rem; color:var(--muted-2)} .pd-perfil .v{font-weight:700; color:var(--cream); font-size:.95rem}
 .pd-metrics{display:flex; flex-direction:column; gap:14px}
+.pd-deliv-ica{display:block; font-size:.78rem; color:var(--muted-2); margin-top:4px}
 .pd-perfil-chips{display:flex; flex-wrap:wrap; gap:7px}
-.pf-chip{display:inline-flex; align-items:center; gap:4px; font-size:.78rem; font-weight:700; border:1.5px solid; border-radius:999px; padding:5px 11px; line-height:1}
+.pf-chip{display:inline-flex; align-items:center; gap:5px; font-size:.78rem; font-weight:600; background:var(--panel-2); border:1px solid var(--line-soft); color:var(--cream); border-radius:999px; padding:5px 11px; line-height:1}
 .loadbrand{display:flex; flex-direction:column; align-items:center; gap:14px; animation:loadfade 1.2s ease}
 .loadbrand .loadlogo{width:74px; height:74px; object-fit:contain}
 .loadbrand .loadname{font-family:'Cormorant Garamond',serif; font-size:1.5rem; letter-spacing:.18em; color:var(--cream); text-transform:uppercase}
@@ -724,8 +729,8 @@ header::after{background:var(--line); opacity:1}
 .pm-ic{font-size:1.05rem}
 .pm-lbl{font-size:.8rem; color:var(--muted-2); text-transform:uppercase; letter-spacing:.08em; flex:1}
 .pm-niv{font-weight:700; font-size:.85rem; color:var(--cream)}
-.pm-bar{height:11px; border-radius:999px; background:var(--panel-2); overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.15)}
-.pm-bar span{display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,#f7c948,#e8871e 60%,#d4137f); box-shadow:0 0 8px rgba(232,135,30,.5); transition:width .5s ease}
+.pm-bar{height:10px; border-radius:999px; background:var(--panel-2); overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.12)}
+.pm-bar span{display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,#f2f2f2,#b8b8b8 50%,#4a4a4a); transition:width .5s ease}
 .pm-txt{font-size:.8rem; color:var(--muted); margin-top:5px; line-height:1.4}
 .pd-dn{display:grid; grid-template-columns:1fr 1fr; gap:8px}
 .pd-dn .opt{display:flex; align-items:center; justify-content:center; gap:6px; padding:12px; border-radius:10px; font-weight:600; font-size:.9rem; border:1px solid var(--line); color:var(--muted)}
@@ -1363,7 +1368,8 @@ function openShare(){
     else if(load){ load.textContent='No se pudo generar el QR'; }
   });
 }
-function openAsesor(){ ASESOR={step:0, ans:{}}; $('#asesorOv').style.display='block'; document.body.style.overflow='hidden'; renderAsesor(); }
+let ASESOR_MODE='compra';
+function openAsesor(mode){ ASESOR_MODE=(typeof mode==='string')?mode:'compra'; ASESOR={step:0, ans:{}}; $('#asesorOv').style.display='block'; document.body.style.overflow='hidden'; renderAsesor(); }
 function closeAsesor(){ $('#asesorOv').style.display='none'; document.body.style.overflow=''; }
 function renderAsesor(){
   const ov=$('#asesorOv');
@@ -1444,15 +1450,23 @@ function asesorRenderRes(){
     ? (scoring?`✨ ${res.length} perfumes · ordenados por coincidencia`:`${res.length} perfumes — responde para ordenarlos`)
     : 'Ningún perfume coincide 😅';
   const list=res.slice(0,30);
-  cont.innerHTML=`<div class="a2-res-head">${head}</div>
+  const modeBtn = ASESOR_MODE==='combo' ? '<span class="a2-act">➕ Añadir al combo</span>'
+                : ASESOR_MODE==='catalogo' ? '<span class="a2-act">📍 Ubicar en catálogo</span>' : '';
+  cont.innerHTML=`<div class="a2-res-head">${head}${ASESOR_MODE!=='compra'?` · <b>modo ayuda</b>`:''}</div>
     <div class="a2-grid">${list.map((r,idx)=>`<button class="a2-card ${scoring&&idx===0?'top':''}" data-id="${r.p.id}">
       ${scoring&&idx===0?`<span class="a2-crown">🏆 Top</span>`:''}
       ${scoring?`<span class="a2-pct ${r.pct>=70?'hi':(r.pct>=40?'mid':'lo')}">${r.pct}%</span>`:''}
       <div class="a2-img">${imgsOf(r.p)[0]?`<img src="${esc(imgsOf(r.p)[0])}" loading="lazy">`:`<span class="ph">${esc((r.p.nombre||'?')[0])}</span>`}</div>
       <div class="a2-name">${esc(r.p.nombre)}</div>
       <div class="a2-meta">${esc(r.p.categoria||'')}${r.p.genero?' · '+esc(r.p.genero):''}</div>
+      ${modeBtn}
     </button>`).join('')}</div>`;
-  cont.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{ window.ASESOR_RETURN=true; $('#asesorOv').style.display='none'; document.body.style.overflow=''; openProduct(b.dataset.id); });
+  cont.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.id;
+    if(ASESOR_MODE==='combo'){ armarAddFromAsesor(id); return; }
+    if(ASESOR_MODE==='catalogo'){ asesorLocate(id); return; }
+    window.ASESOR_RETURN=true; $('#asesorOv').style.display='none'; document.body.style.overflow=''; openProduct(id);
+  });
 }
 
 /* ================= INICIO (hero + más vendidos + testimonios + categorías) ================= */
@@ -1578,7 +1592,7 @@ function renderCatMosaico(){
       }).join('')}
     </div>
   </div>`;
-  const al=cont.querySelector('#asesorLaunch'); if(al) al.onclick=openAsesor;
+  const al=cont.querySelector('#asesorLaunch'); if(al) al.onclick=()=>openAsesor('compra');
   const shl=cont.querySelector('#shareLaunch'); if(shl) shl.onclick=openShare;
   cont.querySelectorAll('.ini-tile').forEach(b=>b.onclick=()=>{
     if(b.dataset.tipo){ filterTipo=b.dataset.tipo; filterCat='Todos'; setView('catalogo'); renderFilters(); render();
@@ -2744,8 +2758,8 @@ function _perfilChip(word){
     [['intens','fuerte'],'💥','#fde5d0','#b5651d'],
     [['tropical'],'🏝️','#d9f5ec','#0f8a67'],
   ];
-  for(const [kws,e,bg,fg] of map){ if(kws.some(k=>t.includes(k))) return `<span class="pf-chip" style="background:${bg};color:${fg};border-color:${fg}33">${e} ${esc(word)}</span>`; }
-  return `<span class="pf-chip" style="background:var(--gold-pale);color:var(--gold-deep);border-color:var(--gold-3)">✨ ${esc(word)}</span>`;
+  for(const [kws,e,bg,fg] of map){ if(kws.some(k=>t.includes(k))) return `<span class="pf-chip" style="color:${fg}">${e} ${esc(word)}</span>`; }
+  return `<span class="pf-chip">✨ ${esc(word)}</span>`;
 }
 function perfilBar(icon,label,texto,frac){
   const pct=Math.round(frac*100);
@@ -2891,16 +2905,7 @@ function openProduct(id, opts){
           <div class="pd-badge"><b>🔒</b>Entrega totalmente segura</div>
           <div class="pd-badge"><b>✅</b>100% originales</div>
         </div>
-        <div class="pd-entregas">
-          <div class="pd-ent">
-            <div class="pd-ent-h">🏪 Pedido en Ica</div>
-            <div class="pd-ent-b">Si haces tu pedido hoy, se alista <b>hoy</b> y se entrega <b>hoy mismo</b>.</div>
-          </div>
-          <div class="pd-ent">
-            <div class="pd-ent-h">📦 Pedido con Envío Shalom</div>
-            <div class="pd-ent-b">Si haces tu pedido hoy, se alista hoy y <b>se envía ${sh.shipTxt}</b>. Estará en camino aprox. <b>${sh.caminoTxt}</b>.</div>
-          </div>
-        </div>
+        <div class="pd-deliv">🚚 Si haces tu pedido ahora, <b>estará en camino ${esc(sh.caminoTxt)}</b><span class="pd-deliv-ica">🏪 En Ica: se alista y entrega el mismo día</span></div>
         <div class="pd-track">
           <div class="ln"></div>
           <div class="st on"><div class="ic">🛍️</div><div class="tt">Pedido</div><div class="dd">Hoy</div></div>
@@ -3056,6 +3061,31 @@ function openCombo(id){
   const pick = document.querySelectorAll('#tallas .talla')[best>=0?best:0];
   if(pick) pick.click();
   $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+function armarAddFromAsesor(pid){
+  const p=(PRODUCTS||[]).find(x=>x.id===pid); if(!p){ toast('No encontrado'); return; }
+  if(!armarCat) armarCat=p.categoria;
+  if(!armarMl){ const sizes=armarSizesDe(armarCat)||[]; armarMl=sizes[0]||'5'; }
+  const key=pid+'__'+armarMl;
+  if(armarSel.some(x=>x.key===key)){ toast('Ya está en tu combo'); return; }
+  let precio=null; const pres=(presActivas(p)||[]).find(x=>String(x.ml)===String(armarMl));
+  if(pres) precio=Number(pres.precio); if(precio==null) precio=armarPrecioDe(p.categoria,armarMl);
+  if(precio==null){ toast('Ese tamaño no está disponible'); return; }
+  armarSel.push({ key, id:p.id, nombre:p.nombre, categoria:p.categoria, ml:armarMl, precio });
+  toast('➕ Añadido al combo: '+p.nombre);
+  if(typeof renderArmar==='function') renderArmar();
+  asesorRenderRes();
+}
+function asesorLocate(pid){
+  const p=PROD_BY_ID[pid]; if(!p) return;
+  closeAsesor();
+  filterCat = p.categoria||'Todos'; if(typeof filterTipo!=='undefined') filterTipo='Todos';
+  query=(p.nombre||'').toLowerCase();
+  setView('catalogo');
+  if(typeof renderFilters==='function') renderFilters();
+  render();
+  setTimeout(()=>{ const el=document.querySelector('#grid [data-open="'+pid+'"]')||document.querySelector('#grid [data-id="'+pid+'"]'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1800); } },250);
+  toast('📍 '+p.nombre+' en el catálogo');
 }
 function _comboPuntos(combo, ml){
   const rc=CONFIG.REGALO_COMBO; if(!rc||rc.activo===false) return {pts:0,n:0};
@@ -3341,7 +3371,7 @@ function closeCart(){ $('#drawer').classList.remove('open'); const sc=$('#drawer
 (function(){ const sc=$('#drawerScrim'); if(sc) sc.onclick=closeCart; })();
 $('#openCart').onclick = openCart;
 { const sb2=$('#shareBtn'); if(sb2) sb2.onclick = openShare; }
-{ const fab=$('#asesorFab'); if(fab) fab.onclick = openAsesor; }
+{ const fab=$('#asesorFab'); if(fab) fab.onclick = ()=>openAsesor(currentView==='armar'?'combo':'catalogo'); }
 document.querySelectorAll('[data-close-cart]').forEach(el=>el.onclick=closeCart);
 
 async function checkout(R){

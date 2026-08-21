@@ -318,19 +318,37 @@ function parseFicha(text){
   };
   const region=(from,to)=>{ const a=lines.findIndex(l=>_nrm(l).includes(_nrm(from))); if(a<0) return ''; let end=lines.length; for(let i=a+1;i<lines.length;i++){ if(to.some(x=>_nrm(lines[i]).includes(_nrm(x)))){ end=i; break; } } return lines.slice(a,end).join(' '); };
   const matchList=(txt,opts)=>{ const tt=_nrm(txt); const f=[]; opts.forEach(o=>{ const ws=_nrm(o).split(/[\s/]+/).filter(w=>w.length>3); if(ws.some(w=>tt.includes(w))) f.push(o); }); return f; };
+  // Toma el valor tras "Etiqueta:" en la misma línea, o el/los renglones siguientes (para títulos numerados sin ':').
+  const grab=(labels,para)=>{
+    let i=-1;
+    for(let k=0;k<lines.length;k++){ const nl=_nrm(lines[k].replace(/^\d+[\.\)]\s*/,'')); if(labels.some(l=>{const n=_nrm(l); return nl===n||nl.startsWith(n+':')||nl.startsWith(n);})){ i=k; break; } }
+    if(i<0) return '';
+    const same=lines[i].split(':').slice(1).join(':').trim(); if(same) return same;
+    const stop=/^(notas de|duraci|estela|ocasi|dulzura|intensidad|familia|estilo|perfil|momento|sensaci|publico|versatil|acordes|concentr|genero|género|descrip|marca|nombre|version|año|ano|es fresco)/;
+    let out=[];
+    for(let j=i+1;j<lines.length;j++){ const ln=lines[j]; if(!ln){ if(out.length) break; else continue; }
+      const nln=_nrm(ln.replace(/^\d+[\.\)]\s*/,'')); if(stop.test(nln)) break;
+      if(/^[^:]{2,30}:\s*\S/.test(ln)) break;
+      out.push(ln.replace(/^[-•\u2192\u2022]\s*/,'').trim()); if(!para) break;
+    }
+    return out.join(para?' ':', ');
+  };
 
   out.marca=val(['marca']);
   out.nombre=val(['nombre']);
   out.concentracion=val(['concentracion']);
   out.anio=val(['ano de lanzamiento','anio','año de lanzamiento','ano']);
   const g=_nrm(val(['genero comercial','genero','género comercial','género'])); if(/hombre/.test(g))out.genero='Hombre'; else if(/mujer/.test(g))out.genero='Mujer'; else if(/unisex/.test(g))out.genero='Unisex';
-  out.descripcion=val(['descripcion corta','descripcion']);
+  out.descripcion=grab(['descripcion corta','descripcion'], true);
   out.notas_salida=seccion('notas de salida');
   out.notas_corazon=seccion('notas de corazon');
   out.notas_fondo=seccion('notas de fondo');
   out.longevidad=val(['duracion estimada','duracion','duración']);
   out.estela=val(['estela']);
-  out.perfil=val(['perfil aromatico','perfil','acordes predominantes','acordes']);
+  // perfil: línea con '·' (varios acordes) o el renglón tras "Perfil"
+  let perfil=''; const pl=lines.find(l=>/·/.test(l) && l.split('·').length>=3);
+  if(pl) perfil=pl.trim(); else perfil=grab(['perfil aromatico','perfil','acordes predominantes','acordes'], false);
+  out.perfil=perfil;
   out.dulzura=_escala10a5(val(['dulzura']));
   out.intensidad=_escala10a5(val(['intensidad']));
   // momento
@@ -740,8 +758,22 @@ function prodForm(id){
       destacado:$('#pDest').checked, visible:$('#pVis').checked, regalo_permitido:$('#pRegalo').checked,
     };
     let pid=id, error;
-    if(id){ ({error}=await sb.from('productos').update(payload).eq('id',id)); }
-    else { const r=await sb.from('productos').insert(payload).select().single(); error=r.error; pid=r.data?.id; }
+    // Guardado robusto: si Supabase reporta una columna inexistente, la quita y reintenta.
+    const guardar=async(pl)=>{
+      let p={...pl};
+      for(let intento=0;intento<10;intento++){
+        let err,data;
+        if(id){ const r=await sb.from('productos').update(p).eq('id',id); err=r.error; data={id}; }
+        else { const r=await sb.from('productos').insert(p).select().single(); err=r.error; data=r.data; }
+        if(!err) return {data};
+        const msg=err.message||''; const m=/'([a-zA-Z_]+)' column/.exec(msg) || /column ["']?([a-zA-Z_]+)["']? /.exec(msg) || /Could not find the '([a-zA-Z_]+)'/.exec(msg);
+        const col=m&&m[1];
+        if(col && Object.prototype.hasOwnProperty.call(p,col)){ delete p[col]; continue; }  // reintenta sin esa columna
+        return {error:err};
+      }
+      return {error:{message:'no se pudo guardar (demasiados reintentos)'}};
+    };
+    const rr=await guardar(payload); error=rr.error; if(rr.data) pid=rr.data.id||id;
     if(error){ toast('Error: '+error.message,true); return; }
     // Relaciones de notas
     if(pid){

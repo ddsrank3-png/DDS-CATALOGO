@@ -104,6 +104,21 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .tb-sort select{border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-size:.82rem; background:var(--panel); color:var(--cream)}
 .tb-filtros{border:1px solid var(--line); border-radius:10px; padding:8px 12px; font-size:.82rem; cursor:pointer; background:var(--panel); color:var(--cream)}
 .tb-filtros.on{background:#111; color:#fff; border-color:#111}
+.tb-share{border:1px solid var(--line); border-radius:10px; padding:8px 12px; font-size:.82rem; cursor:pointer; background:var(--panel); color:var(--cream)}
+.share-launch{width:100%; margin:0 0 18px; padding:13px; border-radius:14px; background:var(--panel-2); border:1.5px solid var(--gold-3); color:var(--gold-deep); font-weight:700; cursor:pointer; font-size:.9rem}
+.share-ov{position:fixed; inset:0; z-index:130; background:rgba(20,10,25,.55); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:18px}
+.share-card{position:relative; background:var(--panel); color:var(--cream); width:100%; max-width:360px; border-radius:20px; padding:24px 22px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.share-card .asesor-x{position:absolute; top:12px; right:14px; font-size:1.1rem; color:var(--muted-2); cursor:pointer}
+.share-h{font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; margin-bottom:16px}
+.share-qr{background:#fff; border-radius:16px; padding:12px; display:inline-block; margin-bottom:10px}
+.share-qr img{display:block; width:220px; height:220px}
+.share-qr-load{font-size:.8rem; color:var(--muted-2); padding:80px 0}
+.share-note{font-size:.82rem; color:var(--muted-2); margin-bottom:10px}
+.share-url{font-size:.78rem; color:var(--muted); background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:9px 10px; word-break:break-all; margin-bottom:14px}
+.share-btns{display:flex; flex-direction:column; gap:9px}
+.share-btns button,.share-btns a{display:block; text-align:center; padding:11px 14px; border-radius:999px; font-weight:700; font-size:.86rem; cursor:pointer; border:1.5px solid var(--line); background:var(--panel-2); color:var(--cream); text-decoration:none}
+.share-btns .pri{background:#111; color:#fff; border-color:#111}
+@media(max-width:760px){ .share-qr img{width:200px; height:200px} }
 .tb-density{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden}
 .tb-density button{padding:8px 10px; background:var(--panel); color:var(--muted-2); cursor:pointer; font-size:1rem; line-height:1}
 .tb-density button.on{background:#111; color:#fff}
@@ -231,16 +246,26 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .a2-spark{color:#f107a3}
 .a2-sub{color:var(--muted-2); font-size:.82rem; margin-top:2px}
 .asesor-x{position:absolute; top:14px; right:16px; font-size:1.2rem; color:var(--muted-2); cursor:pointer}
-.asesor2-body{flex:1; min-height:0; display:grid; grid-template-columns:360px 1fr; overflow:hidden}
-.asesor2-q{order:1; overflow-y:auto; padding:16px 18px; border-right:1px solid var(--line)}
-.asesor2-res{order:2; overflow-y:auto; padding:16px 18px; background:var(--panel)}
-.a2-block{margin-bottom:16px}
-.a2-qh{font-weight:700; font-size:.92rem; margin-bottom:8px} .a2-qh small{color:var(--muted-2); font-weight:400}
-.a2-opts{display:flex; flex-wrap:wrap; gap:7px}
-.a2-opt{display:inline-flex; align-items:center; gap:5px; padding:8px 12px; border:1.5px solid var(--line); border-radius:999px; background:var(--panel-2); color:var(--cream); cursor:pointer; font-size:.82rem; transition:.12s}
+.asesor2-body{flex:1; min-height:0; display:grid; grid-template-columns:1fr 380px; overflow:hidden}
+.asesor2-q{order:2; overflow-y:auto; padding:20px 22px; display:flex; flex-direction:column; justify-content:center}
+.asesor2-res{order:1; overflow-y:auto; padding:16px 18px; border-right:1px solid var(--line); background:var(--panel)}
+.a2-step{max-width:520px; margin:0 auto; width:100%}
+.a2-prog{height:7px; background:var(--panel-2); border-radius:999px; overflow:hidden; margin-bottom:8px}
+.a2-prog span{display:block; height:100%; background:linear-gradient(90deg,#7b2ff7,#f107a3); border-radius:999px; transition:width .3s}
+.a2-stepn{font-size:.74rem; color:var(--muted-2); margin-bottom:10px}
+.a2-qh{font-weight:700; font-size:.92rem; margin-bottom:8px} .a2-qh.big{font-family:'Cormorant Garamond',serif; font-size:1.5rem; margin-bottom:14px} .a2-qh small{color:var(--muted-2); font-weight:400}
+.a2-opts{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px}
+.a2-opt{display:inline-flex; align-items:center; gap:6px; padding:10px 14px; border:1.5px solid var(--line); border-radius:999px; background:var(--panel-2); color:var(--cream); cursor:pointer; font-size:.9rem; transition:.12s}
+.a2-e{font-size:1.05rem}
 .a2-opt:hover{border-color:var(--gold-3)}
 .a2-opt.on{border-color:#f107a3; background:rgba(241,7,163,.14); font-weight:700}
-.a2-reset{margin:6px 0 20px; color:var(--muted-2); text-decoration:underline; cursor:pointer; font-size:.82rem}
+.a2-nav{display:flex; align-items:center; gap:10px}
+.a2-back{color:var(--muted-2); cursor:pointer; font-size:.86rem}
+.a2-skip{margin-left:auto; color:var(--muted-2); cursor:pointer; font-size:.86rem; text-decoration:underline}
+.a2-next{background:#111; color:#fff; font-weight:700; padding:10px 18px; border-radius:999px; cursor:pointer; font-size:.88rem}
+.a2-done{max-width:460px; margin:0 auto; text-align:center; padding:20px 0}
+.a2-done-emo{font-size:2.4rem} .a2-done-t{font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:700; margin:6px 0} .a2-done-s{color:var(--muted-2); font-size:.88rem; margin-bottom:16px}
+.a2-done-btns{display:flex; gap:10px; justify-content:center}
 .a2-res-head{font-size:.8rem; color:var(--muted-2); margin-bottom:12px; position:sticky; top:0; background:var(--panel); padding-bottom:6px; z-index:1}
 .a2-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
 .a2-card{position:relative; background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:10px; cursor:pointer; text-align:center; transition:.15s}
@@ -254,11 +279,14 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .a2-name{font-size:.86rem; font-weight:700; line-height:1.2}
 .a2-meta{font-size:.7rem; color:var(--muted-2); margin-top:2px}
 @media(max-width:760px){
-  .asesor2-body{grid-template-columns:1fr; overflow-y:auto}
-  .asesor2-res{order:1; position:sticky; top:0; z-index:2; max-height:42vh; border-bottom:1px solid var(--line); box-shadow:0 6px 14px rgba(0,0,0,.15)}
-  .asesor2-q{order:2; border-right:none; overflow:visible}
-  .a2-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:9px}
-  .a2-img{height:96px}
+  .asesor2-body{grid-template-columns:1fr; overflow:hidden}
+  .asesor2-res{order:1; border-right:none; border-bottom:1px solid var(--line); padding:10px 12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.12)}
+  .asesor2-res .a2-res-head{position:static; margin-bottom:8px}
+  .a2-grid{display:flex; gap:10px; overflow-x:auto; overflow-y:hidden; padding-bottom:6px; -webkit-overflow-scrolling:touch}
+  .a2-card{flex:0 0 118px; width:118px}
+  .a2-img{height:82px}
+  .asesor2-q{order:2; overflow-y:auto; padding:16px 16px 26px; justify-content:flex-start}
+  .a2-qh.big{font-size:1.3rem}
 }
 .drawer{position:fixed; top:0; right:0; height:100%; width:100%; max-width:420px; z-index:70; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border-left:1px solid var(--line); transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column}
 .drawer.open{transform:none}
@@ -841,6 +869,7 @@ header::after{background:var(--line); opacity:1}
 <div class="inicio" id="inicioView" style="display:none"></div>
 <div id="puntosCatBanner" style="display:none"></div>
 <div class="asesor-ov" id="asesorOv" style="display:none"></div>
+<div class="share-ov" id="shareOv" style="display:none"></div>
 <div class="inicio" id="catMosaico" style="display:none"></div>
 <div class="armar" id="armarView" style="display:none"></div>
 
@@ -882,6 +911,7 @@ header::after{background:var(--line); opacity:1}
 })();
 </script>
 <script src="promos.js"></script>
+<script src="qrcode.js"></script>
 <script>
 /* ================= Inicialización ================= */
 const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
@@ -1211,47 +1241,133 @@ function asesorScore(p,ans){
   const pct=max>0?Math.round(score/max*100):0;
   return {score,max,pct};
 }
-function openAsesor(){ ASESOR={ans:{}}; $('#asesorOv').style.display='block'; document.body.style.overflow='hidden'; renderAsesor(); }
+function _rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function makeBrandQR(text, cb){
+  try{
+    const qr=(window.qrcode||qrcode)(0,'H'); qr.addData(text); qr.make();   // H = máxima tolerancia (permite logo al centro)
+    const n=qr.getModuleCount(), margin=4, total=n+margin*2;
+    const px=Math.max(8, Math.floor(640/total)); const dim=px*total;
+    const cv=document.createElement('canvas'); cv.width=dim; cv.height=dim;
+    const ctx=cv.getContext('2d');
+    ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,dim,dim);
+    ctx.fillStyle='#111111';
+    for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(qr.isDark(r,c)) ctx.fillRect((c+margin)*px,(r+margin)*px,px,px);
+    // Badge central con la marca
+    const nombre=(CONFIG.TIENDA_NOMBRE||'').trim();
+    const ciudad=(CONFIG.CIUDAD||'').trim();
+    const words=nombre.split(/\s+/).filter(Boolean);
+    const big=(words[0]||'DDS');
+    const small=(words.slice(1).join(' ')+(ciudad?(' '+ciudad):'')).trim().toUpperCase();
+    const bw=Math.round(dim*0.28), bx=Math.round((dim-bw)/2);
+    // fondo blanco redondeado + borde dorado
+    ctx.fillStyle='#ffffff'; _rr(ctx,bx,bx,bw,bw,Math.round(bw*0.2)); ctx.fill();
+    ctx.lineWidth=Math.max(3,Math.round(dim*0.010)); ctx.strokeStyle='#c69a3e'; _rr(ctx,bx,bx,bw,bw,Math.round(bw*0.2)); ctx.stroke();
+    // texto
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#111111';
+    const cx=dim/2, cy=dim/2;
+    ctx.font=`700 ${Math.round(bw*0.30)}px Georgia, 'Cormorant Garamond', serif`;
+    ctx.fillText(big, cx, cy - (small?bw*0.10:0));
+    if(small){
+      ctx.fillStyle='#c69a3e';
+      let fs=Math.round(bw*0.13);
+      ctx.font=`700 ${fs}px Arial, sans-serif`;
+      while(fs>7 && ctx.measureText(small).width > bw*0.82){ fs--; ctx.font=`700 ${fs}px Arial, sans-serif`; }
+      ctx.fillText(small, cx, cy + bw*0.20);
+    }
+    cb(cv.toDataURL('image/png'));
+  }catch(e){ console.warn('QR error',e); cb(''); }
+}
+function openShare(){
+  const url = location.origin + location.pathname;
+  const nombre = CONFIG.TIENDA_NOMBRE||'nuestro catálogo';
+  const ov=$('#shareOv'); ov.style.display='flex';
+  ov.innerHTML=`<div class="share-card">
+    <button class="asesor-x" id="shX" aria-label="Cerrar">✕</button>
+    <div class="share-h">Compartir ${esc(nombre)}</div>
+    <div class="share-qr"><img id="shQrImg" alt="Código QR"><div class="share-qr-load" id="shQrLoad">Generando QR…</div></div>
+    <div class="share-note">📷 Escanea el QR para abrir el catálogo</div>
+    <div class="share-url" id="shUrl">${esc(url)}</div>
+    <div class="share-btns">
+      <button id="shCopy">📋 Copiar enlace</button>
+      ${navigator.share?`<button id="shNative" class="pri">📤 Compartir…</button>`:''}
+      <a id="shWa" class="pri" target="_blank" rel="noopener">💬 WhatsApp</a>
+      <a id="shQr" style="display:none">⬇️ Descargar QR</a>
+    </div>
+  </div>`;
+  const close=()=>{ ov.style.display='none'; };
+  $('#shX').onclick=close; ov.onclick=(e)=>{ if(e.target===ov) close(); };
+  $('#shCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(url); toast('✅ Enlace copiado'); }catch(_){ toast('Copia: '+url); } };
+  const wa=$('#shWa'); if(wa) wa.href='https://wa.me/?text='+encodeURIComponent('Mira el catálogo de '+nombre+': '+url);
+  const nat=$('#shNative'); if(nat) nat.onclick=()=>{ navigator.share({title:nombre, text:'Catálogo de '+nombre, url}).catch(()=>{}); };
+  makeBrandQR(url, (data)=>{
+    const img=$('#shQrImg'), load=$('#shQrLoad'), dl=$('#shQr');
+    if(data && img){ img.src=data; if(load) load.style.display='none';
+      if(dl){ dl.href=data; dl.setAttribute('download','qr-'+String(nombre).replace(/\s+/g,'-').toLowerCase()+'.png'); dl.style.display='block'; } }
+    else if(load){ load.textContent='No se pudo generar el QR'; }
+  });
+}
+function openAsesor(){ ASESOR={step:0, ans:{}}; $('#asesorOv').style.display='block'; document.body.style.overflow='hidden'; renderAsesor(); }
 function closeAsesor(){ $('#asesorOv').style.display='none'; document.body.style.overflow=''; }
 function renderAsesor(){
   const ov=$('#asesorOv');
   ov.innerHTML=`<div class="asesor2">
     <div class="asesor2-head">
       <div class="a2-ttl"><span class="a2-spark">✨</span> Encuentra tu perfume ideal</div>
-      <div class="a2-sub">Responde lo que quieras — el catálogo se ordena solo por coincidencia</div>
+      <div class="a2-sub">El catálogo se ordena solo mientras respondes</div>
       <button class="asesor-x" id="asX" aria-label="Cerrar">✕</button>
     </div>
     <div class="asesor2-body">
       <div class="asesor2-res" id="a2res"></div>
-      <div class="asesor2-q" id="a2q">${asesorQuestionsHTML()}</div>
+      <div class="asesor2-q" id="a2q"></div>
     </div>
   </div>`;
   $('#asX').onclick=closeAsesor;
-  wireAsesorQ();
   asesorRenderRes();
+  asesorRenderStep();
 }
-function asesorQuestionsHTML(){
-  return ASESOR_Q.map((Q,qi)=>`<div class="a2-block">
-     <div class="a2-qh">${esc(Q.q)}${Q.max?` <small>(máx ${Q.max})</small>`:(Q.tipo==='multi'?' <small>(varias)</small>':'')}</div>
-     <div class="a2-opts">${Q.opts.map((o,i)=>`<button class="a2-opt" data-q="${qi}" data-i="${i}">${o.e?`<span class="a2-e">${o.e}</span>`:''}${esc(o.l)}</button>`).join('')}</div>
-   </div>`).join('') + `<button class="a2-reset" id="a2reset">↺ Reiniciar respuestas</button>`;
-}
-function wireAsesorQ(){
-  $('#a2q').querySelectorAll('.a2-opt').forEach(b=>b.onclick=()=>{
-    const qi=+b.dataset.q, i=+b.dataset.i, Q=ASESOR_Q[qi], o=Q.opts[i], cur=ASESOR.ans[Q.key];
+function asesorRenderStep(){
+  const q=$('#a2q'); if(!q) return; const total=ASESOR_Q.length; const i=ASESOR.step;
+  if(i>=total){
+    q.innerHTML=`<div class="a2-done">
+      <div class="a2-done-emo">🎉</div>
+      <div class="a2-done-t">¡Listo! Estos son tus mejores matches</div>
+      <div class="a2-done-s">Toca un perfume para ver su ficha.</div>
+      <div class="a2-done-btns"><button class="a2-back" id="asRe">↺ Empezar de nuevo</button><button class="a2-next" id="asCat">Ver catálogo</button></div>
+    </div>`;
+    $('#asRe').onclick=openAsesor;
+    $('#asCat').onclick=()=>{ closeAsesor(); filterCat='Todos'; filterTipo='Todos'; setView('catalogo'); };
+    return;
+  }
+  const Q=ASESOR_Q[i]; const cur=ASESOR.ans[Q.key];
+  const isSel=(k)=> Q.tipo==='multi' ? (Array.isArray(cur)&&cur.includes(k)) : (cur!=null && (Q.opts[k].v!=null? cur===Q.opts[k].v : cur===k));
+  q.innerHTML=`<div class="a2-step">
+    <div class="a2-prog"><span style="width:${Math.round(i/total*100)}%"></span></div>
+    <div class="a2-stepn">Paso ${i+1} de ${total}${Q.tipo==='multi'?(Q.max?` · elige hasta ${Q.max}`:' · elige varias'):''}</div>
+    <div class="a2-qh big">${esc(Q.q)}</div>
+    <div class="a2-opts">${Q.opts.map((o,k)=>`<button class="a2-opt ${isSel(k)?'on':''}" data-i="${k}">${o.e?`<span class="a2-e">${o.e}</span>`:''}${esc(o.l)}</button>`).join('')}</div>
+    <div class="a2-nav">
+      ${i>0?`<button class="a2-back" id="asBack">← Atrás</button>`:'<span></span>'}
+      <button class="a2-skip" id="asSkip">Omitir</button>
+      ${Q.tipo==='multi'?`<button class="a2-next" id="asNext">${i===total-1?'Ver resultados ✨':'Siguiente →'}</button>`:'<span></span>'}
+    </div>
+  </div>`;
+  q.querySelectorAll('.a2-opt').forEach(b=>b.onclick=()=>{
+    const k=+b.dataset.i, o=Q.opts[k];
     if(Q.tipo==='multi'){
       let arr=Array.isArray(cur)?cur.slice():[];
-      if(arr.includes(i)){ arr=arr.filter(x=>x!==i); b.classList.remove('on'); }
-      else { if(Q.max&&arr.length>=Q.max){ toast('Máximo '+Q.max); return; } arr.push(i); b.classList.add('on'); }
-      ASESOR.ans[Q.key]=arr; if(!arr.length) delete ASESOR.ans[Q.key];
+      if(arr.includes(k)){ arr=arr.filter(x=>x!==k); b.classList.remove('on'); }
+      else { if(Q.max&&arr.length>=Q.max){ toast('Máximo '+Q.max); return; } arr.push(k); b.classList.add('on'); }
+      if(arr.length) ASESOR.ans[Q.key]=arr; else delete ASESOR.ans[Q.key];
+      asesorRenderRes();
     } else {
-      const val=(o.v!=null?o.v:i);
-      if(cur===val){ delete ASESOR.ans[Q.key]; b.classList.remove('on'); }
-      else { ASESOR.ans[Q.key]=val; b.parentElement.querySelectorAll('.a2-opt').forEach(x=>x.classList.remove('on')); b.classList.add('on'); }
+      ASESOR.ans[Q.key]=(o.v!=null?o.v:k);
+      asesorRenderRes();
+      ASESOR.step++; asesorRenderStep();
     }
-    asesorRenderRes();
   });
-  const rs=$('#a2reset'); if(rs) rs.onclick=()=>{ ASESOR.ans={}; renderAsesor(); };
+  const nx=$('#asNext'); if(nx) nx.onclick=()=>{ ASESOR.step++; asesorRenderStep(); };
+  const sk=$('#asSkip'); if(sk) sk.onclick=()=>{ delete ASESOR.ans[Q.key]; ASESOR.step++; asesorRenderStep(); asesorRenderRes(); };
+  const bk=$('#asBack'); if(bk) bk.onclick=()=>{ ASESOR.step=Math.max(0,ASESOR.step-1); asesorRenderStep(); };
 }
 function asesorRenderRes(){
   const cont=$('#a2res'); if(!cont) return;
@@ -1260,12 +1376,12 @@ function asesorRenderRes(){
   const scoring = res.some(r=>r.max>0);
   if(scoring) res.sort((a,b)=> b.pct-a.pct || b.score-a.score);
   const head = res.length
-    ? (scoring?`✨ Ordenados por coincidencia · ${res.length} perfumes`:`${res.length} perfumes — responde para ordenarlos`)
-    : 'Ningún perfume coincide con ese filtro 😅';
+    ? (scoring?`✨ ${res.length} perfumes · ordenados por coincidencia`:`${res.length} perfumes — responde para ordenarlos`)
+    : 'Ningún perfume coincide 😅';
   const list=res.slice(0,30);
   cont.innerHTML=`<div class="a2-res-head">${head}</div>
     <div class="a2-grid">${list.map((r,idx)=>`<button class="a2-card ${scoring&&idx===0?'top':''}" data-id="${r.p.id}">
-      ${scoring&&idx===0?`<span class="a2-crown">🏆 Mejor coincidencia</span>`:''}
+      ${scoring&&idx===0?`<span class="a2-crown">🏆 Top</span>`:''}
       ${scoring?`<span class="a2-pct ${r.pct>=70?'hi':(r.pct>=40?'mid':'lo')}">${r.pct}%</span>`:''}
       <div class="a2-img">${imgsOf(r.p)[0]?`<img src="${esc(imgsOf(r.p)[0])}" loading="lazy">`:`<span class="ph">${esc((r.p.nombre||'?')[0])}</span>`}</div>
       <div class="a2-name">${esc(r.p.nombre)}</div>
@@ -1387,6 +1503,7 @@ function renderCatMosaico(){
       <span class="al-tx"><b>¿No sabes cuál elegir?</b><small>Responde unas preguntas y encuentra tu perfume ideal</small></span>
       <span class="al-go">Empezar →</span>
     </button>
+    <button class="share-launch" id="shareLaunch">🔗 Compartir catálogo · QR</button>
     <h3 class="ini-h serif" style="margin-bottom:6px">Catálogo</h3>
     <p class="cat-sub">Elige qué quieres ver</p>
     <div class="ini-tiles">
@@ -1398,6 +1515,7 @@ function renderCatMosaico(){
     </div>
   </div>`;
   const al=cont.querySelector('#asesorLaunch'); if(al) al.onclick=openAsesor;
+  const shl=cont.querySelector('#shareLaunch'); if(shl) shl.onclick=openShare;
   cont.querySelectorAll('.ini-tile').forEach(b=>b.onclick=()=>{
     if(b.dataset.tipo){ filterTipo=b.dataset.tipo; filterCat='Todos'; setView('catalogo'); renderFilters(); render();
       $('#catMosaico').style.display='none'; $('#filters').style.display='flex'; $('#grid').style.display='grid'; }
@@ -2443,6 +2561,7 @@ function renderFilters(){
           <option value="az" ${sortMode==='az'?'selected':''}>Nombre A–Z</option>
         </select></div>
         <button class="tb-filtros ${filtersOpen?'on':''}" id="toggleFilters">⚙ Filtros</button>
+        <button class="tb-share" id="toolShare" title="Compartir catálogo">🔗 Compartir</button>
         <div class="tb-density">
           <button data-dense="0" class="${!gridDense?'on':''}" title="Vista amplia">▦</button>
           <button data-dense="1" class="${gridDense?'on':''}" title="Vista compacta">▤</button>
@@ -2461,6 +2580,7 @@ function renderFilters(){
   fEl.querySelectorAll('[data-dense]').forEach(b=>b.onclick=()=>{ gridDense=b.dataset.dense==='1'; renderFilters(); render(); });
   const sm=$('#sortMode'); if(sm) sm.onchange=()=>{ sortMode=sm.value; render(); };
   const tf=$('#toggleFilters'); if(tf) tf.onclick=()=>{ filtersOpen=!filtersOpen; const p=$('#filtersPanel'); if(p) p.style.display=filtersOpen?'block':'none'; tf.classList.toggle('on',filtersOpen); };
+  const tsh=$('#toolShare'); if(tsh) tsh.onclick=openShare;
   const bk=$('#catBack'); if(bk) bk.onclick=()=>{ filterCat='Todos'; filterTipo='Todos'; filterGen='Todos'; showCatalogo(); window.scrollTo({top:0,behavior:'smooth'}); };
 }
 

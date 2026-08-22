@@ -299,6 +299,13 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .a2-name{font-size:.86rem; font-weight:700; line-height:1.2}
 .a2-meta{font-size:.7rem; color:var(--muted-2); margin-top:2px}
 .a2-act{display:block; margin-top:8px; background:#111; color:#fff; font-weight:700; font-size:.72rem; padding:7px 6px; border-radius:8px}
+.a2-filtros{display:flex; flex-direction:column; gap:6px; margin-bottom:12px}
+.a2-frow{display:flex; flex-wrap:wrap; gap:6px}
+.a2-fchip{font-size:.74rem; font-weight:700; padding:6px 11px; border-radius:999px; border:1.5px solid var(--line); background:var(--panel-2); color:var(--cream); cursor:pointer}
+.a2-fchip.on{border-color:#111; background:#111; color:#fff}
+.a2-empty{color:var(--muted-2); font-size:.85rem; padding:20px 4px}
+.asesor-resume{position:fixed; right:16px; bottom:20px; z-index:125; display:none; align-items:center; gap:6px; background:linear-gradient(120deg,#7b2ff7,#f107a3); color:#fff; border:none; border-radius:999px; padding:14px 22px; font-weight:800; font-size:.95rem; cursor:pointer; box-shadow:0 10px 26px rgba(241,7,163,.45); animation:fabpulse 2s ease-in-out infinite}
+@media(max-width:640px){ .asesor-resume{left:12px; right:12px; justify-content:center} }
 .a2-card.top .a2-act{background:linear-gradient(120deg,#7b2ff7,#f107a3)}
 @keyframes cardflash{0%,100%{box-shadow:0 0 0 0 rgba(212,150,50,0)}30%{box-shadow:0 0 0 4px rgba(212,150,50,.55)}}
 .card.flash{animation:cardflash 1.6s ease}
@@ -716,6 +723,12 @@ header::after{background:var(--line); opacity:1}
 .pd-metrics{display:flex; flex-direction:column; gap:14px}
 .pd-deliv-ica{display:block; font-size:.78rem; color:var(--muted-2); margin-top:4px}
 .pd-perfil-chips{display:flex; flex-wrap:wrap; gap:7px}
+.pd-block.has-coll{position:relative; overflow:hidden}
+.pd-block.has-coll .pd-block-in{position:relative; z-index:1}
+.pd-block:not(.has-coll) .pd-block-in{display:contents}
+.pd-coll{position:absolute; inset:0; display:flex; z-index:0; pointer-events:none}
+.pd-coll-cell{flex:1; background-size:cover; background-position:center; opacity:.12}
+.pd-block.has-coll::after{content:""; position:absolute; inset:0; background:var(--panel); opacity:.82; z-index:0; pointer-events:none}
 .pf-chip{display:inline-flex; align-items:center; gap:5px; font-size:.78rem; font-weight:600; background:var(--panel-2); border:1px solid var(--line-soft); color:var(--cream); border-radius:999px; padding:5px 11px; line-height:1}
 .loadbrand{display:flex; flex-direction:column; align-items:center; gap:14px; animation:loadfade 1.2s ease}
 .loadbrand .loadlogo{width:74px; height:74px; object-fit:contain}
@@ -802,6 +815,11 @@ header::after{background:var(--line); opacity:1}
 .pd-track .dd{font-size:.66rem; color:var(--muted)}
 .pd-track .ln{position:absolute; top:21px; left:16%; right:16%; height:2px; border-top:2px dashed var(--line); z-index:1}
 @media(max-width:980px){ .pd{grid-template-columns:1fr} .pd-media,.pd-buy{position:static} }
+.pd-nobuy{grid-template-columns:1fr 1.15fr}
+.pd-nobuy .pd-buy{grid-column:1 / -1; position:static; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:center; gap:20px; border-top:1px solid var(--line); padding-top:18px; margin-top:8px}
+.pd-nobuy .pd-buy .pd-b{flex:0 0 auto; min-width:240px; max-width:340px}
+.pd-nobuy .pd-buy .pd-badges{margin:0}
+@media(max-width:980px){ .pd-nobuy{grid-template-columns:1fr} .pd-nobuy .pd-buy{flex-direction:column} .pd-nobuy .pd-buy .pd-b{width:100%; max-width:none} }
 
 /* ===================== ARMA TU COMBO ===================== */
 .armar{max-width:1200px; margin:0 auto; padding:0 20px 50px}
@@ -929,6 +947,7 @@ header::after{background:var(--line); opacity:1}
 <div id="puntosCatBanner" style="display:none"></div>
 <div class="asesor-ov" id="asesorOv" style="display:none"></div>
 <button class="asesor-fab" id="asesorFab" style="display:none" aria-label="Asesor de perfumes">✨ Asesor</button>
+<button class="asesor-resume" id="asesorResume" style="display:none">✨ Seguir usando asesor</button>
 <div class="share-ov" id="shareOv" style="display:none"></div>
 <div class="inicio" id="catMosaico" style="display:none"></div>
 <div class="armar" id="armarView" style="display:none"></div>
@@ -1369,7 +1388,10 @@ function openShare(){
   });
 }
 let ASESOR_MODE='compra';
-function openAsesor(mode){ ASESOR_MODE=(typeof mode==='string')?mode:'compra'; ASESOR={step:0, ans:{}}; $('#asesorOv').style.display='block'; document.body.style.overflow='hidden'; renderAsesor(); }
+let ASESOR_FILTER={cat:'Todos',gen:'Todos'};
+function openAsesor(mode){ ASESOR_MODE=(typeof mode==='string')?mode:'compra'; ASESOR_FILTER={cat:'Todos',gen:'Todos'}; ASESOR={step:0, ans:{}}; const rb=$('#asesorResume'); if(rb) rb.style.display='none'; $('#asesorOv').style.display='block'; document.body.style.overflow='hidden'; renderAsesor(); }
+function minimizeAsesor(){ $('#asesorOv').style.display='none'; document.body.style.overflow=''; const rb=$('#asesorResume'); if(rb) rb.style.display='flex'; }
+function resumeAsesor(){ const rb=$('#asesorResume'); if(rb) rb.style.display='none'; $('#asesorOv').style.display='block'; document.body.style.overflow='hidden'; renderAsesor(); }
 function closeAsesor(){ $('#asesorOv').style.display='none'; document.body.style.overflow=''; }
 function renderAsesor(){
   const ov=$('#asesorOv');
@@ -1442,7 +1464,9 @@ function asesorRenderStep(){
 }
 function asesorRenderRes(){
   const cont=$('#a2res'); if(!cont) return;
-  const base=(PRODUCTS||[]).filter(p=>p.visible!==false);
+  const base=(PRODUCTS||[]).filter(p=>p.visible!==false
+    && (ASESOR_FILTER.cat==='Todos' || p.categoria===ASESOR_FILTER.cat)
+    && (ASESOR_FILTER.gen==='Todos' || p.genero===ASESOR_FILTER.gen));
   let res=base.map(p=>{const s=asesorScore(p,ASESOR.ans); return s?{p,...s}:null;}).filter(Boolean);
   const scoring = res.some(r=>r.max>0);
   if(scoring) res.sort((a,b)=> b.pct-a.pct || b.score-a.score);
@@ -1452,7 +1476,14 @@ function asesorRenderRes(){
   const list=res.slice(0,30);
   const modeBtn = ASESOR_MODE==='combo' ? '<span class="a2-act">➕ Añadir al combo</span>'
                 : ASESOR_MODE==='catalogo' ? '<span class="a2-act">📍 Ubicar en catálogo</span>' : '';
+  const cats=['Todos', ...(CONFIG.CATEGORIAS||[])];
+  const gens=['Todos', ...(CONFIG.GENEROS||[])];
+  const filtrosHtml=`<div class="a2-filtros">
+    <div class="a2-frow">${cats.map(c=>`<button class="a2-fchip ${ASESOR_FILTER.cat===c?'on':''}" data-fcat="${esc(c)}">${c==='Árabe'?'Árabes':esc(c)}</button>`).join('')}</div>
+    <div class="a2-frow">${gens.map(g=>`<button class="a2-fchip ${ASESOR_FILTER.gen===g?'on':''}" data-fgen="${esc(g)}">${esc(g)}</button>`).join('')}</div>
+  </div>`;
   cont.innerHTML=`<div class="a2-res-head">${head}${ASESOR_MODE!=='compra'?` · <b>modo ayuda</b>`:''}</div>
+    ${filtrosHtml}
     <div class="a2-grid">${list.map((r,idx)=>`<button class="a2-card ${scoring&&idx===0?'top':''}" data-id="${r.p.id}">
       ${scoring&&idx===0?`<span class="a2-crown">🏆 Top</span>`:''}
       ${scoring?`<span class="a2-pct ${r.pct>=70?'hi':(r.pct>=40?'mid':'lo')}">${r.pct}%</span>`:''}
@@ -1460,7 +1491,9 @@ function asesorRenderRes(){
       <div class="a2-name">${esc(r.p.nombre)}</div>
       <div class="a2-meta">${esc(r.p.categoria||'')}${r.p.genero?' · '+esc(r.p.genero):''}</div>
       ${modeBtn}
-    </button>`).join('')}</div>`;
+    </button>`).join('')||'<div class="a2-empty">Ningún perfume con ese filtro</div>'}</div>`;
+  cont.querySelectorAll('[data-fcat]').forEach(b=>b.onclick=()=>{ ASESOR_FILTER.cat=b.dataset.fcat; asesorRenderRes(); });
+  cont.querySelectorAll('[data-fgen]').forEach(b=>b.onclick=()=>{ ASESOR_FILTER.gen=b.dataset.fgen; asesorRenderRes(); });
   cont.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.id;
     if(ASESOR_MODE==='combo'){ armarAddFromAsesor(id); return; }
@@ -2739,6 +2772,7 @@ function estelaFrac(txt){
   return .5;
 }
 function _nivelTxt(f){ return f>=.85?'Muy alta':f>=.65?'Alta':f>=.45?'Media':f>=.28?'Baja':'Muy baja'; }
+function _collageHTML(imgs,max){ const a=(Array.isArray(imgs)?imgs:[]).slice(0,max||4); if(!a.length) return ''; return `<div class="pd-coll pd-coll-${a.length}">${a.map(u=>`<div class="pd-coll-cell" style="background-image:url('${esc(u)}')"></div>`).join('')}</div>`; }
 function _perfilChip(word){
   const t=String(word||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const map=[
@@ -2851,7 +2885,7 @@ function openProduct(id, opts){
       <span class="brand">${esc(CONFIG.TIENDA_NOMBRE||'')}</span>
       <span style="width:60px"></span>
     </div>
-    <div class="pd">
+    <div class="pd ${hidePrice?'pd-nobuy':''}">
       <div class="pd-media">
         <div class="pd-imgbox">${mainImg?`<img id="mainImg" src="${esc(mainImg)}" alt="${esc(p.nombre)}">`:`<span class="ph">${esc((p.marca||p.nombre||'?')[0])}</span>`}</div>
         ${imgs.length>1?`<div class="pd-thumbs">${imgs.map((u,i)=>`<button class="pd-thumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}"></button>`).join('')}</div>`:''}
@@ -2864,7 +2898,7 @@ function openProduct(id, opts){
         <div class="pd-desc">${p.genero?`<b>${esc(p.genero)}</b> · `:''}${p.concentracion?esc(p.concentracion)+' · ':''}${esc(p.descripcion||'')}</div>
         <div class="pd-tags">${catChip?`<span class="pd-tag">${esc(catChip)}</span>`:''}${stockHtml}</div>
 
-        ${p.perfil?`<div class="pd-block"><h4>Perfil aromático</h4><div class="pd-perfil-chips">${String(p.perfil).split(/[·,;/|]+/).map(s=>s.trim()).filter(Boolean).map(s=>_perfilChip(s)).join('')}</div></div>`:''}
+        ${p.perfil?`<div class="pd-block ${(Array.isArray(p.perfil_imgs)&&p.perfil_imgs.length)?'has-coll':''}">${_collageHTML(p.perfil_imgs,4)}<div class="pd-block-in"><h4>Perfil aromático</h4><div class="pd-perfil-chips">${String(p.perfil).split(/[·,;/|]+/).map(s=>s.trim()).filter(Boolean).map(s=>_perfilChip(s)).join('')}</div></div></div>`:''}
 
         ${(p.longevidad||p.estela)?`<div class="pd-block"><h4>Perfil olfativo</h4><div class="pd-metrics">
           ${p.longevidad?perfilBar('⏳','Longevidad',p.longevidad,longevidadFrac(p.longevidad)):''}
@@ -2875,7 +2909,7 @@ function openProduct(id, opts){
           <div class="opt dia ${dia?'on':''}">☀️ Día</div><div class="opt noche ${noche?'on':''}">🌙 Noche</div>
         </div></div>`:''}
 
-        ${oca?`<div class="pd-block"><h4>Ocasiones de uso</h4>${ocasionListHTML(oca)}</div>`:''}
+        ${oca?`<div class="pd-block ${(Array.isArray(p.ocasion_imgs)&&p.ocasion_imgs.length)?'has-coll':''}">${_collageHTML(p.ocasion_imgs,3)}<div class="pd-block-in"><h4>Ocasiones de uso</h4>${ocasionListHTML(oca)}</div></div>`:''}
       </div>
 
       <div class="pd-buy">
@@ -3072,9 +3106,9 @@ function armarAddFromAsesor(pid){
   if(pres) precio=Number(pres.precio); if(precio==null) precio=armarPrecioDe(p.categoria,armarMl);
   if(precio==null){ toast('Ese tamaño no está disponible'); return; }
   armarSel.push({ key, id:p.id, nombre:p.nombre, categoria:p.categoria, ml:armarMl, precio });
-  toast('➕ Añadido al combo: '+p.nombre);
+  toast('✅ Se agregó al combo: '+p.nombre);
   if(typeof renderArmar==='function') renderArmar();
-  asesorRenderRes();
+  minimizeAsesor();
 }
 function asesorLocate(pid){
   const p=PROD_BY_ID[pid]; if(!p) return;
@@ -3372,6 +3406,7 @@ function closeCart(){ $('#drawer').classList.remove('open'); const sc=$('#drawer
 $('#openCart').onclick = openCart;
 { const sb2=$('#shareBtn'); if(sb2) sb2.onclick = openShare; }
 { const fab=$('#asesorFab'); if(fab) fab.onclick = ()=>openAsesor(currentView==='armar'?'combo':'catalogo'); }
+{ const rb=$('#asesorResume'); if(rb) rb.onclick = resumeAsesor; }
 document.querySelectorAll('[data-close-cart]').forEach(el=>el.onclick=closeCart);
 
 async function checkout(R){

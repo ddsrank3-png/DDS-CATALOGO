@@ -579,6 +579,8 @@ function prodForm(id){
   const cats=CONFIG.CATEGORIAS||['Árabe','Diseñador','Nicho'];
   const gens=CONFIG.GENEROS||['Hombre','Mujer','Unisex'];
   let imgs = imgsOf(p).slice();
+  let perfilImgs = Array.isArray(p.perfil_imgs)?p.perfil_imgs.slice():[];
+  let ocasionImgs = Array.isArray(p.ocasion_imgs)?p.ocasion_imgs.slice():[];
   const presetDe=(cat)=>{ const base=(CONFIG.PRESET_PRESENTACIONES&&CONFIG.PRESET_PRESENTACIONES[cat])||[]; return base.map(x=>({ml:String(x.ml),precio:x.precio,precio_may:0,antes:(x.antes??''),stock:'',activo:true})); };
   let pres = (p.presentaciones && p.presentaciones.length)
     ? JSON.parse(JSON.stringify(p.presentaciones))
@@ -656,6 +658,12 @@ function prodForm(id){
         <div class="chipset" id="pEstilo">${ESTILOS.map(s=>`<button type="button" class="chip-sel ${(Array.isArray(p.estilo)&&p.estilo.includes(s))?'on':''}" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
       <div class="field"><label>Perfil aromático / acordes <span style="font-weight:400;color:var(--muted)">(se usa en el asesor y en la ficha)</span></label>
         <input id="pPerfil" value="${esc(p.perfil||'')}" placeholder="Ej. Tropical · Coco · Higo · Verde · Cremoso · Dulce · Amaderado"></div>
+      <div class="field"><label>🖼️ Imágenes de fondo — Perfil aromático <span style="font-weight:400;color:var(--muted)">(4 imágenes; se muestran como collage detrás de los perfiles)</span></label>
+        <input id="pPerfilFiles" type="file" accept="image/*" multiple>
+        <div class="imgs" id="perfilImgList"></div></div>
+      <div class="field"><label>🖼️ Imágenes de fondo — Ocasiones de uso <span style="font-weight:400;color:var(--muted)">(hasta 3 imágenes; collage detrás de las ocasiones)</span></label>
+        <input id="pOcasionFiles" type="file" accept="image/*" multiple>
+        <div class="imgs" id="ocasionImgList"></div></div>
     </div>
     <div class="check"><input type="checkbox" id="pDest" ${p.destacado?'checked':''}><label for="pDest">Destacado (aparece con etiqueta)</label></div>
     <div class="check"><input type="checkbox" id="pVis" ${p.visible!==false?'checked':''}><label for="pVis">Visible en el catálogo</label></div>
@@ -677,6 +685,16 @@ function prodForm(id){
     for(const f of files){ const u=await uploadImg(f,'productos'); if(u) imgs.push(u); }
     renderImgs(); toast('Imágenes subidas');
   };
+  function renderColl(listId, arr, max, rmAttr){
+    const el=$('#'+listId); if(!el) return;
+    el.innerHTML = arr.map((u,i)=>`<div class="im"><img src="${esc(u)}"><button data-${rmAttr}="${i}">×</button></div>`).join('') + (arr.length<max?'':'<div class="hint" style="margin:6px 0 0">Máximo '+max+' imágenes</div>');
+    el.querySelectorAll('[data-'+rmAttr+']').forEach(b=>b.onclick=()=>{ arr.splice(+b.dataset[rmAttr.replace(/-/g,'')],1); renderColl(listId,arr,max,rmAttr); });
+  }
+  const _rp=()=>renderColl('perfilImgList',perfilImgs,4,'rmperfil');
+  const _ro=()=>renderColl('ocasionImgList',ocasionImgs,3,'rmocasion');
+  _rp(); _ro();
+  if($('#pPerfilFiles')) $('#pPerfilFiles').onchange = async e => { const files=[...e.target.files]; if(!files.length)return; toast('Subiendo...'); for(const f of files){ if(perfilImgs.length>=4){ toast('Máximo 4',true); break;} const u=await uploadImg(f,'perfil'); if(u) perfilImgs.push(u); } _rp(); toast('Listo'); };
+  if($('#pOcasionFiles')) $('#pOcasionFiles').onchange = async e => { const files=[...e.target.files]; if(!files.length)return; toast('Subiendo...'); for(const f of files){ if(ocasionImgs.length>=3){ toast('Máximo 3',true); break;} const u=await uploadImg(f,'ocasion'); if(u) ocasionImgs.push(u); } _ro(); toast('Listo'); };
 
   function renderPres(){
     $('#presList').innerHTML = pres.map((x,i)=>`
@@ -754,6 +772,8 @@ function prodForm(id){
       concentracion: $('#pConcentracion')?($('#pConcentracion').value.trim()||null):null,
       anio: $('#pAnio')?($('#pAnio').value.trim()||null):null,
       perfil: $('#pPerfil')?($('#pPerfil').value.trim()||null):null,
+      perfil_imgs: perfilImgs,
+      ocasion_imgs: ocasionImgs,
       familia: [...document.querySelectorAll('#pFamilia .chip-sel.on')].map(b=>b.dataset.v),
       estilo:  [...document.querySelectorAll('#pEstilo .chip-sel.on')].map(b=>b.dataset.v),
       destacado:(($('#pDest')||{}).checked)||false, visible:($('#pVis')? $('#pVis').checked : true), regalo_permitido:(($('#pRegalo')||{}).checked)||false,

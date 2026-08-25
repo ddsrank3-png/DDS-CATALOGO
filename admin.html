@@ -262,6 +262,17 @@ img{display:block;max-width:100%}
       <div class="hint">Ej. desde 2 decants → 5% · desde 3 → 8% · desde 5 → 12%. Sin tramos = sin descuento automático.</div>
     </div>
 
+    <div class="bar" style="margin-top:22px"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem">💳 Pago (Yape / Plin)</h3></div>
+    <div class="grid2">
+      <div class="field"><label>Número Yape / Plin</label><input id="aYapeNum" placeholder="Ej. 987 240 889"></div>
+      <div class="field"><label>Titular de la cuenta</label><input id="aYapeTit" placeholder="Ej. Agustín Rentería"></div>
+    </div>
+    <div class="field"><label>QR de pago (Yape/Plin)</label>
+      <div class="ci_imgwrap" id="aYapeQrWrap"></div>
+      <input type="file" accept="image/*" id="aYapeQrFile">
+      <div class="hint">Este QR aparece en el paso de Pago del checkout para que el cliente escanee.</div>
+    </div>
+
     <div class="actions"><button class="btn" id="saveAjustes">Guardar ajustes</button></div>
   </section>
 </div>
@@ -461,6 +472,18 @@ function renderAjustes(){
   const en=$('#aEnvio'); if(en) en.value = (D.combo_envio_gratis!=null?D.combo_envio_gratis:(CA.envio_gratis_desde!=null?CA.envio_gratis_desde:''));
   AJ_DESC = Array.isArray(D.combo_descuentos) ? D.combo_descuentos.slice() : (Array.isArray(CA.descuentos)?CA.descuentos.slice():[]);
   renderDescuentos();
+  // Pago
+  const yn=$('#aYapeNum'); if(yn) yn.value = D.yape_numero || CONFIG.YAPE_NUMERO || '';
+  const yt=$('#aYapeTit'); if(yt) yt.value = D.yape_titular || CONFIG.YAPE_NOMBRE || '';
+  AJ_YAPEQR = D.yape_qr || CONFIG.YAPE_QR || '';
+  renderYapeQr();
+}
+let AJ_YAPEQR='';
+function renderYapeQr(){
+  const w=$('#aYapeQrWrap'); if(!w) return;
+  w.innerHTML = AJ_YAPEQR ? `<div class="im"><img src="${esc(AJ_YAPEQR)}" style="max-height:120px"></div> <button type="button" class="btn ghost" id="aYapeQrDel">Quitar</button>` : '<span class="hint">Sin QR</span>';
+  const del=$('#aYapeQrDel'); if(del) del.onclick=()=>{ AJ_YAPEQR=''; renderYapeQr(); };
+  const f=$('#aYapeQrFile'); if(f) f.onchange=async e=>{ const file=e.target.files[0]; if(!file)return; toast('Subiendo QR...'); const u=await uploadImg(file,'pagos'); if(u){ AJ_YAPEQR=u; renderYapeQr(); toast('QR subido'); } };
 }
 
 let AJ_TESTIS=[], AJ_CATIMG={}, AJ_DESC=[];
@@ -528,6 +551,9 @@ async function saveAjustes(){
   D.categoria_imagenes = AJ_CATIMG;
   const env=$('#aEnvio').value; D.combo_envio_gratis = env===''?null:(+env||0);
   D.combo_descuentos = AJ_DESC.filter(d=>d.desde>0&&d.pct>0).sort((a,b)=>a.desde-b.desde);
+  D.yape_numero = ($('#aYapeNum').value||'').trim() || null;
+  D.yape_titular = ($('#aYapeTit').value||'').trim() || null;
+  D.yape_qr = AJ_YAPEQR || null;
   const payload={ id:'principal', hero_sub:$('#aHero').value.trim()||null, mensaje_gracias:$('#aGracias').value.trim()||null, data:D };
   const {error}=await sb.from('ajustes').upsert(payload);
   if(error){ toast('Error: '+error.message,true); return; }

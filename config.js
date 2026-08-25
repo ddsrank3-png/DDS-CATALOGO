@@ -125,7 +125,38 @@ const CONFIG = {
   },
 
   // Empaque para envío (Shalom): si el pedido es menor a 'gratis_desde', se suma 'monto'. Cliente en Ica no paga empaque.
-  EMPAQUE: { activo:true, monto:5, gratis_desde:200 },
+  EMPAQUE: { activo:true, monto:5, gratis_desde:150 },
+
+  // QR de pago (Yape/Plin). También se puede subir desde el Admin › Ajustes › Pago (recomendado).
+  YAPE_QR: "",
+
+  // Agencias oficiales de Shalom (aproximado, EDITABLE). Estructura: DEPARTAMENTO → DISTRITO → [{n:nombre, d:dirección}]
+  // Puedes agregar/editar libremente. El buscador del checkout usa esta lista.
+  SHALOM_AGENCIAS: {
+    "ICA": {
+      "ICA": [
+        { n:"ICA AV. JJ ELIAS", d:"Mza. B, sub-lote 02 del Fundo La Palma, cruce Av. Cutervo con Av. J.J. Elías" },
+        { n:"ICA SAN JOAQUIN", d:"Pasaje Grau N° 101, San Joaquín — a 1 cdra de Petroperú" },
+        { n:"ICA SANTIAGO", d:"Av. Los Maestros — Santiago, Ica" }
+      ],
+      "CHINCHA ALTA": [ { n:"CHINCHA ALTA", d:"Av. Óscar R. Benavides — Chincha Alta" } ],
+      "PISCO": [ { n:"PISCO", d:"Calle Comercio — Pisco" } ],
+      "NAZCA": [ { n:"NAZCA", d:"Jr. Lima — Nazca" } ]
+    },
+    "LIMA": {
+      "LIMA CERCADO": [ { n:"LIMA CENTRO", d:"Jr. de la Unión — Cercado de Lima" } ],
+      "LOS OLIVOS": [ { n:"LOS OLIVOS", d:"Av. Universitaria — Los Olivos" } ],
+      "SAN JUAN DE LURIGANCHO": [ { n:"SJL", d:"Av. Próceres de la Independencia — SJL" } ],
+      "GAMARRA": [ { n:"GAMARRA", d:"Jr. Gamarra — La Victoria" } ],
+      "ATE": [ { n:"ATE", d:"Carretera Central — Ate" } ]
+    },
+    "AREQUIPA": { "AREQUIPA": [ { n:"AREQUIPA CERCADO", d:"Av. Ejército — Arequipa" } ] },
+    "LA LIBERTAD": { "TRUJILLO": [ { n:"TRUJILLO", d:"Av. España — Trujillo" } ] },
+    "PIURA": { "PIURA": [ { n:"PIURA", d:"Av. Sánchez Cerro — Piura" } ] },
+    "LAMBAYEQUE": { "CHICLAYO": [ { n:"CHICLAYO", d:"Av. Balta — Chiclayo" } ] },
+    "CUSCO": { "CUSCO": [ { n:"CUSCO", d:"Av. El Sol — Cusco" } ] },
+    "JUNIN": { "HUANCAYO": [ { n:"HUANCAYO", d:"Calle Real — Huancayo" } ] }
+  },
 
   // Aviso del sistema de puntos (inicio + catálogo). Se muestra solo si REGALO_COMBO está activo.
   PUNTOS_AVISO: {

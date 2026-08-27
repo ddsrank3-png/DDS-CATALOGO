@@ -3470,11 +3470,20 @@ document.querySelectorAll('[data-close-cart]').forEach(el=>el.onclick=closeCart)
 
 /* ================= Checkout de 3 pasos (Envío · Pago · Confirmar) ================= */
 let CO={ step:0, R:null, cli:{}, pago:{} };
+let _peruLoaded=false;
+function _loadPeru(cb){
+  if(window.PERU_UBIGEO||_peruLoaded){ cb&&cb(); return; }
+  const s=document.createElement('script'); s.src='peru.js';
+  s.onload=()=>{ _peruLoaded=true; cb&&cb(); };
+  s.onerror=()=>{ _peruLoaded=true; cb&&cb(); };
+  document.head.appendChild(s);
+}
 function _coEmp(R){ const e=CONFIG.EMPAQUE||{activo:true,monto:5,gratis_desde:150}; const envio=(CO.cli.courier==='ica')?'ica':'shalom'; const gd=Number(e.gratis_desde||150); const emp=(e.activo!==false && envio==='shalom' && R.total<gd)?Number(e.monto||5):0; return {emp, total:R.total+emp}; }
 function openCheckout(R){
   if(!CART.length){ toast('Tu pedido está vacío'); return; }
   CO={ step:0, R, cli:Object.assign({courier:'shalom_agencia', tipoDoc:'DNI'}, CO.cli, {nombre:cliente.nombre||CO.cli.nombre||''}), pago:CO.pago||{metodo:'yape'} };
   $('#coOv').style.display='flex'; document.body.style.overflow='hidden'; renderCheckout();
+  _loadPeru(()=>{ if($('#coOv').style.display==='flex' && CO.step===0) coStepEnvio(); });
 }
 function closeCheckout(){ $('#coOv').style.display='none'; document.body.style.overflow=''; }
 function _coSteps(){ return ['Envío','Pago','Confirmar']; }
@@ -3492,8 +3501,12 @@ function renderCheckout(){
 }
 function coStepEnvio(){
   const b=$('#coBody'); const c=CO.cli;
-  const deps=Object.keys(CONFIG.SHALOM_AGENCIAS||{});
-  const dep=c.dep||deps[0]||''; const dists=Object.keys((CONFIG.SHALOM_AGENCIAS||{})[dep]||{});
+  const UB=window.PERU_UBIGEO||{};
+  const deps=Object.keys(UB);
+  const dep=c.dep||deps[0]||'';
+  const provs=Object.keys(UB[dep]||{});
+  const prov=c.prov||provs[0]||'';
+  const dists=(UB[dep]||{})[prov]||[];
   const dist=c.dist||dists[0]||'';
   const esShalom=(c.courier||'').startsWith('shalom');
   b.innerHTML=`
@@ -3514,35 +3527,33 @@ function coStepEnvio(){
       </select></div>
     </div>
     ${esShalom?`<div class="co-agencias">
-      <div class="co-lbl">Buscador de agencias oficiales (Shalom)</div>
+      <div class="co-lbl">Datos de entrega (Shalom)</div>
       <div class="co-grid2">
-        <div class="co-f"><label>Departamento</label><select id="cf_dep">${deps.map(d=>`<option ${d===dep?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
-        <div class="co-f"><label>Distrito</label><select id="cf_dist">${dists.map(d=>`<option ${d===dist?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
+        <div class="co-f"><label>Departamento</label><select id="cf_dep">${deps.length?deps.map(d=>`<option ${d===dep?'selected':''}>${esc(d)}</option>`).join(''):'<option>Cargando…</option>'}</select></div>
+        <div class="co-f"><label>Provincia</label><select id="cf_prov">${provs.map(d=>`<option ${d===prov?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
       </div>
-      <div class="co-f"><label>Seleccionar agencia autorizada</label>
-        <input id="cf_agq" placeholder="Escribe para buscar tu agencia..." value="${esc(c.agencia||'')}" autocomplete="off">
-        <div class="co-aglist" id="cf_aglist"></div>
+      <div class="co-f"><label>Distrito</label><select id="cf_dist">${dists.map(d=>`<option ${d===dist?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
+      <div class="co-f"><label>Dirección de la agencia Shalom donde recogerás</label>
+        <input id="cf_agdir" value="${esc(c.agencia_dir||'')}" placeholder="Ej. Agencia Shalom Av. J.J. Elías 123 — Ica">
+        <div class="co-note">Escribe la dirección exacta de la agencia Shalom que te queda más cerca.</div>
       </div>
-    </div>`:'<div class="co-note">Recojo/entrega directa en Ica. No necesitas agencia.</div>'}
+    </div>`:'<div class="co-note">Recojo/entrega directa en Ica. No necesitas dirección de agencia.</div>'}
     <div class="co-nav"><button class="co-b ghost" id="co_cancel">Cancelar</button><button class="co-b dark" id="co_next">Continuar al pago →</button></div>
   `;
   const g=(id)=>$('#'+id);
-  const save=()=>{ c.nombre=g('cf_nom').value.trim(); c.correo=g('cf_mail').value.trim(); c.tipoDoc=g('cf_td').value; c.doc=g('cf_doc').value.trim(); c.tel=g('cf_tel').value.trim(); c.courier=g('cf_cour').value; };
+  const save=()=>{ c.nombre=g('cf_nom').value.trim(); c.correo=g('cf_mail').value.trim(); c.tipoDoc=g('cf_td').value; c.doc=g('cf_doc').value.trim(); c.tel=g('cf_tel').value.trim(); c.courier=g('cf_cour').value; if(g('cf_agdir')) c.agencia_dir=g('cf_agdir').value.trim(); };
   g('cf_cour').onchange=()=>{ save(); CO.cli=c; coStepEnvio(); };
   if(esShalom){
-    const dsel=g('cf_dep'), dist2=g('cf_dist');
-    dsel.onchange=()=>{ c.dep=dsel.value; c.dist=Object.keys((CONFIG.SHALOM_AGENCIAS||{})[c.dep]||{})[0]||''; c.agencia=''; save(); CO.cli=c; coStepEnvio(); };
-    dist2.onchange=()=>{ c.dist=dist2.value; c.agencia=''; save(); CO.cli=c; coStepEnvio(); };
-    const q=g('cf_agq'), list=g('cf_aglist');
-    const ags=((CONFIG.SHALOM_AGENCIAS||{})[dep]||{})[dist]||[];
-    const paint=(f)=>{ const ff=(f||'').toLowerCase(); const items=ags.filter(a=>!ff||a.n.toLowerCase().includes(ff)||(a.d||'').toLowerCase().includes(ff)); list.innerHTML=items.map(a=>`<button class="co-ag" data-ag="${esc(a.n)}"><b>${esc(a.n)}</b><small>${esc(a.d||'')}</small></button>`).join('')||'<div class="co-note">Sin agencias para ese distrito.</div>'; list.querySelectorAll('[data-ag]').forEach(bt=>bt.onclick=()=>{ c.agencia=bt.dataset.ag; q.value=bt.dataset.ag; list.innerHTML=''; }); };
-    q.oninput=()=>paint(q.value); q.onfocus=()=>paint(q.value);
+    const dsel=g('cf_dep'), psel=g('cf_prov'), dist2=g('cf_dist');
+    if(dsel) dsel.onchange=()=>{ c.dep=dsel.value; c.prov=Object.keys(UB[c.dep]||{})[0]||''; c.dist=((UB[c.dep]||{})[c.prov]||[])[0]||''; save(); CO.cli=c; coStepEnvio(); };
+    if(psel) psel.onchange=()=>{ c.prov=psel.value; c.dist=((UB[c.dep||dep]||{})[c.prov]||[])[0]||''; save(); CO.cli=c; coStepEnvio(); };
+    if(dist2) dist2.onchange=()=>{ c.dist=dist2.value; save(); CO.cli=c; };
   }
   g('co_cancel').onclick=closeCheckout;
-  g('co_next').onclick=()=>{ save(); CO.cli=c;
+  g('co_next').onclick=()=>{ save(); c.dep=c.dep||dep; c.prov=c.prov||prov; c.dist=c.dist||dist; CO.cli=c;
     if(!c.nombre){ toast('Escribe tu nombre',true); return; }
     if(!c.tel){ toast('Escribe tu teléfono',true); return; }
-    if((c.courier||'').startsWith('shalom') && !c.agencia){ toast('Elige tu agencia Shalom',true); return; }
+    if((c.courier||'').startsWith('shalom') && !c.agencia_dir){ toast('Escribe la dirección de la agencia Shalom',true); return; }
     cliente.nombre=c.nombre; cliente.tel=c.tel; cliente.envio=(c.courier==='ica'?'ica':'shalom'); saveCart&&saveCart();
     CO.step=1; renderCheckout();
   };
@@ -3586,7 +3597,7 @@ function coStepConfirmar(){
       ${c.doc?`<div class="cb-row"><span>${esc(c.tipoDoc||'Doc')}</span><b>${esc(c.doc)}</b></div>`:''}
       ${c.tel?`<div class="cb-row"><span>Teléfono</span><b>${esc(c.tel)}</b></div>`:''}
       <div class="cb-row"><span>Entrega</span><b>${esc(envTxt)}</b></div>
-      ${c.agencia?`<div class="cb-row"><span>Agencia</span><b>${esc(c.agencia)} (${esc(c.dist||'')}, ${esc(c.dep||'')})</b></div>`:''}
+      ${c.agencia_dir?`<div class="cb-row"><span>Agencia Shalom</span><b>${esc(c.agencia_dir)}</b></div><div class="cb-row"><span>Ubicación</span><b>${esc(c.dist||'')}, ${esc(c.prov||'')}, ${esc(c.dep||'')}</b></div>`:''}
       <div class="cb-sep"></div>
       ${R.lines.map(i=>`<div class="cb-row"><span>${esc(i.nombre)} · ${esc(mlLabel(i.ml))} ×${i.qty}</span><b>${i.tipo==='regalo'?'GRATIS':fmt(i.unit*i.qty)}</b></div>`).join('')}
       ${R.ahorro>0?`<div class="cb-row desc"><span>Descuento</span><b>- ${fmt(R.ahorro)}</b></div>`:''}
@@ -3608,10 +3619,10 @@ async function coFinalizar(){
     const items=R.lines.map(i=>({id:i.id,nombre:i.nombre,marca:i.marca||'',ml:i.ml,qty:i.qty,precio:i.unit,total:i.unit*i.qty,tipo:i.tipo||'normal'}));
     await sb.from('ventas').insert({
       cliente_nombre:c.nombre||null, cliente_telefono:c.tel||null,
-      cliente_direccion:(c.agencia?`${c.agencia} — ${c.dist||''}, ${c.dep||''}`:envTxt),
+      cliente_direccion:(c.agencia_dir?`Ag. Shalom: ${c.agencia_dir} — ${c.dist||''}, ${c.prov||''}, ${c.dep||''}`:envTxt),
       items, subtotal:R.totalSinDesc, descuento:R.ahorro, total:total,
       metodo_pago:'yape', yape_operacion:p.op||null, estado:'nuevo',
-      data:{ correo:c.correo||'', tipo_doc:c.tipoDoc||'', documento:c.doc||'', courier:c.courier, departamento:c.dep||'', distrito:c.dist||'', agencia:c.agencia||'', empaque:emp, comprobante:p.comprobante||'' }
+      data:{ correo:c.correo||'', tipo_doc:c.tipoDoc||'', documento:c.doc||'', courier:c.courier, departamento:c.dep||'', provincia:c.prov||'', distrito:c.dist||'', agencia_dir:c.agencia_dir||'', empaque:emp, comprobante:p.comprobante||'' }
     });
   }catch(e){ console.warn('No se registró la venta:', e); }
   // WhatsApp
@@ -3622,7 +3633,7 @@ async function coFinalizar(){
   msg+=`%0A*Total: ${enc(fmt(total))}*`;
   msg+=`%0A%0A👤 *Datos:*%0ANombre: ${enc(c.nombre||'')}%0A${c.tipoDoc||'Doc'}: ${enc(c.doc||'-')}%0ATel: ${enc(c.tel||'-')}%0A${c.correo?`Correo: ${enc(c.correo)}%0A`:''}`;
   msg+=`%0A📦 Entrega: ${enc(envTxt)}`;
-  if(c.agencia) msg+=`%0AAgencia: ${enc(c.agencia)} (${enc(c.dist||'')}, ${enc(c.dep||'')})`;
+  if(c.agencia_dir) msg+=`%0AAgencia Shalom: ${enc(c.agencia_dir)}%0AUbicación: ${enc((c.dist||'')+', '+(c.prov||'')+', '+(c.dep||''))}`;
   msg+=`%0A%0A💜 Pago Yape/Plin · N° op: ${enc(p.op||'-')}`;
   if(p.comprobante) msg+=`%0AComprobante: ${enc(p.comprobante)}`;
   window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`,'_blank');

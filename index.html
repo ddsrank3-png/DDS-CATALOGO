@@ -174,6 +174,8 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .card .nombre{font-family:'Cormorant Garamond',serif; font-size:1.24rem; font-weight:600; line-height:1.12; color:var(--cream)}
 .card .foot{margin-top:auto; padding-top:11px; display:flex; align-items:flex-end; justify-content:space-between; gap:8px}
 .card .precio{display:flex; flex-direction:column; line-height:1.1}
+.card .precio-sello small{color:var(--gold-deep); font-weight:700}
+.card .precio-sello b{color:var(--gold-deep)}
 .card .precio small{color:var(--muted); font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; margin-bottom:3px}
 .card .precio b{font-family:'Cormorant Garamond',serif; font-weight:600; font-size:1.18rem; color:var(--gold-1)}
 .card .ver{width:34px; height:34px; border-radius:50%; border:1px solid var(--gold-deep); color:var(--gold-1); display:grid; place-items:center; font-size:1.05rem; transition:.22s; flex:0 0 auto}
@@ -840,6 +842,7 @@ header::after{background:var(--line); opacity:1}
 .pd-colored .pd-deliv-env{color:var(--ctxt)}
 .pd-colored .pd-track .tt{color:var(--ctxt)} .pd-colored .pd-track .dd{color:var(--ctxt); opacity:.6}
 .pd-colored .pd-dn .opt{color:var(--ctxt); border-color:color-mix(in srgb,var(--ctxt) 22%, transparent)}
+.pd-colored .pd-sello-banner{box-shadow:0 8px 22px rgba(0,0,0,.35)}
 .pd-colored .pd-badge{color:var(--ctxt)}
 .pd-colored.pd-hasbg .pd-bg-veil{background:linear-gradient(180deg, color-mix(in srgb,var(--cbg) 55%, transparent), color-mix(in srgb,var(--cbg) 80%, transparent))}
 .pd-imgstrip{display:grid; gap:6px}
@@ -924,6 +927,12 @@ header::after{background:var(--line); opacity:1}
 /* Encabezado Tamaños con líneas */
 .pd-sizes-h{display:flex; align-items:center; gap:12px; justify-content:center; color:var(--cream); font-weight:600; letter-spacing:.02em; margin-bottom:2px}
 .pd-sizes-h::before,.pd-sizes-h::after{content:""; height:1px; flex:1; max-width:60px; background:var(--line)}
+.pd-sello-banner{display:flex; align-items:center; justify-content:space-between; gap:10px; background:linear-gradient(120deg,#7b5410,#d4a83c 55%,#7b5410); border-radius:14px; padding:14px 18px; margin-bottom:14px; box-shadow:0 8px 22px rgba(180,140,40,.28)}
+.pd-sello-banner .ps-lbl{color:#fff; font-weight:800; font-size:.88rem; letter-spacing:.01em}
+.pd-sello-banner .ps-price{display:flex; align-items:baseline; gap:8px}
+.pd-sello-banner .ps-price b{color:#fff; font-size:1.5rem; font-weight:800}
+.pd-sello-banner .ps-antes{color:rgba(255,255,255,.75); text-decoration:line-through; font-size:.9rem}
+@media(max-width:640px){ .pd-sello-banner{flex-direction:column; align-items:flex-start; gap:6px} .pd-sello-banner .ps-price b{font-size:1.3rem} }
 /* Fila cantidad + agregar */
 .pd-buyrow{display:flex; gap:10px; align-items:stretch}
 .pd-buyrow .pd-qty{flex:0 0 auto}
@@ -1265,6 +1274,15 @@ function mlLabel(ml){ return String(ml).toLowerCase()==='sellado' ? 'Sellado' : 
 function ofertaPct(x){ const a=Number(x.antes), pr=Number(x.precio); return (a&&pr&&a>pr)?Math.round((a-pr)/a*100):0; }
 function precioEfectivo(p, x){ const r=window.PROMOS_ENGINE.precioUnit(p, x.ml, Number(x.precio), PROMOS); return r.precio; }
 function precioDesde(p){ const v=presActivas(p).map(x=>precioEfectivo(p,x)); return v.length?Math.min(...v):null; }
+function precioSellado(p){
+  const pres=presDeTipo(p,'Sellado').filter(x=>x&&x.activo!==false);
+  if(!pres.length) return null;
+  // Toma la primera presentación sellada activa (normalmente hay una sola)
+  const x=pres[0];
+  const actual = precioEfectivo(p,x);
+  const antes = Number(x.antes||x.precio_antes||0) || null;
+  return { actual, antes: (antes && antes>actual) ? antes : null };
+}
 function maxOfertaCard(p){
   let m=0;
   presActivas(p).forEach(x=>{
@@ -2904,8 +2922,12 @@ function render(){
 
   $('#grid').innerHTML = list.map(p => {
     const desde = precioDesde(p);
+    const sello = precioSellado(p);
     const main = imgsOf(p)[0];
     const off = maxOfertaCard(p);
+    const precioHtml = sello
+      ? `<span class="precio precio-sello"><small>Perfume completo</small><b>${sello.antes?`<span class="antes">${fmt(sello.antes)}</span>`:''}${fmt(sello.actual)}</b></span>`
+      : `<span class="precio">${desde!=null?`<small>Desde</small><b>${fmt(desde)}</b>`:'<small>Precio</small><b>Consultar</b>'}</span>`;
     return `<button class="card ${agotado(p)?'agotado':''}" data-id="${p.id}">
       ${p.destacado ? '<span class="badge-dest">Destacado</span>' : ''}
       ${off ? `<span class="badge-off">−${off}%</span>` : ''}
@@ -2915,7 +2937,7 @@ function render(){
         <span class="nombre">${esc(p.nombre)}</span>
         ${stockLine(p)}
         <div class="foot">
-          <span class="precio">${desde!=null?`<small>Desde</small><b>${fmt(desde)}</b>`:'<small>Precio</small><b>Consultar</b>'}</span>
+          ${precioHtml}
           <span class="ver">→</span>
         </div>
       </div>
@@ -3071,7 +3093,7 @@ function openProduct(id, opts){
   const notas = NOTAS_BY_PROD[id] || [];
   const imgs = imgsOf(p);
   const mainImg = imgs[0];
-  const pres = presActivas(p);
+  const pres = [...presActivas(p)].sort((a,b)=> (_esSellado(b.ml)?1:0) - (_esSellado(a.ml)?1:0));
   const _stocks = pres.map(x=>x.stock).filter(v=>v!=null&&v!=='');
   const s = _stocks.length ? _stocks.reduce((a,b)=>a+Number(b),0) : stockDe(p);
   const low = CONFIG.STOCK_BAJO||5;
@@ -3166,7 +3188,8 @@ function openProduct(id, opts){
           <div class="pd-badge"><b>✅</b>100% original</div>
         </div>
         ` : `
-        <div class="pd-sizes-h">Tamaños</div>
+        ${(function(){ const s=precioSellado(p); if(!s) return ''; return `<div class="pd-sello-banner"><span class="ps-lbl">💎 Perfume completo (sellado)</span><span class="ps-price">${s.antes?`<span class="ps-antes">${fmt(s.antes)}</span>`:''}<b>${fmt(s.actual)}</b></span></div>`; })()}
+        <div class="pd-sizes-h">Tamaños${(function(){ const s=precioSellado(p); return s?' y presentaciones':''; })()}</div>
         <div class="pd-sizes" id="tallas">${sizesHtml}</div>
         <div class="pd-buyrow">
           <div class="pd-qty"><button id="qMinus">−</button><input id="qInput" type="number" min="1" value="1"><button id="qPlus">+</button></div>

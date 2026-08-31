@@ -798,6 +798,48 @@ header::after{background:var(--line); opacity:1}
 .pd-deliv-ica2{font-size:.86rem; color:var(--cream); margin-bottom:4px}
 .pd-deliv-env{font-size:.86rem; color:var(--gold-deep)}
 .pd-perfil-chips{display:flex; flex-wrap:wrap; gap:7px}
+/* Mosaico celda-a-celda (perfil / ocasiones) */
+.pd-cells{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.pd-cell{position:relative; border-radius:12px; padding:14px 8px; min-height:76px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; text-align:center; background:var(--panel-2); border:1px solid var(--line); overflow:hidden}
+.pd-cell.has-img{background-size:cover; background-position:center; color:#fff; border-color:transparent}
+.pd-cell.has-img::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.62))}
+.pd-cell .pc-em,.pd-cell .pc-tx{position:relative; z-index:1}
+.pd-cell .pc-em{font-size:1.4rem; line-height:1}
+.pd-cell .pc-tx{font-size:.76rem; font-weight:700; color:var(--cream)}
+.pd-cell.has-img .pc-tx{color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.85)}
+@media(max-width:640px){ .pd-cells{grid-template-columns:repeat(3,1fr)} }
+/* Cartilla con colores personalizados */
+.pd-colored{background:var(--cbg); color:var(--ctxt); border-radius:20px; padding:22px}
+.pd-colored .pd-marca{color:var(--ctxt); opacity:.7}
+.pd-colored .pd-name{color:var(--ctxt)}
+.pd-colored .pd-desc{color:var(--ctxt); opacity:.85}
+.pd-colored .pd-desc b{color:var(--ctxt)}
+.pd-colored .pd-block{background:color-mix(in srgb, var(--cbg) 86%, #ffffff 14%); border:1px solid color-mix(in srgb, var(--ctxt) 22%, transparent)}
+.pd-colored .pd-block h4{color:var(--ctxt); opacity:.75}
+.pd-colored .pd-tag{color:var(--ctxt); border-color:color-mix(in srgb,var(--ctxt) 30%, transparent)}
+.pd-colored .pd-imgbox{background:color-mix(in srgb,var(--cbg) 85%, #ffffff 15%)}
+.pd-colored .pd-thumb{border-color:color-mix(in srgb,var(--ctxt) 25%, transparent); background:color-mix(in srgb,var(--cbg) 85%, #fff 15%)}
+.pd-colored .pd-thumb.active{border-color:var(--ctxt)}
+.pd-colored .pd-notaspanel{background:color-mix(in srgb,var(--cbg) 88%, #ffffff 12%); border:1px solid color-mix(in srgb,var(--ctxt) 20%, transparent)}
+.pd-colored .pd-oval small{color:var(--ctxt)}
+.pd-colored .pd-sizes-h,.pd-colored .tb-count{color:var(--ctxt)}
+.pd-colored .pd-size{background:color-mix(in srgb,var(--cbg) 84%, #ffffff 16%); border:1px solid color-mix(in srgb,var(--ctxt) 20%, transparent); color:var(--ctxt)}
+.pd-colored .pd-size small{color:var(--ctxt); opacity:.7}
+.pd-colored .pd-size.on{background:var(--cbtn); border-color:var(--ctxt); color:var(--ctxt)}
+.pd-colored .pd-b.dark{background:var(--cbtn); color:var(--ctxt); border:none}
+.pd-colored .pd-qty{background:color-mix(in srgb,var(--cbg) 84%, #ffffff 16%); border:1px solid color-mix(in srgb,var(--ctxt) 20%, transparent)}
+.pd-colored .pd-qty input,.pd-colored .pd-qty button{color:var(--ctxt)}
+.pd-colored .pf-chip{background:color-mix(in srgb,var(--cbg) 80%, #ffffff 20%); border:1px solid color-mix(in srgb,var(--ctxt) 25%, transparent); color:var(--ctxt)}
+.pd-colored .pd-cell{background:color-mix(in srgb,var(--cbg) 84%, #ffffff 16%); border-color:color-mix(in srgb,var(--ctxt) 20%, transparent)}
+.pd-colored .pd-cell .pc-tx{color:var(--ctxt)}
+.pd-colored .pm-top,.pd-colored .pm-niv,.pd-colored .pm-txt,.pd-colored .oc-item{color:var(--ctxt)}
+.pd-colored .pm-bar{background:color-mix(in srgb,var(--cbg) 65%, #000 35%)}
+.pd-colored .pd-deliv-ica2{color:var(--ctxt)}
+.pd-colored .pd-deliv-env{color:var(--ctxt)}
+.pd-colored .pd-track .tt{color:var(--ctxt)} .pd-colored .pd-track .dd{color:var(--ctxt); opacity:.6}
+.pd-colored .pd-dn .opt{color:var(--ctxt); border-color:color-mix(in srgb,var(--ctxt) 22%, transparent)}
+.pd-colored .pd-badge{color:var(--ctxt)}
+.pd-colored.pd-hasbg .pd-bg-veil{background:linear-gradient(180deg, color-mix(in srgb,var(--cbg) 55%, transparent), color-mix(in srgb,var(--cbg) 80%, transparent))}
 .pd-imgstrip{display:grid; gap:6px}
 .pd-strip-c{aspect-ratio:9/16; background-size:cover; background-position:center; border-radius:8px; background-color:var(--panel-2)}
 @media(max-width:640px){ .pd-imgstrip{grid-template-columns:repeat(3,1fr)!important} }
@@ -2903,27 +2945,28 @@ function estelaFrac(txt){
 function _nivelTxt(f){ return f>=.85?'Muy alta':f>=.65?'Alta':f>=.45?'Media':f>=.28?'Baja':'Muy baja'; }
 function _imgStripHTML(imgs,max){ const a=(Array.isArray(imgs)?imgs:[]).slice(0,max||6); if(!a.length) return ''; return `<div class="pd-imgstrip" style="grid-template-columns:repeat(${a.length},1fr)">${a.map(u=>`<div class="pd-strip-c" style="background-image:url('${esc(u)}')"></div>`).join('')}</div>`; }
 function _collageHTML(imgs,max){ const a=(Array.isArray(imgs)?imgs:[]).slice(0,max||4); if(!a.length) return ''; return `<div class="pd-coll pd-coll-${a.length}">${a.map(u=>`<div class="pd-coll-cell" style="background-image:url('${esc(u)}')"></div>`).join('')}</div>`; }
+const _PERFIL_MAP=[
+    [['floral','flor','rosa','jazmin','peonia','violeta'],'🌸','#c2186a'],
+    [['dulce','gourmand','caramelo','toffee','azucar','miel'],'🍬','#b5651d'],
+    [['vainilla','tonka','haba'],'🍦','#8a6d1a'],
+    [['citric','limon','bergamota','naranja','mandarina','lima'],'🍋','#7a8210'],
+    [['fresc','acuatic','marino','agua','menta'],'💧','#1076a8'],
+    [['frut','manzana','pera','durazno','piña','pina','frutal','ciruela','coco'],'🍑','#c0492e'],
+    [['amaderad','madera','sandalo','cedro','vetiver','oud'],'🪵','#6b4a26'],
+    [['especi','canela','cardamomo','pimienta','jengibre','anis','azafran'],'🌶️','#b23b2a'],
+    [['orient','ambar','ambarad','incienso','balsam','resina'],'🌙','#6b3fa0'],
+    [['crem','lacton','leche'],'🥥','#8a6a4a'],
+    [['cuero','tabaco','ahumad'],'🔥','#6b4630'],
+    [['aromatic','salvia','romero','hierba','lavanda','verde'],'🌿','#2f7d3a'],
+    [['limpio','jabon','almizcle','musk','almizclad'],'🧼','#556074'],
+    [['intens','fuerte'],'💥','#b5651d'],
+    [['tropical'],'🏝️','#0f8a67'],
+];
+function _perfilMeta(word){ const t=String(word||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); for(const [kws,e,fg] of _PERFIL_MAP){ if(kws.some(k=>t.includes(k))) return {e,fg}; } return {e:'✨',fg:''}; }
+function _cellsHTML(items, imgs){ imgs=imgs||[]; return `<div class="pd-cells">${items.map((it,i)=>{ const u=imgs[i]; return `<div class="pd-cell ${u?'has-img':''}" ${u?`style="background-image:url('${esc(u)}')"`:''}><span class="pc-em">${it.emoji||'✨'}</span><span class="pc-tx">${esc(it.txt)}</span></div>`; }).join('')}</div>`; }
 function _perfilChip(word){
-  const t=String(word||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const map=[
-    [['floral','flor','rosa','jazmin','peonia','violeta'],'🌸','#fce4ef','#c2186a'],
-    [['dulce','gourmand','caramelo','toffee','azucar','miel'],'🍬','#fde8cf','#b5651d'],
-    [['vainilla','tonka','haba'],'🍦','#f6ecd6','#8a6d1a'],
-    [['citric','limon','bergamota','naranja','mandarina','lima'],'🍋','#f4f7cf','#7a8210'],
-    [['fresc','acuatic','marino','agua','menta'],'💧','#d9f0fb','#1076a8'],
-    [['frut','manzana','pera','durazno','piña','pina','frutal','ciruela','coco'],'🍑','#ffe6df','#c0492e'],
-    [['amaderad','madera','sandalo','cedro','vetiver','oud'],'🪵','#eadfce','#6b4a26'],
-    [['especi','canela','cardamomo','pimienta','jengibre','anis','azafran'],'🌶️','#fbe0da','#b23b2a'],
-    [['orient','ambar','ambarad','incienso','balsam','resina'],'🌙','#efe6f7','#6b3fa0'],
-    [['crem','lacton','leche'],'🥥','#f3ece3','#8a6a4a'],
-    [['cuero','tabaco','ahumad'],'🔥','#eadfd7','#6b4630'],
-    [['aromatic','salvia','romero','hierba','lavanda','verde'],'🌿','#e2f3e2','#2f7d3a'],
-    [['limpio','jabon','almizcle','musk','almizclad'],'🧼','#eef1f6','#556074'],
-    [['intens','fuerte'],'💥','#fde5d0','#b5651d'],
-    [['tropical'],'🏝️','#d9f5ec','#0f8a67'],
-  ];
-  for(const [kws,e,bg,fg] of map){ if(kws.some(k=>t.includes(k))) return `<span class="pf-chip">${e} ${esc(word)}</span>`; }
-  return `<span class="pf-chip">✨ ${esc(word)}</span>`;
+  const m=_perfilMeta(word);
+  return `<span class="pf-chip">${m.e} ${esc(word)}</span>`;
 }
 function perfilBar(icon,label,texto,frac){
   const pct=Math.round(frac*100);
@@ -3067,15 +3110,17 @@ function openProduct(id, opts){
   const sh=_shalomInfo(now);
   const fFecha=d=>d.toLocaleDateString('es-PE',{day:'numeric',month:'long'});
 
-  // Bloque Perfil aromático: si hay imágenes, se muestran (hasta 6) y se ocultan las palabras; si no, chips.
+  // Bloque Perfil aromático: con imágenes = mosaico celda-a-celda; sin imágenes = chips de texto.
   const _perfilImgs = Array.isArray(p.perfil_imgs)?p.perfil_imgs:[];
-  const perfilBlock = _perfilImgs.length
-    ? `<div class="pd-block"><h4>Perfil aromático</h4>${_imgStripHTML(_perfilImgs,6)}</div>`
-    : (p.perfil ? `<div class="pd-block"><h4>Perfil aromático</h4><div class="pd-perfil-chips">${String(p.perfil).split(/[·,;/|]+/).map(s=>s.trim()).filter(Boolean).map(s=>_perfilChip(s)).join('')}</div></div>` : '');
-  // Bloque Ocasiones: si hay imágenes, se muestran (hasta 6) y se oculta el texto; si no, la lista.
+  const _perfilWords = String(p.perfil||'').split(/[·,;/|]+/).map(s=>s.trim()).filter(Boolean);
+  const perfilBlock = _perfilImgs.length && _perfilWords.length
+    ? `<div class="pd-block"><h4>Perfil aromático</h4>${_cellsHTML(_perfilWords.map(w=>({txt:w, emoji:_perfilMeta(w).e})), _perfilImgs)}</div>`
+    : (p.perfil ? `<div class="pd-block"><h4>Perfil aromático</h4><div class="pd-perfil-chips">${_perfilWords.map(s=>_perfilChip(s)).join('')}</div></div>` : '');
+  // Bloque Ocasiones: con imágenes = mosaico celda-a-celda; sin imágenes = lista de texto.
   const _ocaImgs = Array.isArray(p.ocasion_imgs)?p.ocasion_imgs:[];
-  const ocaBlock = _ocaImgs.length
-    ? `<div class="pd-block"><h4>Ocasiones de uso</h4>${_imgStripHTML(_ocaImgs,6)}</div>`
+  const _ocaItems = ocasionItems(oca);
+  const ocaBlock = _ocaImgs.length && _ocaItems.length
+    ? `<div class="pd-block"><h4>Ocasiones de uso</h4>${_cellsHTML(_ocaItems, _ocaImgs)}</div>`
     : (oca ? `<div class="pd-block"><h4>Ocasiones de uso</h4>${ocasionListHTML(oca)}</div>` : '');
 
   $('#sheet').innerHTML = `
@@ -3084,7 +3129,7 @@ function openProduct(id, opts){
       <span class="brand">${esc(CONFIG.TIENDA_NOMBRE||'')}</span>
       <button class="pd-share" id="pdShare" aria-label="Compartir">📤 Compartir</button>
     </div>
-    <div class="pd ${hidePrice?'pd-nobuy':''} ${p.fondo?'pd-hasbg':''}">
+    <div class="pd ${hidePrice?'pd-nobuy':''} ${p.fondo?'pd-hasbg':''} ${(p.card_bg||p.card_btn||p.card_txt)?'pd-colored':''}" ${(p.card_bg||p.card_btn||p.card_txt)?`style="--cbg:${esc(p.card_bg||'#0e1b2e')};--cbtn:${esc(p.card_btn||'#12324f')};--ctxt:${esc(p.card_txt||'#eef3f8')}"`:''}>
       ${p.fondo?`<div class="pd-bg" style="background-image:url('${esc(p.fondo)}'); opacity:${Number(p.fondo_op!=null?p.fondo_op:0.35)}"></div><div class="pd-bg-veil"></div>`:''}
       <div class="pd-media">
         <div class="pd-imgbox">${mainImg?`<img id="mainImg" src="${esc(mainImg)}" alt="${esc(p.nombre)}">`:`<span class="ph">${esc((p.marca||p.nombre||'?')[0])}</span>`}</div>

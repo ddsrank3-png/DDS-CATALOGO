@@ -100,6 +100,13 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 @media(max-width:760px){ .hero{grid-template-columns:1fr; text-align:center; padding-top:38px; gap:22px} .hero-copy{text-align:center} .eyebrow{justify-content:center} .hero p{margin:0 auto} .hero-ornament{width:min(200px,58vw)} }
 
 /* Filtros */
+.cat-change{display:flex; align-items:center; gap:10px; width:100%; justify-content:center; margin:14px 0 12px; padding:15px 18px; border-radius:14px; border:1.5px solid var(--gold-3); background:linear-gradient(120deg,#111,#2a2a2a); color:#fff; font-weight:800; font-size:1rem; letter-spacing:.08em; cursor:pointer; box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.cat-change .cc-arrow{font-size:1.25rem; line-height:1}
+.cat-change:hover{border-color:var(--gold-1)}
+.cat-genrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:10px; margin:0 0 14px}
+.genbtn{padding:14px 8px; border:1.5px solid var(--line); border-radius:14px; background:var(--panel); color:var(--cream); font-weight:700; font-size:.95rem; cursor:pointer; text-align:center; transition:all .15s}
+.genbtn:hover{border-color:var(--gold-3)}
+.genbtn.on{background:#111; border-color:#111; color:#fff}
 .filters{max-width:1200px; margin:0 auto; padding:14px 20px 0; display:block}
 .cat-toolbar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-bottom:12px; border-bottom:1px solid var(--line)}
 .cat-toolbar .tb-back{background:none; color:var(--muted-2); font-size:.85rem; cursor:pointer; font-weight:600}
@@ -2797,12 +2804,14 @@ function notificarWA(o, detalle){
   setTimeout(()=>{ if(confirm('¿Avisar por WhatsApp que enviaste un cambio?')) window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`, '_blank'); }, 250);
 }
 function renderFilters(){
-  const cats = ['Todos', ...(CONFIG.CATEGORIAS||[])];
   const gens = ['Todos', ...(CONFIG.GENEROS||[])];
   $('#filters').innerHTML = `
     <div class="cat-search"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg><input id="catSearch" placeholder="Buscar perfume por nombre…" value="${esc(query||'')}"></div>
+    <button class="cat-change" id="catBack"><span class="cc-arrow">←</span> CAMBIAR CATEGORÍA</button>
+    <div class="cat-genrow" id="genRow">
+      ${gens.map(g=>`<button class="genbtn ${filterGen===g?'on':''}" data-gen="${esc(g)}">${g==='Todos'?'Todos':esc(g)}</button>`).join('')}
+    </div>
     <div class="cat-toolbar">
-      <button class="tb-back" id="catBack">← Categorías</button>
       <span class="tb-count" id="fcount"></span>
       <div class="tb-right">
         <div class="tb-sort"><select id="sortMode">
@@ -2811,27 +2820,17 @@ function renderFilters(){
           <option value="pdesc" ${sortMode==='pdesc'?'selected':''}>Precio: mayor a menor</option>
           <option value="az" ${sortMode==='az'?'selected':''}>Nombre A–Z</option>
         </select></div>
-        <button class="tb-filtros ${filtersOpen?'on':''}" id="toggleFilters">⚙ Filtros</button>
         <div class="tb-density">
           <button data-dense="0" class="${!gridDense?'on':''}" title="Vista amplia">▦</button>
           <button data-dense="1" class="${gridDense?'on':''}" title="Vista compacta (más perfumes)">▤</button>
         </div>
       </div>
-    </div>
-    <div class="filters-panel" id="filtersPanel" style="display:${filtersOpen?'block':'none'}">
-      <div class="frow"><span class="flabel">Categoría</span>
-        ${cats.map(c=>`<button class="chip ${filterCat===c?'active':''}" data-cat="${esc(c)}">${c==='Árabe'?'Árabes':esc(c)}</button>`).join('')}</div>
-      <div class="frow"><span class="flabel">Género</span>
-        ${gens.map(g=>`<button class="chip ${filterGen===g?'active':''}" data-gen="${esc(g)}">${esc(g)}</button>`).join('')}</div>
     </div>`;
   const fEl=$('#filters');
   const cs=$('#catSearch'); if(cs) cs.oninput=()=>{ query=cs.value.trim().toLowerCase(); render(); };
-  fEl.querySelectorAll('[data-cat]').forEach(c=>c.onclick=()=>{filterCat=c.dataset.cat; renderFilters(); render();});
   fEl.querySelectorAll('[data-gen]').forEach(c=>c.onclick=()=>{filterGen=c.dataset.gen; renderFilters(); render();});
   fEl.querySelectorAll('[data-dense]').forEach(b=>b.onclick=()=>{ gridDense=b.dataset.dense==='1'; renderFilters(); render(); });
   const sm=$('#sortMode'); if(sm) sm.onchange=()=>{ sortMode=sm.value; render(); };
-  const tf=$('#toggleFilters'); if(tf) tf.onclick=()=>{ filtersOpen=!filtersOpen; const p=$('#filtersPanel'); if(p) p.style.display=filtersOpen?'block':'none'; tf.classList.toggle('on',filtersOpen); };
-  const tsh=$('#toolShare'); if(tsh) tsh.onclick=openShare;
   const bk=$('#catBack'); if(bk) bk.onclick=()=>{ filterCat='Todos'; filterTipo='Todos'; filterGen='Todos'; showCatalogo(); window.scrollTo({top:0,behavior:'smooth'}); };
 }
 

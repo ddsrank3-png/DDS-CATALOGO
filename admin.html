@@ -684,15 +684,15 @@ function prodForm(id){
         <div class="chipset" id="pEstilo">${ESTILOS.map(s=>`<button type="button" class="chip-sel ${(Array.isArray(p.estilo)&&p.estilo.includes(s))?'on':''}" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
       <div class="field"><label>Perfil aromático / acordes <span style="font-weight:400;color:var(--muted)">(se usa en el asesor y en la ficha)</span></label>
         <input id="pPerfil" value="${esc(p.perfil||'')}" placeholder="Ej. Tropical · Coco · Higo · Verde · Cremoso · Dulce · Amaderado"></div>
-      <div class="field"><label>🎨 Color de la cartilla <span style="font-weight:400;color:var(--muted)">(tiñe la ficha del perfume; opcional)</span></label>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
-          <input type="color" id="pColor" value="${esc(p.color||'#101418')}" style="width:64px; height:44px; padding:4px">
-          <input type="text" id="pColorHex" value="${esc(p.color||'')}" placeholder="#101418" style="max-width:140px">
-          <button type="button" class="btn ghost" id="pColorAuto">✨ Auto desde imagen</button>
-          <button type="button" class="btn ghost" id="pColorClear">Quitar</button>
-          <span id="pColorPrev" style="width:40px; height:40px; border-radius:8px; border:1px solid var(--line); background:${esc(p.color||'transparent')}"></span>
+      <div class="field"><label>🖼️ Imagen de fondo de la cartilla <span style="font-weight:400;color:var(--muted)">(cubre toda la ficha del perfume; opcional)</span></label>
+        <input id="pFondoFile" type="file" accept="image/*">
+        <div class="imgs" id="pFondoWrap" style="margin-top:8px"></div>
+        <div style="display:flex; gap:10px; align-items:center; margin-top:10px">
+          <label style="margin:0; white-space:nowrap">Opacidad</label>
+          <input type="range" id="pFondoOp" min="5" max="90" step="5" value="${esc(String(Math.round((p.fondo_op!=null?p.fondo_op:0.35)*100)))}" style="flex:1">
+          <span id="pFondoOpVal" style="min-width:44px; text-align:right">${esc(String(Math.round((p.fondo_op!=null?p.fondo_op:0.35)*100)))}%</span>
         </div>
-        <div class="hint" style="margin-top:6px">Si no pones color, la ficha usa el estilo por defecto. "Auto" intenta leer el color de la primera imagen.</div>
+        <div class="hint" style="margin-top:6px">Sube una imagen; ajusta la opacidad para que se lea bien la información encima. Sin imagen, la ficha usa el estilo por defecto.</div>
       </div>
       <div class="field"><label>🖼️ Imágenes de fondo — Perfil aromático <span style="font-weight:400;color:var(--muted)">(4 imágenes; se muestran como collage detrás de los perfiles)</span></label>
         <input id="pPerfilFiles" type="file" accept="image/*" multiple>
@@ -715,29 +715,12 @@ function prodForm(id){
     $('#imgList').querySelectorAll('[data-rmimg]').forEach(b=>b.onclick=()=>{ imgs.splice(+b.dataset.rmimg,1); renderImgs(); });
   }
   renderImgs();
-  // Color de la cartilla (manual + auto desde imagen)
-  (function(){
-    const pc=$('#pColor'), hx=$('#pColorHex'), pv=$('#pColorPrev');
-    if(!pc) return;
-    const setCol=(v)=>{ if(v){ pc.value=v; hx.value=v; pv.style.background=v; } else { hx.value=''; pv.style.background='transparent'; } };
-    pc.oninput=()=>setCol(pc.value);
-    hx.oninput=()=>{ const v=hx.value.trim(); if(/^#[0-9a-fA-F]{6}$/.test(v)) setCol(v); else pv.style.background=v||'transparent'; };
-    const clr=$('#pColorClear'); if(clr) clr.onclick=()=>setCol('');
-    const auto=$('#pColorAuto'); if(auto) auto.onclick=()=>{
-      const url=imgs[0]; if(!url){ toast('Sube primero una imagen',true); return; }
-      const im=new Image(); im.crossOrigin='anonymous';
-      im.onload=()=>{ try{
-        const cv=document.createElement('canvas'); const w=cv.width=40, h=cv.height=40; const cx=cv.getContext('2d');
-        cx.drawImage(im,0,0,w,h); const d=cx.getImageData(0,0,w,h).data;
-        let r=0,g=0,b=0,n=0; for(let i=0;i<d.length;i+=4){ if(d[i+3]<128) continue; r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
-        if(!n){ toast('No se pudo leer el color',true); return; }
-        r=Math.round(r/n); g=Math.round(g/n); b=Math.round(b/n);
-        setCol('#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('')); toast('Color detectado');
-      }catch(e){ toast('La imagen bloquea la lectura (CORS). Pon el color manual.',true); } };
-      im.onerror=()=>toast('No se pudo cargar la imagen',true);
-      im.src=url;
-    };
-  })();
+  // Imagen de fondo de la cartilla + opacidad
+  let pFondo = p.fondo || '';
+  function renderPFondo(){ const w=$('#pFondoWrap'); if(!w) return; w.innerHTML = pFondo?`<div class="im"><img src="${esc(pFondo)}"><button type="button" id="pFondoDel">×</button></div>`:'<span class="hint">Sin imagen de fondo</span>'; const d=$('#pFondoDel'); if(d) d.onclick=()=>{ pFondo=''; renderPFondo(); }; }
+  renderPFondo();
+  if($('#pFondoFile')) $('#pFondoFile').onchange=async e=>{ const f=e.target.files[0]; if(!f)return; toast('Subiendo fondo...'); const u=await uploadImg(f,'fondos'); if(u){ pFondo=u; renderPFondo(); toast('Fondo subido'); } };
+  if($('#pFondoOp')) $('#pFondoOp').oninput=e=>{ const v=$('#pFondoOpVal'); if(v) v.textContent=e.target.value+'%'; };
   $('#pFiles').onchange = async e => {
     const files=[...e.target.files]; if(!files.length)return;
     toast('Subiendo imágenes...');
@@ -831,7 +814,9 @@ function prodForm(id){
       concentracion: $('#pConcentracion')?($('#pConcentracion').value.trim()||null):null,
       anio: $('#pAnio')?($('#pAnio').value.trim()||null):null,
       perfil: $('#pPerfil')?($('#pPerfil').value.trim()||null):null,
-      color: $('#pColorHex')?(($('#pColorHex').value.trim()&&/^#[0-9a-fA-F]{6}$/.test($('#pColorHex').value.trim()))?$('#pColorHex').value.trim():null):null,
+      color: null,
+      fondo: pFondo || null,
+      fondo_op: (function(){ const el=$('#pFondoOp'); return el?(Math.max(5,Math.min(90,parseInt(el.value,10)||35))/100):0.35; })(),
       perfil_imgs: perfilImgs,
       ocasion_imgs: ocasionImgs,
       familia: [...document.querySelectorAll('#pFamilia .chip-sel.on')].map(b=>b.dataset.v),

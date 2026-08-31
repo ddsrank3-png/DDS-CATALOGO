@@ -886,29 +886,12 @@ header::after{background:var(--line); opacity:1}
 .pd-track .ln{position:absolute; top:21px; left:16%; right:16%; height:2px; border-top:2px dashed var(--line); z-index:1}
 @media(max-width:980px){ .pd{grid-template-columns:1fr} .pd-media,.pd-buy{position:static} }
 .pd-nobuy{grid-template-columns:1fr 1.15fr}
-/* Ficha teñida con el color del perfume */
-.pd-tinted{--pink:var(--pcol); background:linear-gradient(165deg, color-mix(in srgb,var(--pcol) 42%, #06080b) 0%, #06080b 65%); border-radius:20px; padding:22px; color:#eef2f6}
-.pd-tinted .pd-marca{color:color-mix(in srgb,var(--pcol) 55%, #ffffff)}
-.pd-tinted h2,.pd-tinted .pd-name,.pd-tinted .pd-precio{color:#fff}
-.pd-tinted .pd-desc,.pd-tinted .genero{color:#c4ccd6}
-.pd-tinted .pd-block{background:color-mix(in srgb,var(--pcol) 16%, #0b0f14); border:1px solid color-mix(in srgb,var(--pcol) 38%, #1a2028)}
-.pd-tinted .pd-block h4{color:color-mix(in srgb,var(--pcol) 45%, #ffffff)}
-.pd-tinted .pd-size{background:color-mix(in srgb,var(--pcol) 18%, #0b0f14); border:1px solid color-mix(in srgb,var(--pcol) 40%, #1a2028); color:#fff}
-.pd-tinted .pd-size.on{background:color-mix(in srgb,var(--pcol) 55%, #000); border-color:#fff}
-.pd-tinted .pd-size small{color:#c4ccd6}
-.pd-tinted .pf-chip{background:color-mix(in srgb,var(--pcol) 20%, #0b0f14); border:1px solid color-mix(in srgb,var(--pcol) 45%, #2a323c); color:#fff}
-.pd-tinted .pm-bar{background:color-mix(in srgb,var(--pcol) 25%, #0b0f14)}
-.pd-tinted .pd-b.dark{background:#0b0f14; border:1px solid color-mix(in srgb,var(--pcol) 45%, #2a323c); color:#fff}
-.pd-tinted .pd-qty{background:color-mix(in srgb,var(--pcol) 16%, #0b0f14); border:1px solid color-mix(in srgb,var(--pcol) 38%, #1a2028)}
-.pd-tinted .pd-qty input,.pd-tinted .pd-qty button{color:#fff}
-.pd-tinted .pd-thumb{border:1px solid color-mix(in srgb,var(--pcol) 40%, #2a323c)}
-.pd-tinted .pd-thumb.active{border-color:#fff}
-.pd-tinted .oc-item,.pd-tinted .pm-top,.pd-tinted .pm-niv,.pd-tinted .pm-txt{color:#eef2f6}
-.pd-tinted .pd-deliv,.pd-tinted .pd-deliv-ica2{color:#dfe5ec}
-.pd-tinted .pd-deliv-env{color:color-mix(in srgb,var(--pcol) 45%, #ffffff)}
-.pd-tinted .pd-track .tt{color:#eef2f6} .pd-tinted .pd-track .dd{color:#aeb8c4}
-.pd-tinted .notas-box,.pd-tinted .pd-notas{background:color-mix(in srgb,var(--pcol) 12%, #0b0f14); border:1px solid color-mix(in srgb,var(--pcol) 34%, #1a2028)}
-.pd-tinted .pd-block.has-coll::after{background:color-mix(in srgb,var(--pcol) 22%, #0b0f14)}
+/* Ficha con imagen de fondo + opacidad editable */
+.pd-hasbg{position:relative; overflow:hidden; border-radius:20px; padding:22px}
+.pd-hasbg>*{position:relative; z-index:2}
+.pd-hasbg .pd-bg{position:absolute; inset:0; z-index:0; background-size:cover; background-position:center; background-repeat:no-repeat}
+.pd-hasbg .pd-bg-veil{position:absolute; inset:0; z-index:1; background:linear-gradient(180deg, color-mix(in srgb,var(--panel) 55%, transparent), color-mix(in srgb,var(--panel) 78%, transparent)); pointer-events:none}
+.pd-hasbg .pd-block{background:color-mix(in srgb,var(--panel) 82%, transparent); backdrop-filter:blur(2px)}
 .pd-nobuy .pd-buy{grid-column:1 / -1; position:static; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:center; gap:20px; border-top:1px solid var(--line); padding-top:18px; margin-top:8px}
 .pd-nobuy .pd-buy .pd-b{flex:0 0 auto; min-width:240px; max-width:340px}
 .pd-nobuy .pd-buy .pd-badges{margin:0}
@@ -1945,17 +1928,26 @@ function renderArmar(){
   cont.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ armarSel=armarSel.filter(x=>x.key!==b.dataset.del); renderArmar(); });
   const pay=$('#armarPay'); if(pay) pay.onclick=armarCheckout;
   // Drawer móvil del combo
-  const closeSide=()=>{ window._armarCloseTs=Date.now(); const s=$('#armarSide'); const sc=$('#armarScrim'); if(s)s.classList.remove('open'); if(sc)sc.classList.remove('open'); };
-  const openSide=()=>{ const s=$('#armarSide'); const sc=$('#armarScrim'); if(s)s.classList.add('open'); if(sc)sc.classList.add('open'); if(window._navReady&&window.innerWidth<=900)_navPush('combopanel'); };
-  { const x=$('#armarSideX'); if(x) x.onclick=closeSide; }
+  const closeSide=()=>{ window._armarCloseTs=Date.now(); const s=$('#armarSide'); const sc=$('#armarScrim'); if(s)s.classList.remove('open'); if(sc)sc.classList.remove('open'); document.removeEventListener('click', _armarSwallow, true); document.removeEventListener('pointerdown', _armarSwallow, true); };
+  function _armarSwallow(e){
+    const panel=$('#armarSide');
+    if(panel && panel.contains(e.target)) return; // toques dentro del panel funcionan normal
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    window._armarCloseTs=Date.now();
+    closeSide();
+  }
+  window._armarSwallowOff=()=>{ document.removeEventListener('click', _armarSwallow, true); document.removeEventListener('pointerdown', _armarSwallow, true); };
+  const openSide=()=>{ const s=$('#armarSide'); const sc=$('#armarScrim'); if(s)s.classList.add('open'); if(sc)sc.classList.add('open'); if(window._navReady&&window.innerWidth<=900)_navPush('combopanel');
+    document.addEventListener('click', _armarSwallow, true); document.addEventListener('pointerdown', _armarSwallow, true);
+  };
+  { const x=$('#armarSideX'); if(x) x.onclick=(e)=>{ e.stopPropagation(); closeSide(); }; }
   { const sc=$('#armarScrim'); if(sc) sc.onclick=closeSide; }
-  { const sg=$('#armarSeguir'); if(sg) sg.onclick=closeSide; }
+  { const sg=$('#armarSeguir'); if(sg) sg.onclick=(e)=>{ e.stopPropagation(); closeSide(); }; }
   { const vf=$('#armarVerFab'); if(vf){ vf.style.display = (window.innerWidth<=900 && C.n>0)?'block':'none'; vf.onclick=openSide; } }
   if(window._armarJustAdded && window.innerWidth<=900){ window._armarJustAdded=false; openSide(); }
 }
 
 function armarToggle(id){
-  if(Date.now()-(window._armarCloseTs||0)<450){ return; } // evita el toque que solo cerró el panel
   if(!armarMl){ toast('Elige primero el tamaño'); return; }
   const p=(PRODUCTS||[]).find(x=>x.id===id); if(!p) return;
   const key=id+'__'+armarMl;
@@ -3076,7 +3068,8 @@ function openProduct(id, opts){
       <span class="brand">${esc(CONFIG.TIENDA_NOMBRE||'')}</span>
       <button class="pd-share" id="pdShare" aria-label="Compartir">📤 Compartir</button>
     </div>
-    <div class="pd ${hidePrice?'pd-nobuy':''} ${p.color?'pd-tinted':''}" ${p.color?`style="--pcol:${esc(p.color)}"`:''}>
+    <div class="pd ${hidePrice?'pd-nobuy':''} ${p.fondo?'pd-hasbg':''}">
+      ${p.fondo?`<div class="pd-bg" style="background-image:url('${esc(p.fondo)}'); opacity:${Number(p.fondo_op!=null?p.fondo_op:0.35)}"></div><div class="pd-bg-veil"></div>`:''}
       <div class="pd-media">
         <div class="pd-imgbox">${mainImg?`<img id="mainImg" src="${esc(mainImg)}" alt="${esc(p.nombre)}">`:`<span class="ph">${esc((p.marca||p.nombre||'?')[0])}</span>`}</div>
         ${imgs.length>1?`<div class="pd-thumbs">${imgs.map((u,i)=>`<button class="pd-thumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}"></button>`).join('')}</div>`:''}
@@ -3619,7 +3612,7 @@ function _closeTopOverlay(){
   const so=$('#shareOv'); if(so && so.style.display==='flex'){ if(typeof closeShare==='function') closeShare(); else so.style.display='none'; return true; }
   const dr=$('#drawer'); if(dr && dr.classList.contains('open')){ closeCart(); return true; }
   const ov=$('#overlay'); if(ov && ov.classList.contains('open')){ closeProduct(); return true; }
-  const asd=$('#armarSide'); if(asd && asd.classList.contains('open')){ window._armarCloseTs=Date.now(); asd.classList.remove('open'); const sc=$('#armarScrim'); if(sc)sc.classList.remove('open'); return true; }
+  const asd=$('#armarSide'); if(asd && asd.classList.contains('open')){ window._armarCloseTs=Date.now(); asd.classList.remove('open'); const sc=$('#armarScrim'); if(sc)sc.classList.remove('open'); if(window._armarSwallowOff)window._armarSwallowOff(); return true; }
   return false;
 }
 (function _initNav(){

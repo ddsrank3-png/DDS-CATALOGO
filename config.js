@@ -7,8 +7,8 @@ const CONFIG = {
 
   // --- Supabase (Project Settings -> API en tu proyecto DDS) ---
   //  PON AQUÍ LAS LLAVES DE TU PROYECTO SUPABASE DE DDS:
-  SUPABASE_URL:      "https://cueofggreijcudpvgyip.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZW9mZ2dyZWlqY3VkcHZneWlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NTA3NTUsImV4cCI6MjA5ODIyNjc1NX0.LUySx4N8ZUTgxPmZ-6W_5GMDoo1oqMY_8Oq-FdNv2t8",
+  SUPABASE_URL:      "https://TU-PROYECTO-DDS.supabase.co",
+  SUPABASE_ANON_KEY: "TU_ANON_KEY_DE_DDS",
 
   // Bucket de imágenes de productos (créalo en Supabase > Storage, público).
   BUCKET: "productos",
@@ -148,7 +148,7 @@ const CONFIG = {
     activo: true,
     ml: "2",           // talla del regalo
     meta: 60,          // puntos por cada regalo
-    sellado_pts: 60,   // un perfume sellado = 1 regalo (2 sellados = 2 regalos, etc.)
+    sellado_pts: 45,   // puntos que suma un perfume sellado hacia el regalo (independiente de 'meta')
     puntos: {
       "Árabe":     { "2":12, "3":15, "5":20, "10":30 },
       "Diseñador": { "2":15, "3":20, "5":30, "10":48 },

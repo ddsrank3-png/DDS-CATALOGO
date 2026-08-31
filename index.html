@@ -586,12 +586,13 @@ header::after{background:var(--line); opacity:1}
 @keyframes mqscroll{from{transform:translateX(0)} to{transform:translateX(-50%)}}
 
 /* Nav de secciones estilo tienda */
-.viewtabs{border-bottom:1px solid var(--line); gap:26px; justify-content:center; padding:0 20px; margin-top:14px; flex-wrap:wrap}
-.vtab{background:none!important; border:none!important; border-radius:0!important; color:var(--muted); text-transform:uppercase; letter-spacing:.13em; font-size:.76rem; font-weight:500; padding:12px 2px; position:relative; transition:color .2s}
+.viewtabs{border-bottom:1px solid var(--line); gap:34px; justify-content:center; padding:0 20px; margin-top:14px; flex-wrap:wrap; position:sticky; top:0; z-index:39; background:var(--bg); box-shadow:0 2px 14px rgba(0,0,0,.06)}
+.vtab{background:none!important; border:none!important; border-radius:0!important; color:var(--muted); text-transform:uppercase; letter-spacing:.14em; font-size:1rem; font-weight:600; padding:16px 4px; position:relative; transition:color .2s; cursor:pointer}
 .vtab:hover{color:var(--cream)}
-.vtab.active{color:var(--cream)!important; font-weight:700; background:none!important}
-.vtab.active::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--cream)}
+.vtab.active{color:var(--cream)!important; font-weight:800; background:none!important}
+.vtab.active::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:3px; background:var(--gold-grad,var(--cream)); border-radius:3px}
 .vtab .fire{margin-left:6px}
+@media(max-width:640px){ .viewtabs{gap:18px; overflow-x:auto; flex-wrap:nowrap; justify-content:flex-start; -webkit-overflow-scrolling:touch} .vtab{font-size:.9rem; padding:14px 2px; white-space:nowrap; letter-spacing:.1em} .viewtabs::-webkit-scrollbar{display:none} }
 
 /* Chips de filtro */
 .chip{border-radius:999px}
@@ -643,7 +644,9 @@ header::after{background:var(--line); opacity:1}
 .ini-800{color:var(--accent); font-weight:700}
 
 /* Hero destacado */
-.ini-hero{display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:center; background:linear-gradient(135deg,var(--panel),var(--bg-2)); border:1px solid var(--line); border-radius:20px; padding:34px; margin-top:20px; overflow:hidden}
+.ini-hero{display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:center; background:linear-gradient(135deg,var(--panel) 0%,var(--bg-2) 55%,color-mix(in srgb,var(--gold-3) 22%,var(--panel)) 100%); border:1px solid var(--gold-3); border-radius:22px; padding:40px; margin-top:20px; overflow:hidden; position:relative; box-shadow:0 14px 40px rgba(0,0,0,.14)}
+.ini-hero::before{content:""; position:absolute; top:-40%; right:-10%; width:60%; height:180%; background:radial-gradient(circle,color-mix(in srgb,var(--gold-3) 40%,transparent),transparent 70%); pointer-events:none}
+.ini-hero-copy,.ini-hero-img{position:relative; z-index:1}
 .ini-hero-copy{display:flex; flex-direction:column; gap:10px; align-items:flex-start}
 .tag-vendido{display:inline-flex; align-items:center; gap:6px; background:#12b76a; color:#fff; font-weight:700; font-size:.72rem; letter-spacing:.08em; padding:7px 14px; border-radius:999px}
 .ini-hero-title{font-family:'Cormorant Garamond',serif; font-size:clamp(2.2rem,6vw,3.6rem); font-weight:700; line-height:1; color:var(--cream)}
@@ -654,7 +657,16 @@ header::after{background:var(--line); opacity:1}
 .ini-cta{margin-top:10px; background:var(--gold-grad); color:#fff; border-radius:999px; padding:14px 30px; font-weight:600; font-size:.95rem; cursor:pointer}
 .ini-cta.dark{background:#111}
 .ini-hero-img{display:grid; place-items:center; min-height:220px}
-.ini-hero-img img{max-width:100%; max-height:340px; object-fit:contain}
+.ini-hero-img img{max-width:100%; max-height:400px; object-fit:contain; filter:drop-shadow(0 18px 40px rgba(0,0,0,.35))}
+/* Ficha de promoción: collage de fondo tenue + color */
+.combo-bd{position:relative; overflow:hidden}
+.combo-bd>*{position:relative; z-index:1}
+.combo-coll{position:absolute; inset:0; z-index:0; display:flex; flex-wrap:wrap; pointer-events:none}
+.combo-coll-c{flex:1 1 33%; min-width:33%; background-size:cover; background-position:center; opacity:.10}
+.combo-bd::after{content:""; position:absolute; inset:0; z-index:0; background:linear-gradient(180deg,var(--panel) 0%,color-mix(in srgb,var(--gold-3) 8%,var(--panel)) 100%); opacity:.9; pointer-events:none}
+.combo-bd .combo-benef{gap:8px}
+.combo-bd .cbf{background:linear-gradient(120deg,var(--gold-pale),#fff); border:1px solid var(--gold-3); color:#3a2e10; font-weight:600}
+.combo-bd h2{background:linear-gradient(90deg,var(--cream),var(--gold-deep)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
 .ini-hero-img .ph{font-family:'Cormorant Garamond',serif; font-size:5rem; color:var(--gold-deep)}
 
 /* Carrusel Más Vendidos */
@@ -915,7 +927,10 @@ header::after{background:var(--line); opacity:1}
 .armar-item .ai-body{flex:1; min-width:0}
 .armar-item .ai-name{font-size:.8rem; color:var(--cream); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .armar-item .ai-tag{font-size:.7rem; color:var(--muted)}
-.armar-item .ai-price{font-weight:700; font-size:.82rem; color:var(--cream)}
+.armar-item .ai-price{font-weight:700; font-size:.82rem; color:var(--cream); text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:0}
+.armar-item .ai-tach{text-decoration:line-through; color:var(--muted-2); font-weight:500; font-size:.72rem}
+.armar-item .ai-now{color:#12833f; font-weight:800}
+.armar-item .ai-off{font-size:.62rem; font-weight:800; color:#fff; background:#12833f; border-radius:999px; padding:1px 6px}
 .armar-item .ai-del{width:24px; height:24px; border-radius:50%; background:#111; color:#fff; display:grid; place-items:center; cursor:pointer; flex:0 0 auto}
 .armar-empty{color:var(--muted); font-size:.85rem; text-align:center; padding:26px 14px}
 .armar-side-bot{padding:14px 16px; border-top:1px solid var(--line)}
@@ -930,9 +945,18 @@ header::after{background:var(--line); opacity:1}
 .armar-pts-box b{text-decoration:underline}
 .armar-pts-box.on{background:linear-gradient(100deg,#0d6b32,#12a04d)}
 @media(prefers-reduced-motion:reduce){ .armar-pts-box,.armar-envio{animation:none} }
+.armar-side-x{display:none; background:transparent; border:none; color:#fff; font-size:1.1rem; cursor:pointer; margin-left:auto}
+.armar-seguir{background:var(--gold-pale); color:var(--gold-deep); font-weight:700; font-size:.8rem; text-align:center; padding:10px 12px; margin:0 0 8px; border-radius:10px; border:1px dashed var(--gold-3); cursor:pointer}
+.armar-scrim{display:none}
+.armar-verfab{display:none}
 @media(max-width:900px){
   .armar-body{grid-template-columns:1fr}
-  .armar-side{position:static; order:2}
+  .armar-side{position:fixed; top:0; right:0; height:100%; width:92%; max-width:400px; border-radius:0; z-index:142; transform:translateX(100%); transition:transform .28s ease; overflow-y:auto; box-shadow:-8px 0 30px rgba(0,0,0,.3)}
+  .armar-side.open{transform:none}
+  .armar-side-x{display:block}
+  .armar-scrim{position:fixed; inset:0; background:rgba(4,4,6,.5); z-index:141; opacity:0; visibility:hidden; transition:opacity .25s}
+  .armar-scrim.open{opacity:1; visibility:visible}
+  .armar-verfab{position:fixed; left:12px; right:12px; bottom:16px; z-index:120; background:#111; color:#fff; border:none; border-radius:12px; padding:15px; font-weight:800; font-size:.95rem; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.3)}
 }
 </style>
 </head>
@@ -1589,7 +1613,7 @@ function renderInicio(){
   // 2) Carrusel Más Vendidos (combos)
   let carHtml='';
   if(combos.length){
-    carHtml=`<div class="ini-sec"><h3 class="ini-h">Más Vendidos</h3><div class="ini-carousel">${combos.map(c=>{
+    carHtml=`<div class="ini-sec"><h3 class="ini-h center serif">PROMOCIONES 🔥</h3><div class="ini-carousel">${combos.map(c=>{
       const img=imgsOf(c)[0]; const d=comboDesde(c); const a=comboAntesDesde(c);
       const oc=ocasionItems(comboMeta(c).ocasiones).slice(0,3);
       return `<button class="ini-ccard" data-combo="${c.id}"><span class="badge-oferta">Oferta</span>
@@ -1626,7 +1650,7 @@ function renderInicio(){
     return `<button class="ini-tile${bg?' has-img':''}"${bg} data-view="${t.v}" data-cat="${esc(t.cat)}"><span class="ini-tile-label">${esc(t.n)}</span></button>`;
   }).join('')}</div></div>`;
 
-  cont.innerHTML = puntosHero + heroHtml + carHtml + tilesHtml + ctaHtml + testiHtml;
+  cont.innerHTML = puntosHero + tilesHtml + heroHtml + carHtml + ctaHtml + testiHtml;
 
   // Eventos
   const pib=cont.querySelector('.puntos-hero'); if(pib) pib.onclick=()=>{ setView('catalogo'); window.scrollTo({top:0,behavior:'smooth'}); };
@@ -1832,11 +1856,18 @@ function renderArmar(){
     if(C.total>=umbral) envioHtml=`<div class="armar-envio ok">🚚 ¡Tienes envío gratis!</div>`;
     else envioHtml=`<div class="armar-envio">🚚 Te faltan ${fmt(umbral-C.total)} para envío gratis</div>`;
   }
-  const itemsHtml = armarSel.length ? armarSel.map(i=>`<div class="armar-item">
+  const _detByKey={}; (C.detalle||[]).forEach(d=>{ _detByKey[d.key]=d; });
+  const itemsHtml = armarSel.length ? armarSel.map(i=>{
+    const d=_detByKey[i.key]||{}; const base=Number(d.base!=null?d.base:i.precio)||0; const fin=Number(d.final!=null?d.final:base)||0;
+    const off = base>0 ? Math.round((1-fin/base)*100) : 0;
+    const priceHtml = (fin<base && off>0)
+      ? `<div class="ai-price"><span class="ai-tach">${fmt(base)}</span><span class="ai-now">${fmt(fin)}</span><span class="ai-off">-${off}%</span></div>`
+      : `<div class="ai-price">${fmt(base)}</div>`;
+    return `<div class="armar-item">
       <div class="ai-body"><div class="ai-name">${esc(i.nombre)}</div><div class="ai-tag">${esc(i.categoria)} · ${esc(i.ml)}ml</div></div>
-      <div class="ai-price">${fmt(i.precio)}</div>
+      ${priceHtml}
       <div class="ai-del" data-del="${esc(i.key)}">✕</div>
-    </div>`).join('') : `<div class="armar-empty">Ningún perfume seleccionado aún</div>`;
+    </div>`; }).join('') : `<div class="armar-empty">Ningún perfume seleccionado aún</div>`;
   // Progreso de puntos de regalo en el combo
   let puntosHtml='';
   const _rc=(CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.activo!==false)?CONFIG.REGALO_COMBO:null;
@@ -1848,10 +1879,11 @@ function renderArmar(){
     else if(pts>0) puntosHtml=`<div class="armar-pts-box">🎁 Llevas <b>${pts} pts</b> · Te faltan <b>${rem}</b> para un regalo gratis</div>`;
     else puntosHtml=`<div class="armar-pts-box">🎁 Suma <b>${meta} pts</b> y llévate un decant de 2ml gratis</div>`;
   }
-  const sideHtml=`<div class="armar-side">
-    <div class="armar-side-top"><b>TU COMBO</b><span>${C.n} ${C.n===1?'item':'items'}</span></div>
+  const sideHtml=`<div class="armar-scrim" id="armarScrim"></div><div class="armar-side" id="armarSide">
+    <div class="armar-side-top"><b>TU COMBO</b><span>${C.n} ${C.n===1?'item':'items'}</span><button class="armar-side-x" id="armarSideX" aria-label="Cerrar">✕</button></div>
     ${envioHtml}
     ${puntosHtml}
+    ${C.n?`<div class="armar-seguir" id="armarSeguir">👉 Toca aquí o fuera del panel para seguir agregando perfumes</div>`:''}
     <div class="armar-items">${itemsHtml}</div>
     <div class="armar-side-bot">
       <div class="armar-row"><span>Precio sin descuento</span><span>${fmt(C.subtotal)}</span></div>
@@ -1859,7 +1891,8 @@ function renderArmar(){
       <div class="armar-total"><span>TOTAL A PAGAR</span><b>${fmt(C.total)}</b></div>
       <button class="armar-pay" id="armarPay" ${C.n?'':'disabled'}>🛒 Agregar combo al carrito</button>
     </div>
-  </div>`;
+  </div>
+  <button class="armar-verfab" id="armarVerFab" style="display:none">🧩 Ver mi combo · ${C.n} · ${fmt(C.total)}</button>`;
 
   cont.innerHTML=`<div class="armar-head"><h2>${esc(cfg.titulo||'Arma tu combo')}</h2><p>${esc(cfg.subtitulo||'')}</p></div>
     ${steps}
@@ -1873,6 +1906,14 @@ function renderArmar(){
   cont.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>armarToggle(b.dataset.add));
   cont.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ armarSel=armarSel.filter(x=>x.key!==b.dataset.del); renderArmar(); });
   const pay=$('#armarPay'); if(pay) pay.onclick=armarCheckout;
+  // Drawer móvil del combo
+  const closeSide=()=>{ const s=$('#armarSide'); const sc=$('#armarScrim'); if(s)s.classList.remove('open'); if(sc)sc.classList.remove('open'); };
+  const openSide=()=>{ const s=$('#armarSide'); const sc=$('#armarScrim'); if(s)s.classList.add('open'); if(sc)sc.classList.add('open'); };
+  { const x=$('#armarSideX'); if(x) x.onclick=closeSide; }
+  { const sc=$('#armarScrim'); if(sc) sc.onclick=closeSide; }
+  { const sg=$('#armarSeguir'); if(sg) sg.onclick=closeSide; }
+  { const vf=$('#armarVerFab'); if(vf){ vf.style.display = (window.innerWidth<=900 && C.n>0)?'block':'none'; vf.onclick=openSide; } }
+  if(window._armarJustAdded && window.innerWidth<=900){ window._armarJustAdded=false; openSide(); }
 }
 
 function armarToggle(id){
@@ -1889,6 +1930,7 @@ function armarToggle(id){
     if(precio==null) precio=armarPrecioDe(p.categoria,armarMl);
     if(precio==null){ toast('Ese tamaño no está disponible'); return; }
     armarSel.push({ key, id:p.id, nombre:p.nombre, categoria:p.categoria, ml:armarMl, precio });
+    window._armarJustAdded=true;
   }
   renderArmar();
 }
@@ -3059,6 +3101,10 @@ function openCombo(id){
   const incluye=Array.isArray(c.incluye)?c.incluye.filter(Boolean):[];
   const addons=Array.isArray(c.addons)?c.addons.filter(a=>a&&a.nombre&&Number(a.precio)>0):[];
   const meta=comboMeta(c);
+  const collageImgs=[];
+  incluye.forEach(n=>{ const pp=_comboFindProd(String(n).replace(/^[\s\u2192>\-•]+/,'').trim()); const u=pp&&imgsOf(pp)[0]; if(u&&!collageImgs.includes(u)) collageImgs.push(u); });
+  imgs.forEach(u=>{ if(u&&collageImgs.length<6&&!collageImgs.includes(u)) collageImgs.push(u); });
+  const collHtml = collageImgs.length ? `<div class="combo-coll">${collageImgs.slice(0,6).map(u=>`<div class="combo-coll-c" style="background-image:url('${esc(u)}')"></div>`).join('')}</div>` : '';
 
   $('#sheet').innerHTML = `
     <div class="hd big combo-hero">
@@ -3066,7 +3112,8 @@ function openCombo(id){
       ${mainImg ? `<img id="mainImg" src="${esc(mainImg)}" alt="${esc(c.nombre)}">` : `<div class="ph" style="font-size:4rem">${esc((c.nombre||'?')[0])}</div>`}
     </div>
     ${imgs.length>1 ? `<div class="gallery big">${imgs.map((u,i)=>`<button class="gthumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : ''}
-    <div class="bd">
+    <div class="bd combo-bd">
+      ${collHtml}
       <div class="marca">Promoción</div>
       <h2>${esc(c.nombre)}</h2>
       ${meta.subtitulo?`<div class="combo-sub">${esc(meta.subtitulo)}</div>`:''}
@@ -3463,6 +3510,9 @@ function openCart(){ renderCart(); $('#drawer').classList.add('open'); const sc=
 function closeCart(){ $('#drawer').classList.remove('open'); const sc=$('#drawerScrim'); if(sc) sc.classList.remove('open'); document.body.style.overflow=''; }
 (function(){ const sc=$('#drawerScrim'); if(sc) sc.onclick=closeCart; })();
 $('#openCart').onclick = openCart;
+// Mantener las tabs fijas justo debajo del header
+function _stickTabs(){ const h=document.querySelector('header'); const t=$('#viewtabs'); if(h&&t) t.style.top=(h.offsetHeight-1)+'px'; }
+window.addEventListener('resize', _stickTabs); window.addEventListener('load', _stickTabs); setTimeout(_stickTabs,300);
 { const sb2=$('#shareBtn'); if(sb2) sb2.onclick = openShare; }
 { const fab=$('#asesorFab'); if(fab) fab.onclick = ()=>openAsesor(currentView==='armar'?'combo':'catalogo'); }
 { const rb=$('#asesorResume'); if(rb) rb.onclick = resumeAsesor; }

@@ -684,6 +684,16 @@ function prodForm(id){
         <div class="chipset" id="pEstilo">${ESTILOS.map(s=>`<button type="button" class="chip-sel ${(Array.isArray(p.estilo)&&p.estilo.includes(s))?'on':''}" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
       <div class="field"><label>Perfil aromático / acordes <span style="font-weight:400;color:var(--muted)">(se usa en el asesor y en la ficha)</span></label>
         <input id="pPerfil" value="${esc(p.perfil||'')}" placeholder="Ej. Tropical · Coco · Higo · Verde · Cremoso · Dulce · Amaderado"></div>
+      <div class="field"><label>🎨 Color de la cartilla <span style="font-weight:400;color:var(--muted)">(tiñe la ficha del perfume; opcional)</span></label>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+          <input type="color" id="pColor" value="${esc(p.color||'#101418')}" style="width:64px; height:44px; padding:4px">
+          <input type="text" id="pColorHex" value="${esc(p.color||'')}" placeholder="#101418" style="max-width:140px">
+          <button type="button" class="btn ghost" id="pColorAuto">✨ Auto desde imagen</button>
+          <button type="button" class="btn ghost" id="pColorClear">Quitar</button>
+          <span id="pColorPrev" style="width:40px; height:40px; border-radius:8px; border:1px solid var(--line); background:${esc(p.color||'transparent')}"></span>
+        </div>
+        <div class="hint" style="margin-top:6px">Si no pones color, la ficha usa el estilo por defecto. "Auto" intenta leer el color de la primera imagen.</div>
+      </div>
       <div class="field"><label>🖼️ Imágenes de fondo — Perfil aromático <span style="font-weight:400;color:var(--muted)">(4 imágenes; se muestran como collage detrás de los perfiles)</span></label>
         <input id="pPerfilFiles" type="file" accept="image/*" multiple>
         <div class="imgs" id="perfilImgList"></div></div>
@@ -705,6 +715,29 @@ function prodForm(id){
     $('#imgList').querySelectorAll('[data-rmimg]').forEach(b=>b.onclick=()=>{ imgs.splice(+b.dataset.rmimg,1); renderImgs(); });
   }
   renderImgs();
+  // Color de la cartilla (manual + auto desde imagen)
+  (function(){
+    const pc=$('#pColor'), hx=$('#pColorHex'), pv=$('#pColorPrev');
+    if(!pc) return;
+    const setCol=(v)=>{ if(v){ pc.value=v; hx.value=v; pv.style.background=v; } else { hx.value=''; pv.style.background='transparent'; } };
+    pc.oninput=()=>setCol(pc.value);
+    hx.oninput=()=>{ const v=hx.value.trim(); if(/^#[0-9a-fA-F]{6}$/.test(v)) setCol(v); else pv.style.background=v||'transparent'; };
+    const clr=$('#pColorClear'); if(clr) clr.onclick=()=>setCol('');
+    const auto=$('#pColorAuto'); if(auto) auto.onclick=()=>{
+      const url=imgs[0]; if(!url){ toast('Sube primero una imagen',true); return; }
+      const im=new Image(); im.crossOrigin='anonymous';
+      im.onload=()=>{ try{
+        const cv=document.createElement('canvas'); const w=cv.width=40, h=cv.height=40; const cx=cv.getContext('2d');
+        cx.drawImage(im,0,0,w,h); const d=cx.getImageData(0,0,w,h).data;
+        let r=0,g=0,b=0,n=0; for(let i=0;i<d.length;i+=4){ if(d[i+3]<128) continue; r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++; }
+        if(!n){ toast('No se pudo leer el color',true); return; }
+        r=Math.round(r/n); g=Math.round(g/n); b=Math.round(b/n);
+        setCol('#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('')); toast('Color detectado');
+      }catch(e){ toast('La imagen bloquea la lectura (CORS). Pon el color manual.',true); } };
+      im.onerror=()=>toast('No se pudo cargar la imagen',true);
+      im.src=url;
+    };
+  })();
   $('#pFiles').onchange = async e => {
     const files=[...e.target.files]; if(!files.length)return;
     toast('Subiendo imágenes...');
@@ -798,6 +831,7 @@ function prodForm(id){
       concentracion: $('#pConcentracion')?($('#pConcentracion').value.trim()||null):null,
       anio: $('#pAnio')?($('#pAnio').value.trim()||null):null,
       perfil: $('#pPerfil')?($('#pPerfil').value.trim()||null):null,
+      color: $('#pColorHex')?(($('#pColorHex').value.trim()&&/^#[0-9a-fA-F]{6}$/.test($('#pColorHex').value.trim()))?$('#pColorHex').value.trim():null):null,
       perfil_imgs: perfilImgs,
       ocasion_imgs: ocasionImgs,
       familia: [...document.querySelectorAll('#pFamilia .chip-sel.on')].map(b=>b.dataset.v),
@@ -1099,6 +1133,11 @@ function comboForm(id){
       <div class="imgs" id="cImgList"></div>
     </div>
 
+    <div class="field"><label>🖼️ Imagen de fondo de la promoción <span style="font-weight:400;color:var(--muted)">(se ve elegante detrás, en el inicio y en la ficha)</span></label>
+      <input id="cFondoFile" type="file" accept="image/*">
+      <div class="imgs" id="cFondoWrap"></div>
+    </div>
+
     <div class="field"><label>Perfumes que incluye (uno por línea)</label>
       <textarea id="cIncluye" rows="3" placeholder="→ 9AM Dive&#10;→ Club de Nuit Urban Elixir&#10;→ Valentino Born in Roma Intense">${esc(incluyeTxt)}</textarea>
       <div class="hint">Se muestran como etiquetas en el detalle del combo.</div>
@@ -1151,6 +1190,11 @@ function comboForm(id){
     for(const f of files){ const u=await uploadImg(f,'combos'); if(u) imgs.push(u); }
     renderImgsC(); toast('Imágenes subidas');
   };
+  // Fondo de la promoción
+  let cFondo = cd.fondo || '';
+  function renderFondoC(){ const w=$('#cFondoWrap'); if(!w) return; w.innerHTML = cFondo?`<div class="im"><img src="${esc(cFondo)}"><button id="cFondoDel">×</button></div>`:'<span class="hint">Sin imagen de fondo</span>'; const d=$('#cFondoDel'); if(d) d.onclick=()=>{ cFondo=''; renderFondoC(); }; }
+  renderFondoC();
+  $('#cFondoFile').onchange = async e => { const f=e.target.files[0]; if(!f)return; toast('Subiendo fondo...'); const u=await uploadImg(f,'combos'); if(u){ cFondo=u; renderFondoC(); toast('Fondo subido'); } };
 
   function renderTallas(){
     $('#cTallas').innerHTML = tallas.map((t,i)=>`
@@ -1208,6 +1252,7 @@ function comboForm(id){
       ocasiones: $('#cOcasiones').value.trim(),
       por_que: $('#cPorQue').value.trim(),
       perfecto_para: $('#cPerfecto').value.trim(),
+      fondo: cFondo || '',
     };
     const payload = {
       nombre, descripcion:$('#cDesc').value.trim()||null,

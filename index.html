@@ -798,6 +798,9 @@ header::after{background:var(--line); opacity:1}
 .pd-deliv-ica2{font-size:.86rem; color:var(--cream); margin-bottom:4px}
 .pd-deliv-env{font-size:.86rem; color:var(--gold-deep)}
 .pd-perfil-chips{display:flex; flex-wrap:wrap; gap:7px}
+.pd-imgstrip{display:grid; gap:6px}
+.pd-strip-c{aspect-ratio:9/16; background-size:cover; background-position:center; border-radius:8px; background-color:var(--panel-2)}
+@media(max-width:640px){ .pd-imgstrip{grid-template-columns:repeat(3,1fr)!important} }
 .pd-block.has-coll{position:relative; overflow:hidden}
 .pd-block.has-coll .pd-block-in{position:relative; z-index:2}
 .pd-block:not(.has-coll) .pd-block-in{display:contents}
@@ -899,6 +902,8 @@ header::after{background:var(--line); opacity:1}
 .pd-hasbg .pd-bg{position:absolute; inset:0; z-index:0; background-size:cover; background-position:center; background-repeat:no-repeat}
 .pd-hasbg .pd-bg-veil{position:absolute; inset:0; z-index:1; background:linear-gradient(180deg, color-mix(in srgb,var(--panel) 55%, transparent), color-mix(in srgb,var(--panel) 78%, transparent)); pointer-events:none}
 .pd-hasbg .pd-block{background:color-mix(in srgb,var(--panel) 82%, transparent); backdrop-filter:blur(2px)}
+.pd-hasbg .pd-media{top:auto}
+.pd-hasbg .pd-buy{top:auto}
 .pd-nobuy .pd-buy{grid-column:1 / -1; position:static; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:center; gap:20px; border-top:1px solid var(--line); padding-top:18px; margin-top:8px}
 .pd-nobuy .pd-buy .pd-b{flex:0 0 auto; min-width:240px; max-width:340px}
 .pd-nobuy .pd-buy .pd-badges{margin:0}
@@ -2896,6 +2901,7 @@ function estelaFrac(txt){
   return .5;
 }
 function _nivelTxt(f){ return f>=.85?'Muy alta':f>=.65?'Alta':f>=.45?'Media':f>=.28?'Baja':'Muy baja'; }
+function _imgStripHTML(imgs,max){ const a=(Array.isArray(imgs)?imgs:[]).slice(0,max||6); if(!a.length) return ''; return `<div class="pd-imgstrip" style="grid-template-columns:repeat(${a.length},1fr)">${a.map(u=>`<div class="pd-strip-c" style="background-image:url('${esc(u)}')"></div>`).join('')}</div>`; }
 function _collageHTML(imgs,max){ const a=(Array.isArray(imgs)?imgs:[]).slice(0,max||4); if(!a.length) return ''; return `<div class="pd-coll pd-coll-${a.length}">${a.map(u=>`<div class="pd-coll-cell" style="background-image:url('${esc(u)}')"></div>`).join('')}</div>`; }
 function _perfilChip(word){
   const t=String(word||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -3061,6 +3067,17 @@ function openProduct(id, opts){
   const sh=_shalomInfo(now);
   const fFecha=d=>d.toLocaleDateString('es-PE',{day:'numeric',month:'long'});
 
+  // Bloque Perfil aromático: si hay imágenes, se muestran (hasta 6) y se ocultan las palabras; si no, chips.
+  const _perfilImgs = Array.isArray(p.perfil_imgs)?p.perfil_imgs:[];
+  const perfilBlock = _perfilImgs.length
+    ? `<div class="pd-block"><h4>Perfil aromático</h4>${_imgStripHTML(_perfilImgs,6)}</div>`
+    : (p.perfil ? `<div class="pd-block"><h4>Perfil aromático</h4><div class="pd-perfil-chips">${String(p.perfil).split(/[·,;/|]+/).map(s=>s.trim()).filter(Boolean).map(s=>_perfilChip(s)).join('')}</div></div>` : '');
+  // Bloque Ocasiones: si hay imágenes, se muestran (hasta 6) y se oculta el texto; si no, la lista.
+  const _ocaImgs = Array.isArray(p.ocasion_imgs)?p.ocasion_imgs:[];
+  const ocaBlock = _ocaImgs.length
+    ? `<div class="pd-block"><h4>Ocasiones de uso</h4>${_imgStripHTML(_ocaImgs,6)}</div>`
+    : (oca ? `<div class="pd-block"><h4>Ocasiones de uso</h4>${ocasionListHTML(oca)}</div>` : '');
+
   $('#sheet').innerHTML = `
     <div class="pd-close">
       <button class="bk" id="closeSheet">← Volver</button>
@@ -3073,6 +3090,7 @@ function openProduct(id, opts){
         <div class="pd-imgbox">${mainImg?`<img id="mainImg" src="${esc(mainImg)}" alt="${esc(p.nombre)}">`:`<span class="ph">${esc((p.marca||p.nombre||'?')[0])}</span>`}</div>
         ${imgs.length>1?`<div class="pd-thumbs">${imgs.map((u,i)=>`<button class="pd-thumb ${i===0?'active':''}" data-img="${esc(u)}"><img src="${esc(u)}"></button>`).join('')}</div>`:''}
         ${notasHtml}
+        ${perfilBlock}
       </div>
 
       <div class="pd-info">
@@ -3080,8 +3098,6 @@ function openProduct(id, opts){
         <h1 class="pd-name">${esc(p.nombre)}</h1>
         <div class="pd-desc">${p.genero?`<b>${esc(p.genero)}</b> · `:''}${p.concentracion?esc(p.concentracion)+' · ':''}${esc(p.descripcion||'')}</div>
         <div class="pd-tags">${catChip?`<span class="pd-tag">${esc(catChip)}</span>`:''}${stockHtml}</div>
-
-        ${p.perfil?`<div class="pd-block ${(Array.isArray(p.perfil_imgs)&&p.perfil_imgs.length)?'has-coll':''}">${_collageHTML(p.perfil_imgs,4)}<div class="pd-block-in"><h4>Perfil aromático</h4><div class="pd-perfil-chips">${String(p.perfil).split(/[·,;/|]+/).map(s=>s.trim()).filter(Boolean).map(s=>_perfilChip(s)).join('')}</div></div></div>`:''}
 
         ${(p.longevidad||p.estela)?`<div class="pd-block"><h4>Perfil olfativo</h4><div class="pd-metrics">
           ${p.longevidad?perfilBar('⏳','Longevidad',p.longevidad,longevidadFrac(p.longevidad)):''}
@@ -3092,7 +3108,7 @@ function openProduct(id, opts){
           <div class="opt dia ${dia?'on':''}">☀️ Día</div><div class="opt noche ${noche?'on':''}">🌙 Noche</div>
         </div></div>`:''}
 
-        ${oca?`<div class="pd-block ${(Array.isArray(p.ocasion_imgs)&&p.ocasion_imgs.length)?'has-coll':''}">${_collageHTML(p.ocasion_imgs,3)}<div class="pd-block-in"><h4>Ocasiones de uso</h4>${ocasionListHTML(oca)}</div></div>`:''}
+        ${ocaBlock}
       </div>
 
       <div class="pd-buy">

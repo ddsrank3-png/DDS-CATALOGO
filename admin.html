@@ -694,10 +694,10 @@ function prodForm(id){
         </div>
         <div class="hint" style="margin-top:6px">Sube una imagen; ajusta la opacidad para que se lea bien la información encima. Sin imagen, la ficha usa el estilo por defecto.</div>
       </div>
-      <div class="field"><label>🖼️ Imágenes de fondo — Perfil aromático <span style="font-weight:400;color:var(--muted)">(4 imágenes; se muestran como collage detrás de los perfiles)</span></label>
+      <div class="field"><label>🖼️ Imágenes de fondo — Perfil aromático <span style="font-weight:400;color:var(--muted)">(hasta 6 imágenes; si subes imágenes, reemplazan a las palabras en la ficha)</span></label>
         <input id="pPerfilFiles" type="file" accept="image/*" multiple>
         <div class="imgs" id="perfilImgList"></div></div>
-      <div class="field"><label>🖼️ Imágenes de fondo — Ocasiones de uso <span style="font-weight:400;color:var(--muted)">(hasta 3 imágenes; collage detrás de las ocasiones)</span></label>
+      <div class="field"><label>🖼️ Imágenes de fondo — Ocasiones de uso <span style="font-weight:400;color:var(--muted)">(hasta 6 imágenes; si subes imágenes, reemplazan al texto en la ficha)</span></label>
         <input id="pOcasionFiles" type="file" accept="image/*" multiple>
         <div class="imgs" id="ocasionImgList"></div></div>
     </div>
@@ -732,11 +732,11 @@ function prodForm(id){
     el.innerHTML = arr.map((u,i)=>`<div class="im"><img src="${esc(u)}"><button data-${rmAttr}="${i}">×</button></div>`).join('') + (arr.length<max?'':'<div class="hint" style="margin:6px 0 0">Máximo '+max+' imágenes</div>');
     el.querySelectorAll('[data-'+rmAttr+']').forEach(b=>b.onclick=()=>{ arr.splice(+b.dataset[rmAttr.replace(/-/g,'')],1); renderColl(listId,arr,max,rmAttr); });
   }
-  const _rp=()=>renderColl('perfilImgList',perfilImgs,4,'rmperfil');
-  const _ro=()=>renderColl('ocasionImgList',ocasionImgs,3,'rmocasion');
+  const _rp=()=>renderColl('perfilImgList',perfilImgs,6,'rmperfil');
+  const _ro=()=>renderColl('ocasionImgList',ocasionImgs,6,'rmocasion');
   _rp(); _ro();
-  if($('#pPerfilFiles')) $('#pPerfilFiles').onchange = async e => { const files=[...e.target.files]; if(!files.length)return; toast('Subiendo...'); for(const f of files){ if(perfilImgs.length>=4){ toast('Máximo 4',true); break;} const u=await uploadImg(f,'perfil'); if(u) perfilImgs.push(u); } _rp(); toast('Listo'); };
-  if($('#pOcasionFiles')) $('#pOcasionFiles').onchange = async e => { const files=[...e.target.files]; if(!files.length)return; toast('Subiendo...'); for(const f of files){ if(ocasionImgs.length>=3){ toast('Máximo 3',true); break;} const u=await uploadImg(f,'ocasion'); if(u) ocasionImgs.push(u); } _ro(); toast('Listo'); };
+  if($('#pPerfilFiles')) $('#pPerfilFiles').onchange = async e => { const files=[...e.target.files]; if(!files.length)return; toast('Subiendo...'); for(const f of files){ if(perfilImgs.length>=6){ toast('Máximo 6',true); break;} const u=await uploadImg(f,'perfil'); if(u) perfilImgs.push(u); } _rp(); toast('Listo'); };
+  if($('#pOcasionFiles')) $('#pOcasionFiles').onchange = async e => { const files=[...e.target.files]; if(!files.length)return; toast('Subiendo...'); for(const f of files){ if(ocasionImgs.length>=6){ toast('Máximo 6',true); break;} const u=await uploadImg(f,'ocasion'); if(u) ocasionImgs.push(u); } _ro(); toast('Listo'); };
 
   function renderPres(){
     $('#presList').innerHTML = pres.map((x,i)=>`

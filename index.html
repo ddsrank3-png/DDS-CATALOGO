@@ -190,6 +190,11 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .card .ver{width:34px; height:34px; border-radius:50%; border:1px solid var(--gold-deep); color:var(--gold-1); display:grid; place-items:center; font-size:1.05rem; transition:.22s; flex:0 0 auto}
 .card:hover .ver{background:var(--gold-grad); color:var(--bg); border-color:transparent}
 .badge-dest{position:absolute; top:11px; left:11px; z-index:2; font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; padding:5px 9px; border-radius:999px; background:color-mix(in srgb, var(--bg) 82%, transparent); border:1px solid var(--gold-deep); color:var(--gold-2)}
+.card-dest{position:relative; border-color:var(--cream)!important; animation:destPulse 2.2s ease-in-out infinite}
+.card-dest::after{content:""; position:absolute; inset:0; border-radius:inherit; box-shadow:0 0 0 0 color-mix(in srgb,var(--cream) 55%, transparent); pointer-events:none; animation:destGlow 2.2s ease-in-out infinite; z-index:1}
+@keyframes destPulse{0%,100%{box-shadow:0 2px 10px rgba(0,0,0,.05)}50%{box-shadow:0 6px 22px color-mix(in srgb,var(--cream) 30%, transparent)}}
+@keyframes destGlow{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--cream) 45%, transparent)}50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--cream) 35%, transparent)}}
+@media(prefers-reduced-motion:reduce){ .card-dest,.card-dest::after{animation:none} }
 .badge-off{position:absolute; top:11px; right:11px; z-index:2; font-size:.68rem; font-weight:700; padding:5px 9px; border-radius:999px; background:var(--danger); color:#fff}
 
 .state{grid-column:1/-1; text-align:center; color:var(--muted); padding:70px 20px}
@@ -1295,6 +1300,19 @@ function imgsOf(p){ const a=Array.isArray(p.imagenes)?p.imagenes.filter(Boolean)
 function mlLabel(ml){ return String(ml).toLowerCase()==='sellado' ? 'Sellado' : ml+'ml'; }
 function ofertaPct(x){ const a=Number(x.antes), pr=Number(x.precio); return (a&&pr&&a>pr)?Math.round((a-pr)/a*100):0; }
 function precioEfectivo(p, x){ const r=window.PROMOS_ENGINE.precioUnit(p, x.ml, Number(x.precio), PROMOS); return r.precio; }
+function _stockOrderKey(p){
+  const s=stockDe(p);
+  if(s==null) return 1e6;      // sin stock trackeado: como si tuviera mucho stock (va después de los numerados)
+  if(s<=0) return 1e9;         // agotado / a pedido: siempre al final
+  return s;                    // 1,2,3... primero
+}
+function _catalogDefaultSort(list){
+  return [...list].sort((a,b)=>{
+    const da = a.destacado?0:1, db = b.destacado?0:1;
+    if(da!==db) return da-db;              // destacados siempre primero
+    return _stockOrderKey(a)-_stockOrderKey(b); // luego por stock ascendente (0/agotado al final)
+  });
+}
 function precioDesde(p){ const v=presActivas(p).map(x=>precioEfectivo(p,x)); return v.length?Math.min(...v):null; }
 function precioSellado(p){
   const pres=presDeTipo(p,'Sellado').filter(x=>x&&x.activo!==false);
@@ -2940,6 +2958,7 @@ function render(){
   if(sortMode==='pasc') list=[...list].sort((a,b)=>(precioDesde(a)??1e9)-(precioDesde(b)??1e9));
   else if(sortMode==='pdesc') list=[...list].sort((a,b)=>(precioDesde(b)??-1)-(precioDesde(a)??-1));
   else if(sortMode==='az') list=[...list].sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||'')));
+  else list=_catalogDefaultSort(list); // por defecto: destacados primero, luego menos stock primero (agotados al final)
   const gridEl=$('#grid'); if(gridEl) gridEl.classList.toggle('dense', gridDense);
 
   $('#grid').innerHTML = list.map(p => {
@@ -2950,8 +2969,8 @@ function render(){
     const precioHtml = sello
       ? `<span class="precio precio-sello"><small>Perfume completo</small><b>${sello.antes?`<span class="antes">${fmt(sello.antes)}</span>`:''}${fmt(sello.actual)}</b></span>`
       : `<span class="precio">${desde!=null?`<small>Desde</small><b>${fmt(desde)}</b>`:'<small>Precio</small><b>Consultar</b>'}</span>`;
-    return `<button class="card ${agotado(p)?'agotado':''}" data-id="${p.id}">
-      ${p.destacado ? '<span class="badge-dest">Destacado</span>' : ''}
+    return `<button class="card ${agotado(p)?'agotado':''} ${p.destacado?'card-dest':''}" data-id="${p.id}">
+      ${p.destacado ? '<span class="badge-dest">★ Destacado</span>' : ''}
       ${off ? `<span class="badge-off">−${off}%</span>` : ''}
       <div class="imgwrap">${main ? `<img src="${esc(main)}" alt="${esc(p.nombre)}" loading="lazy">` : `<span class="ph">${esc((p.marca||p.nombre||'?')[0])}</span>`}</div>
       <div class="body">

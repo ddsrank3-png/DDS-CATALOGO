@@ -636,7 +636,6 @@ function prodForm(id){
       <div class="field"><label>Género</label><select id="pGen">${gens.map(g=>`<option ${p.genero===g?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
     </div>
     <div class="grid3">
-      <div class="field" style="max-width:200px"><label>Orden</label><input id="pOrden" type="number" value="${p.orden??0}"></div>
       <div class="field"><label>Concentración</label><input id="pConcentracion" value="${esc(p.concentracion||'')}" placeholder="Ej. Eau de Parfum (EDP)"></div>
       <div class="field"><label>Año</label><input id="pAnio" value="${esc(p.anio||'')}" placeholder="Ej. 2025"></div>
     </div>
@@ -811,7 +810,7 @@ function prodForm(id){
     selNotas = new Set(notasDetectadas().map(n=>n.id));
     const payload = {
       marca:$('#pMarca').value.trim(), nombre, tipo:$('#pTipo').value, categoria:$('#pCat').value, genero:$('#pGen').value,
-      orden:parseInt($('#pOrden').value)||0, descripcion:$('#pDesc').value.trim(),
+      descripcion:$('#pDesc').value.trim(),
       precio: precioBase,
       stock: (()=>{ const ss=presLimpio.map(x=>x.stock).filter(v=>v!=null); return ss.length? ss.reduce((a,b)=>a+Number(b),0) : null; })(),
       imagenes:imgs, imagen_url:imgs[0]||null, presentaciones:presLimpio,

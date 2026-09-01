@@ -1953,7 +1953,7 @@ function renderArmar(){
   // Grilla de perfumes (si hay categoría y tamaño)
   let gridHtml='';
   if(armarCat && armarMl){
-    const list=(PRODUCTS||[]).filter(p=>p.visible!==false && (p.categoria===armarCat));
+    const list=(PRODUCTS||[]).filter(p=>p.visible!==false && (p.categoria===armarCat) && presActivas(p).some(x=>String(x.ml)===String(armarMl) && !_esSellado(x.ml)));
     if(!list.length) gridHtml=`<div class="armar-hint">Aún no hay perfumes en ${esc(armarCat)}. Cárgalos en el panel.</div>`;
     else gridHtml=`<div class="armar-grid">${list.map(p=>{
       const key=p.id+'__'+armarMl; const on=armarSel.some(x=>x.key===key);
@@ -2051,12 +2051,11 @@ function armarToggle(id){
   const idx=armarSel.findIndex(x=>x.key===key);
   if(idx>=0){ armarSel.splice(idx,1); }
   else{
-    // Precio base = precio registrado del producto para esa talla; si no lo tiene, la tabla del combo
+    // Precio = precio propio del producto para esa talla de decant (nunca el genérico de categoría)
     let precio=null;
-    const pres=(presActivas(p)||[]).find(x=>String(x.ml)===String(armarMl));
+    const pres=(presActivas(p)||[]).find(x=>String(x.ml)===String(armarMl) && !_esSellado(x.ml));
     if(pres) precio=Number(pres.precio);
-    if(precio==null) precio=armarPrecioDe(p.categoria,armarMl);
-    if(precio==null){ toast('Ese tamaño no está disponible'); return; }
+    if(precio==null){ toast('Ese perfume no tiene decants a la venta',true); return; }
     armarSel.push({ key, id:p.id, nombre:p.nombre, categoria:p.categoria, ml:armarMl, precio });
     window._armarJustAdded=true;
   }
@@ -3418,9 +3417,9 @@ function armarAddFromAsesor(pid){
   if(!armarMl){ const sizes=armarSizesDe(armarCat)||[]; armarMl=sizes[0]||'5'; }
   const key=pid+'__'+armarMl;
   if(armarSel.some(x=>x.key===key)){ toast('Ya está en tu combo'); return; }
-  let precio=null; const pres=(presActivas(p)||[]).find(x=>String(x.ml)===String(armarMl));
-  if(pres) precio=Number(pres.precio); if(precio==null) precio=armarPrecioDe(p.categoria,armarMl);
-  if(precio==null){ toast('Ese tamaño no está disponible'); return; }
+  let precio=null; const pres=(presActivas(p)||[]).find(x=>String(x.ml)===String(armarMl) && !_esSellado(x.ml));
+  if(pres) precio=Number(pres.precio);
+  if(precio==null){ toast('Ese perfume no tiene decants a la venta',true); return; }
   armarSel.push({ key, id:p.id, nombre:p.nombre, categoria:p.categoria, ml:armarMl, precio });
   toast('✅ Se agregó al combo: '+p.nombre);
   if(typeof renderArmar==='function') renderArmar();

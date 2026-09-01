@@ -86,6 +86,7 @@ const CONFIG = {
     "gold-2":     "#c9a84c",
     "gold-3":     "#d4aa5a",
     "gold-deep":  "#9a7d2e",
+    "gold-pale":  "#faf1d9",
     "gold-grad":  "#b8923a",
     "cream":      "#1a1714",
     "muted":      "#5a5450",

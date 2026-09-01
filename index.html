@@ -19,7 +19,7 @@
 :root{
   --bg:#ffffff; --bg-2:#f2f2f4; --panel:#f7f7f8; --panel-2:#ededf0;
   --line:#e4e4e8; --line-soft:#ededf0;
-  --gold-1:#141416; --gold-2:#141416; --gold-3:#3b3b40; --gold-deep:#d6d6da;
+  --gold-1:#141416; --gold-2:#141416; --gold-3:#3b3b40; --gold-deep:#d6d6da; --gold-pale:rgba(212,170,90,.15);
   --gold-grad:#141416;
   --cream:#141416; --muted:#6c6c74; --muted-2:#a0a0a8;
   --accent:#f5c518; --accent-deep:#e2ad00;
@@ -211,6 +211,8 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .card .nombre{font-family:'Cormorant Garamond',serif; font-size:1.24rem; font-weight:600; line-height:1.12; color:var(--cream)}
 .card .foot{margin-top:auto; padding-top:11px; display:flex; align-items:flex-end; justify-content:space-between; gap:8px}
 .card .precio{display:flex; flex-direction:column; line-height:1.1}
+.foot-price{display:flex; align-items:flex-end; gap:6px; flex-wrap:wrap}
+.card-pts{font-size:.64rem; font-weight:800; color:#5c3d00; background:#ffdf7e; border-radius:999px; padding:3px 8px; white-space:nowrap; margin-bottom:1px}
 .card .precio-sello{background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:6px 10px; margin:-2px 0}
 .card .precio-sello small{color:var(--muted); font-weight:700; text-transform:uppercase; font-size:.62rem; letter-spacing:.04em}
 .card .precio-sello b{color:#d4287a; font-size:1.05rem; font-weight:800}
@@ -309,6 +311,15 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .puntos-hero .ph-go{margin-left:auto; font-size:.85rem; background:rgba(255,255,255,.22); padding:6px 12px; border-radius:999px; white-space:nowrap}
 /* Banner de puntos — catálogo (vibra, elegante) */
 #puntosCatBanner{max-width:1200px; margin:0 auto; padding:14px 20px 0}
+.premios-marquee{max-width:1200px; margin:0 auto; padding:12px 0 0; overflow:hidden}
+.premios-marquee .pm-track{display:flex; align-items:center; gap:0; width:max-content; animation:premiosScroll 28s linear infinite}
+.premios-marquee:hover .pm-track{animation-play-state:paused}
+.premios-marquee .pm-item{display:inline-flex; align-items:center; gap:8px; padding:9px 22px; font-size:.86rem; font-weight:600; color:#5c3d00; white-space:nowrap}
+.premios-marquee .pm-item b{color:#8a5a12}
+.premios-marquee .pm-sep{color:var(--gold-3); opacity:.6; padding:0 4px}
+.premios-marquee .pm-strip{background:linear-gradient(100deg,#fff4da,#ffe6b3); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+@keyframes premiosScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){ .premios-marquee .pm-track{animation:none; flex-wrap:wrap; width:auto} }
 .puntos-banner{display:block; width:100%; cursor:pointer; text-align:center; padding:11px 16px; border-radius:12px; font-weight:700; font-size:.9rem; color:#fff; background:linear-gradient(100deg,#7b2ff7,#f107a3 55%,#ff7a18); box-shadow:0 6px 18px rgba(241,7,163,.3); animation:nudgeShake 1.8s ease-in-out infinite}
 .puntos-banner b{font-size:1.1rem}
 @media(prefers-reduced-motion:reduce){ .puntos-hero,.puntos-banner{animation:none} }
@@ -950,7 +961,7 @@ header::after{background:var(--line); opacity:1}
 .pd-buy{position:sticky; top:70px; display:flex; flex-direction:column; gap:12px}
 .pd-buy-lbl{text-align:center; font-size:.72rem; letter-spacing:.14em; color:var(--muted-2); text-transform:uppercase}
 .pd-sizes{display:block}
-.pd-sizebox{border:1.5px solid var(--line); border-radius:16px; padding:12px; background:linear-gradient(160deg,var(--panel-2) 0%, color-mix(in srgb,var(--gold-3) 10%, var(--panel-2)) 100%)}
+.pd-sizebox{border:1.5px solid var(--line); border-radius:16px; padding:12px; background:linear-gradient(160deg, rgba(196,155,74,0) 0%, rgba(196,155,74,.14) 100%), var(--panel-2)}
 .pd-sizebox-sello{margin-bottom:12px}
 .pd-sizebox-sello .pd-size{width:100%}
 .pd-sizebox-decants{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
@@ -958,7 +969,7 @@ header::after{background:var(--line); opacity:1}
 .pd-size-lg{padding:20px 10px 14px}
 .pd-size-lg .pr{font-size:1.35rem}
 .pd-size-lg .dot{width:18px; height:18px; margin-bottom:10px}
-.pd-size{position:relative; border:1.5px solid var(--line); border-radius:12px; padding:16px 6px 10px; text-align:center; cursor:pointer; background:linear-gradient(165deg,#fff 0%,color-mix(in srgb,var(--gold-3) 12%,#fff) 100%); transition:transform .15s,box-shadow .15s}
+.pd-size{position:relative; border:1.5px solid var(--line); border-radius:12px; padding:16px 6px 10px; text-align:center; cursor:pointer; background:linear-gradient(165deg, rgba(196,155,74,0) 0%, rgba(196,155,74,.16) 100%), #fff; transition:transform .15s,box-shadow .15s}
 .pd-size:hover{transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,.08)}
 .pd-size .pr{color:#d4287a; font-weight:800}
 .pd-size.on{border-color:#111; box-shadow:0 0 0 1.5px #111 inset}
@@ -969,7 +980,7 @@ header::after{background:var(--line); opacity:1}
 .pd-size .pr{font-weight:700; font-size:1rem; color:var(--cream)}
 .pd-size .ml{font-size:.72rem; color:var(--muted); margin-top:2px}
 .pd-size .top{position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:linear-gradient(120deg,#7b2ff7,#f107a3); color:#fff; font-size:.58rem; font-weight:800; padding:3px 8px; border-radius:999px; white-space:nowrap; letter-spacing:.03em}
-.pd-size .pd-pts{margin-top:5px; font-size:.62rem; font-weight:700; color:var(--gold-deep); background:var(--gold-pale); border-radius:999px; padding:2px 6px; display:inline-block}
+.pd-size .pd-pts{margin-top:5px; font-size:.64rem; font-weight:800; color:#5c3d00; background:#ffdf7e; border-radius:999px; padding:3px 8px; display:inline-block}
 .pd-qty{display:flex; align-items:center; gap:10px; justify-content:center}
 .pd-qty button{width:38px; height:38px; border:1px solid var(--line); border-radius:10px; font-size:1.1rem; background:var(--panel)}
 .pd-qty input{width:56px; text-align:center; border:1px solid var(--line); border-radius:10px; padding:8px; font-size:1rem; -moz-appearance:textfield}
@@ -1095,7 +1106,7 @@ header::after{background:var(--line); opacity:1}
 .armar-total b{font-size:1.35rem; font-family:'Cormorant Garamond',serif}
 .armar-pay{width:100%; background:#12b76a; color:#fff; border-radius:12px; padding:14px; font-weight:700; font-size:.95rem; cursor:pointer}
 .armar-pay:disabled{background:#cfe9d9; cursor:not-allowed}
-.armar-opt .armar-pts{margin-top:5px; font-size:.62rem; font-weight:700; color:var(--gold-deep); background:var(--gold-pale); border-radius:999px; padding:2px 6px; display:inline-block}
+.armar-opt .armar-pts{margin-top:5px; font-size:.64rem; font-weight:800; color:#5c3d00; background:#ffdf7e; border-radius:999px; padding:3px 8px; display:inline-block}
 .armar-pts-box{font-size:.82rem; color:#fff; font-weight:700; background:linear-gradient(100deg,#7b2ff7,#f107a3 55%,#ff7a18); border:none; border-radius:10px; padding:11px 13px; margin:2px 0 8px; box-shadow:0 5px 14px rgba(241,7,163,.26); animation:nudgeShake 2s ease-in-out infinite}
 .armar-pts-box b{text-decoration:underline}
 .armar-pts-box.on{background:linear-gradient(100deg,#0d6b32,#12a04d)}
@@ -1172,6 +1183,7 @@ header::after{background:var(--line); opacity:1}
 
 <div class="inicio" id="inicioView" style="display:none"></div>
 <div id="puntosCatBanner" style="display:none"></div>
+<div id="premiosMarquee" class="premios-marquee" style="display:none"></div>
 <div class="asesor-ov" id="asesorOv" style="display:none"></div>
 <button class="asesor-fab" id="asesorFab" style="display:none" aria-label="Asesor de perfumes">✨ Asesor</button>
 <button class="asesor-resume" id="asesorResume" style="display:none">✨ Seguir usando asesor</button>
@@ -1370,6 +1382,16 @@ function precioSellado(p){
   const antes = Number(x.antes||x.precio_antes||0) || null;
   return { actual, antes: (antes && antes>actual) ? antes : null };
 }
+function puntosCardDe(p, sello){
+  if(!(CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.activo!==false)) return null;
+  if(sello) return _selloPtsFor(p.categoria);
+  const pres=presActivas(p).filter(x=>!_esSellado(x.ml));
+  if(!pres.length) return null;
+  const min=pres[0]; // presActivas ya viene ordenado por precio ascendente
+  const pd=(CONFIG.REGALO_COMBO.puntos||{})[p.categoria]||{};
+  const v=pd[String(min.ml)];
+  return v!=null ? Number(v) : null;
+}
 function maxOfertaCard(p){
   let m=0;
   presActivas(p).forEach(x=>{
@@ -1497,6 +1519,7 @@ function setView(v, fromPop){
   const divEl=document.querySelector('.divider'); if(divEl) divEl.style.display = 'none';
   const cm=$('#catMosaico'); if(cm) cm.style.display = 'none';
   const pcb=$('#puntosCatBanner'); if(pcb){ if(v==='catalogo'){ pcb.innerHTML=puntosCatBannerHTML(); pcb.style.display='block'; const b=pcb.querySelector('.puntos-banner'); if(b) b.onclick=openPuntosInfo; } else pcb.style.display='none'; }
+  { const pm=$('#premiosMarquee'); if(pm){ if(v==='inicio'||v==='catalogo'){ _mostrarPremiosMarquee(); } else pm.style.display='none'; } }
   const fab=$('#asesorFab'); if(fab) fab.style.display=(['catalogo','promos','armar'].includes(v))?'flex':'none';
   const av=$('#armarView'); if(av) av.style.display = v==='armar' ? 'block' : 'none';
   $('#filters').style.display     = 'none';
@@ -1540,6 +1563,23 @@ function puntosCatBannerHTML(){
   if(!(CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.activo!==false)) return '';
   const t=c.catalogo_texto||'🎁 Completa puntos para llevarte premios gratis';
   return `<button class="puntos-banner">${esc(t)} <b>›</b></button>`;
+}
+let PREMIOS_CACHE = null; // null=sin cargar, []=cargado vacío, array=cargado con datos
+async function _cargarPremiosRecientes(){
+  if(PREMIOS_CACHE!==null) return PREMIOS_CACHE;
+  try{
+    const { data, error } = await sb.rpc('premios_recientes', { p_limit:5 });
+    PREMIOS_CACHE = (!error && Array.isArray(data)) ? data : [];
+  }catch(e){ PREMIOS_CACHE = []; }
+  return PREMIOS_CACHE;
+}
+async function _mostrarPremiosMarquee(){
+  const box=$('#premiosMarquee'); if(!box) return;
+  const data = await _cargarPremiosRecientes();
+  if(!data.length){ box.style.display='none'; return; }
+  const items = data.map(r=>`<span class="pm-item">🎉 <b>${esc(r.nombre||'Cliente')}</b> se llevó ${esc(mlLabel(r.ml||'2'))} de ${esc(r.premio||'un perfume')} <span class="pm-sep">✦</span></span>`).join('');
+  box.innerHTML = `<div class="pm-strip"><div class="pm-track">${items}${items}</div></div>`;
+  box.style.display='block';
 }
 function openPuntosInfo(){
   const ov=$('#puntosInfoOv'); if(!ov) return;
@@ -2781,8 +2821,9 @@ const _usaCuentasPreorden = !!(CONFIG.SECCIONES && (CONFIG.SECCIONES.preorden ||
 const MI_CUENTA_KEY = 'micuenta_'+(CONFIG.TIENDA_NOMBRE||'tienda');
 let MI_CUENTA = null;
 try{ MI_CUENTA = JSON.parse(localStorage.getItem(MI_CUENTA_KEY)||'null'); }catch(e){}
+if(MI_CUENTA){ cliente.nombre = cliente.nombre || MI_CUENTA.nombre || ''; cliente.tel = cliente.tel || MI_CUENTA.telefono || ''; }
 window.MI_CUENTA = MI_CUENTA;
-function _guardarMiCuenta(v){ MI_CUENTA=v; window.MI_CUENTA=v; try{ if(v) localStorage.setItem(MI_CUENTA_KEY, JSON.stringify(v)); else localStorage.removeItem(MI_CUENTA_KEY); }catch(e){} }
+function _guardarMiCuenta(v){ MI_CUENTA=v; window.MI_CUENTA=v; if(v){ cliente.nombre=v.nombre||cliente.nombre; cliente.tel=v.telefono||cliente.tel; } try{ if(v) localStorage.setItem(MI_CUENTA_KEY, JSON.stringify(v)); else localStorage.removeItem(MI_CUENTA_KEY); }catch(e){} }
 function openMiCuenta(){
   if(MI_CUENTA && MI_CUENTA.codigo){ mostrarMiCuentaPanel(); return; }
   $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
@@ -2828,11 +2869,59 @@ async function _miCuentaIngresarCodigo(){
     const { data, error } = await sb.rpc('cliente_por_codigo', { p_codigo:cod });
     const row=(data&&data[0])||null;
     if(error || !row){ box.innerHTML=`<div class="genero" style="color:#c0392b">Código no encontrado o aún no aprobado.</div>`; return; }
-    _guardarMiCuenta({ codigo:row.codigo, nombre:row.nombre, telefono:row.telefono });
+    _guardarMiCuenta({ codigo:row.codigo, nombre:row.nombre, telefono:row.telefono, dni:row.dni||'', dep:row.departamento||'', prov:row.provincia||'', dist:row.distrito||'', agencia_dir:row.agencia_dir||'' });
     mostrarMiCuentaPanel();
   }catch(e){ box.innerHTML=`<div class="genero" style="color:#c0392b">Ocurrió un error. Intenta de nuevo.</div>`; }
 }
 function _cerrarMiCuenta(){ _guardarMiCuenta(null); toast('Sesión cerrada'); closeProduct(); }
+function _renderMcEnvioBox(){
+  const box=$('#mcEnvioBox'); if(!box) return;
+  const c=MI_CUENTA||{};
+  const tieneCompleto = !!(c.dni && c.dep && c.prov && c.dist && c.agencia_dir);
+  box.innerHTML = `<div id="mcEnvioResumen">${tieneCompleto
+      ? `<div class="genero">✅ DNI ${esc(c.dni)} · ${esc(c.dist)}, ${esc(c.prov)}, ${esc(c.dep)} · ${esc(c.agencia_dir)}</div><button class="np" id="mcEnvioEdit" style="margin-top:8px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">✏️ Editar</button>`
+      : `<button class="np" id="mcEnvioEdit" style="padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">+ Completar datos de envío</button>`
+    }</div>`;
+  $('#mcEnvioEdit').onclick=_mostrarFormEnvio;
+}
+function _mostrarFormEnvio(){
+  const box=$('#mcEnvioBox'); const c=MI_CUENTA||{};
+  box.innerHTML=`<div class="spinner"></div>`;
+  _loadPeru(()=>{
+    const UB=window.PERU_UBIGEO||{};
+    const deps=Object.keys(UB);
+    const dep=c.dep||deps[0]||'';
+    const provs=Object.keys(UB[dep]||{});
+    const prov=c.prov||provs[0]||'';
+    const dists=(UB[dep]||{})[prov]||[];
+    const dist=c.dist||dists[0]||'';
+    box.innerHTML=`
+      <div class="miniform"><input id="mcDni" placeholder="DNI" value="${esc(c.dni||'')}" inputmode="numeric"></div>
+      <div class="miniform" style="margin-top:8px"><select id="mcDep">${deps.map(d=>`<option ${d===dep?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
+      <div class="miniform" style="margin-top:8px"><select id="mcProv">${provs.map(p=>`<option ${p===prov?'selected':''}>${esc(p)}</option>`).join('')}</select></div>
+      <div class="miniform" style="margin-top:8px"><select id="mcDist">${dists.map(d=>`<option ${d===dist?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
+      <div class="miniform" style="margin-top:8px"><input id="mcAgencia" placeholder="Dirección de la agencia Shalom" value="${esc(c.agencia_dir||'')}"></div>
+      <button class="add-cta dark" id="mcEnvioSave" style="margin-top:10px">Guardar datos de envío</button>
+      <div id="mcEnvioResult" style="margin-top:8px"></div>`;
+    const dsel=$('#mcDep'), psel=$('#mcProv'), dsel2=$('#mcDist');
+    dsel.onchange=()=>{ const p2=Object.keys(UB[dsel.value]||{}); psel.innerHTML=p2.map(p=>`<option>${esc(p)}</option>`).join(''); psel.onchange(); };
+    psel.onchange=()=>{ const d2=(UB[dsel.value]||{})[psel.value]||[]; dsel2.innerHTML=d2.map(d=>`<option>${esc(d)}</option>`).join(''); };
+    $('#mcEnvioSave').onclick=_guardarDatosEnvio;
+  });
+}
+async function _guardarDatosEnvio(){
+  const dni=($('#mcDni').value||'').trim();
+  const dep=$('#mcDep').value, prov=$('#mcProv').value, dist=$('#mcDist').value;
+  const agencia=($('#mcAgencia').value||'').trim();
+  const res=$('#mcEnvioResult'); res.innerHTML='<div class="spinner"></div>';
+  try{
+    const { error } = await sb.rpc('cliente_actualizar_envio', { p_codigo:MI_CUENTA.codigo, p_dni:dni||null, p_departamento:dep||null, p_provincia:prov||null, p_distrito:dist||null, p_agencia_dir:agencia||null });
+    if(error) throw error;
+    _guardarMiCuenta(Object.assign({}, MI_CUENTA, { dni, dep, prov, dist, agencia_dir:agencia }));
+    _renderMcEnvioBox();
+    toast('Datos de envío guardados');
+  }catch(e){ res.innerHTML='<div class="genero" style="color:#c0392b">No se pudo guardar. Intenta de nuevo.</div>'; }
+}
 async function mostrarMiCuentaPanel(){
   if(!MI_CUENTA || !MI_CUENTA.codigo){ return openMiCuenta(); }
   $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
@@ -2841,6 +2930,9 @@ async function mostrarMiCuentaPanel(){
       <h2>Hola, ${esc(MI_CUENTA.nombre)} 👋</h2>
       <div class="genero">Código: <b style="font-family:monospace">${esc(MI_CUENTA.codigo)}</b></div>
       <div id="mcPuntosBox" class="mc-box" style="margin-top:14px"><div class="spinner"></div></div>
+      <div class="mc-h" style="margin-top:20px">📦 Datos para envío Shalom <span style="font-weight:400;color:var(--muted)">(opcional)</span></div>
+      <div class="genero">Complétalos una vez y se autocompletarán en tus próximos pedidos por envío.</div>
+      <div id="mcEnvioBox" class="mc-box" style="margin-top:8px"></div>
       <div class="mc-h" style="margin-top:20px">🧾 Mis compras</div>
       <div id="mcHistorial" style="margin-top:8px"><div class="spinner"></div></div>
       <button class="np" id="mcLogout" style="margin-top:18px;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">Cerrar sesión</button>
@@ -2848,6 +2940,7 @@ async function mostrarMiCuentaPanel(){
   $('#closeSheet').onclick=closeProduct;
   $('#mcLogout').onclick=_cerrarMiCuenta;
   $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+  _renderMcEnvioBox();
   try{
     const { data, error } = await sb.rpc('cliente_historial', { p_codigo: MI_CUENTA.codigo });
     if(error) throw error;
@@ -3160,9 +3253,11 @@ function render(){
     const sello = precioSellado(p);
     const main = imgsOf(p)[0];
     const off = maxOfertaCard(p);
+    const pts = puntosCardDe(p, !!sello);
     const precioHtml = sello
       ? `<span class="precio precio-sello"><small>Perfume completo</small><b>${sello.antes?`<span class="antes">${fmt(sello.antes)}</span>`:''}${fmt(sello.actual)}</b></span>`
       : `<span class="precio">${desde!=null?`<small>Desde</small><b>${fmt(desde)}</b>`:'<small>Precio</small><b>Consultar</b>'}</span>`;
+    const ptsHtml = pts ? `<span class="card-pts">🎁 +${pts} pts</span>` : '';
     return `<button class="card ${agotado(p)?'agotado':''} ${p.destacado?'card-dest':''}" data-id="${p.id}">
       ${p.destacado ? '<span class="badge-dest">★ Destacado</span>' : ''}
       ${off ? `<span class="badge-off">−${off}%</span>` : ''}
@@ -3172,7 +3267,7 @@ function render(){
         <span class="nombre">${esc(p.nombre)}</span>
         ${stockLine(p)}
         <div class="foot">
-          ${precioHtml}
+          <div class="foot-price">${precioHtml}${ptsHtml}</div>
           <span class="ver">→</span>
         </div>
       </div>
@@ -3307,7 +3402,22 @@ function _toRgbArr(c){
   if(c==='transparent') return [0,0,0,0];
   return null;
 }
+/* Le pide al propio navegador que resuelva un color-mix(...) (garantizado por la especificación para propiedades de color simples), mucho más confiable que calcularlo a mano. */
+function _browserResolveColor(colorStr){
+  try{
+    const probe=document.createElement('span');
+    probe.style.cssText='position:fixed; left:-9999px; top:0; visibility:hidden;';
+    document.body.appendChild(probe);
+    probe.style.color=colorStr;
+    const resolved=getComputedStyle(probe).color;
+    document.body.removeChild(probe);
+    if(resolved && resolved.indexOf('color-mix(')===-1 && /^rgba?\(/.test(resolved)) return resolved;
+  }catch(e){}
+  return null;
+}
 function _mixColorMixString(full){
+  const viaBrowser=_browserResolveColor(full);
+  if(viaBrowser) return viaBrowser;
   try{
     const inner=full.slice(full.indexOf('(')+1, full.lastIndexOf(')'));
     const body=inner.replace(/^in\s+[\w-]+\s*,\s*/i,'');
@@ -3346,7 +3456,7 @@ function _resolveColorMixInString(str){
   return out;
 }
 function _sanitizeCloneColors(root){
-  const props=['backgroundColor','backgroundImage','borderTopColor','borderRightColor','borderBottomColor','borderLeftColor','boxShadow','color','outlineColor'];
+  const props=['backgroundColor','backgroundImage','background','borderTopColor','borderRightColor','borderBottomColor','borderLeftColor','boxShadow','color','outlineColor','textDecorationColor'];
   const all=[root, ...root.querySelectorAll('*')];
   all.forEach(el=>{
     let cs; try{ cs=getComputedStyle(el); }catch(e){ return; }
@@ -4086,7 +4196,16 @@ function _loadPeru(cb){
 function _coEmp(R){ const e=CONFIG.EMPAQUE||{activo:true,monto:5,gratis_desde:150}; const envio=(CO.cli.courier==='ica')?'ica':'shalom'; const gd=Number(e.gratis_desde||150); const emp=(e.activo!==false && envio==='shalom' && R.total<gd)?Number(e.monto||5):0; return {emp, total:R.total+emp}; }
 function openCheckout(R){
   if(!CART.length){ toast('Tu pedido está vacío'); return; }
-  CO={ step:0, R, cli:Object.assign({courier:'shalom_agencia', tipoDoc:'DNI'}, CO.cli, {nombre:cliente.nombre||CO.cli.nombre||''}), pago:CO.pago||{metodo:'yape'} };
+  const base={courier:'shalom_agencia', tipoDoc:'DNI'};
+  if(MI_CUENTA){
+    base.nombre=MI_CUENTA.nombre||''; base.tel=MI_CUENTA.telefono||'';
+    if(MI_CUENTA.dni) base.doc=MI_CUENTA.dni;
+    if(MI_CUENTA.dep) base.dep=MI_CUENTA.dep;
+    if(MI_CUENTA.prov) base.prov=MI_CUENTA.prov;
+    if(MI_CUENTA.dist) base.dist=MI_CUENTA.dist;
+    if(MI_CUENTA.agencia_dir) base.agencia_dir=MI_CUENTA.agencia_dir;
+  }
+  CO={ step:0, R, cli:Object.assign(base, CO.cli, {nombre:cliente.nombre||CO.cli.nombre||base.nombre||''}), pago:CO.pago||{metodo:'yape'} };
   $('#coOv').style.display='flex'; document.body.style.overflow='hidden'; if(window._navReady)_navPush('checkout'); renderCheckout();
   _loadPeru(()=>{ if($('#coOv').style.display==='flex' && CO.step===0) coStepEnvio(); });
 }

@@ -1,5 +1,5 @@
 // Service worker — permite instalar como app (catálogo y admin) y uso offline básico.
-const CACHE = 'catalogo-v65';
+const CACHE = 'catalogo-v66';
 const CORE = ['./','./index.html','./admin.html','./config.js','./promos.js','./qrcode.js','./peru.js','./install.js',
               './manifest.webmanifest','./manifest-admin.webmanifest',
               './icons/icon-192.png','./icons/icon-512.png','./icons/icon-180.png'];

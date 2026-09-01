@@ -3476,32 +3476,88 @@ function _sanitizeCloneColors(root){
   });
 }
 function _buildShareCardHTML(p){
+  const F='font-family:Arial,Helvetica,sans-serif'; const S='font-family:Georgia,\'Times New Roman\',serif';
   const img=imgsOf(p)[0]||'';
   const sello=precioSellado(p);
   const desde=precioDesde(p);
-  const pres=presActivas(p).filter(x=>!_esSellado(x.ml)).slice(0,5);
-  const pts=puntosCardDe(p, !!sello);
-  const priceLbl = sello ? 'PERFUME COMPLETO' : 'DESDE';
-  const priceVal = sello ? fmt(sello.actual) : (desde!=null?fmt(desde):'Consultar');
-  const desc=String(p.descripcion||'').slice(0,230);
-  const sizesHtml = pres.map(x=>`<div style="border:1px solid #e6e0d4;border-radius:10px;padding:8px 12px;text-align:center;min-width:66px;background:#fbf9f5">
-      <div style="font-weight:700;font-size:14px;color:#1a1714;font-family:Arial,sans-serif">${esc(fmt(precioEfectivo(p,x)))}</div>
-      <div style="font-size:11px;color:#8a8378;font-family:Arial,sans-serif">${esc(mlLabel(x.ml))}</div>
-    </div>`).join('');
-  return `<div style="width:1100px; background:#ffffff; padding:44px; font-family:Arial,Helvetica,sans-serif; display:flex; gap:38px; box-sizing:border-box; color:#1a1714">
-    <div style="flex:0 0 400px; height:400px; background:#f3efe6; border-radius:16px; display:flex; align-items:center; justify-content:center; overflow:hidden">
-      ${img?`<img src="${esc(img)}" style="max-width:100%; max-height:100%; object-fit:contain" crossorigin="anonymous">`:''}
+  const pres=[...presActivas(p)].sort((a,b)=>(_esSellado(b.ml)?1:0)-(_esSellado(a.ml)?1:0));
+  const notas=NOTAS_BY_PROD[p.id]||[];
+  const perfilWords=String(p.perfil||'').split(/[·,;/|]+/).map(s=>s.trim()).filter(Boolean);
+  const oca=ocasionItems(p.ocasion||'').slice(0,8);
+  const dia=_tieneKw((p.ocasion||'')+' '+(p.descripcion||''),['día','dia','diurno','oficina','diario']);
+  const noche=_tieneKw((p.ocasion||'')+' '+(p.descripcion||''),['noche','nocturno','cita','fiesta','evento']);
+  const desc=String(p.descripcion||'').slice(0,260);
+
+  const chip=(inner,extra)=>`<span style="display:inline-flex;align-items:center;gap:4px;border:1px solid #e6e0d4;background:#fbf9f5;color:#1a1714;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;${F};${extra||''}">${inner}</span>`;
+  const notasHtml = notas.length ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">${notas.slice(0,8).map(n=>{
+      const real = n.imagen_url && !String(n.imagen_url).startsWith('data:');
+      return `<div style="display:flex;flex-direction:column;align-items:center;width:56px">
+        <div style="width:46px;height:46px;border-radius:50%;overflow:hidden;background:${real?'#f3efe6':_notaColor(n.nombre)};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;${F};font-size:15px">
+          ${real?`<img src="${esc(n.imagen_url)}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover">`:esc((n.nombre||'?')[0].toUpperCase())}
+        </div>
+        <div style="font-size:10px;color:#8a8378;text-align:center;margin-top:4px;${F}">${esc(n.nombre)}</div>
+      </div>`;
+    }).join('')}</div>` : '';
+
+  const perfilHtml = perfilWords.length ? `<div style="margin-top:20px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#8a8378;margin-bottom:8px;${F}">Perfil aromático</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${perfilWords.map(w=>{ const m=_perfilMeta(w); return chip(`${m.e} ${esc(w)}`); }).join('')}</div>
+    </div>` : '';
+
+  const bar=(label,frac,txt)=>`<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#1a1714;margin-bottom:5px;${F}"><span>${label}</span><span>${esc(_nivelTxt(frac))}</span></div>
+      <div style="height:9px;background:#eee5d6;border-radius:999px;overflow:hidden"><div style="height:100%;width:${Math.round(frac*100)}%;background:#3b3b40"></div></div>
+      ${txt?`<div style="font-size:11px;color:#8a8378;margin-top:3px;${F}">${esc(txt)}</div>`:''}
+    </div>`;
+  const olfativoHtml = (p.longevidad||p.estela) ? `<div style="margin-top:20px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#8a8378;margin-bottom:8px;${F}">Perfil olfativo</div>
+      ${p.longevidad?bar('Longevidad',longevidadFrac(p.longevidad),p.longevidad):''}
+      ${p.estela?bar('Estela',estelaFrac(p.estela),p.estela):''}
+    </div>` : '';
+
+  const usoHtml = (dia||noche) ? `<div style="margin-top:18px;display:flex;gap:8px">
+      ${chip('☀️ Día', dia?'background:#eaf2fb;border-color:#c7dbf3':'opacity:.4')}
+      ${chip('🌙 Noche', noche?'background:#2a2620;color:#fff;border-color:#2a2620':'opacity:.4')}
+    </div>` : '';
+
+  const ocaHtml = oca.length ? `<div style="margin-top:20px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#8a8378;margin-bottom:8px;${F}">Ocasiones de uso</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${oca.map(o=>chip(`${o.emoji} ${esc(o.txt)}`)).join('')}</div>
+    </div>` : '';
+
+  const pts=(ml,sel)=>{ if(!(CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.activo!==false)) return null; if(sel) return _selloPtsFor(p.categoria); const pd=(CONFIG.REGALO_COMBO.puntos||{})[p.categoria]||{}; const v=pd[String(ml)]; return v!=null?Number(v):null; };
+  const sizesHtml = pres.length ? `<div style="margin-top:24px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#8a8378;margin-bottom:8px;${F}">Tamaños y presentaciones</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${pres.map(x=>{
+        const sel=_esSellado(x.ml); const ef=precioEfectivo(p,x); const p2=pts(x.ml,sel);
+        return `<div style="border:1.5px solid ${sel?'#d4aa5a':'#e6e0d4'};background:${sel?'#faf1d9':'#fbf9f5'};border-radius:10px;padding:10px 14px;text-align:center;min-width:${sel?'96px':'76px'}">
+          <div style="font-weight:800;font-size:${sel?'18px':'15px'};color:#1a1714;${F}">${esc(fmt(ef))}</div>
+          <div style="font-size:11px;color:#8a8378;${F};margin-top:1px">${esc(mlLabel(x.ml))}</div>
+          ${p2?`<div style="margin-top:4px;display:inline-block;background:#ffdf7e;color:#5c3d00;font-weight:800;font-size:10px;padding:2px 6px;border-radius:999px;${F}">🎁+${p2}</div>`:''}
+        </div>`;
+      }).join('')}</div>
+    </div>` : '';
+
+  return `<div style="width:1180px; background:#ffffff; padding:44px; ${F}; color:#1a1714; box-sizing:border-box">
+    <div style="display:flex; gap:38px">
+      <div style="flex:0 0 360px">
+        <div style="width:360px; height:360px; background:#f3efe6; border-radius:16px; display:flex; align-items:center; justify-content:center; overflow:hidden">
+          ${img?`<img src="${esc(img)}" crossorigin="anonymous" style="max-width:100%; max-height:100%; object-fit:contain">`:''}
+        </div>
+        ${notasHtml}
+      </div>
+      <div style="flex:1; min-width:0">
+        <div style="font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#8a8378; margin-bottom:8px">${esc(p.marca||'')}</div>
+        <div style="font-size:38px; font-weight:800; color:#1a1714; margin-bottom:10px; ${S}; line-height:1.1">${esc(p.nombre)}</div>
+        ${desc?`<div style="font-size:14px; color:#5a5450; line-height:1.5; margin-bottom:6px">${esc(desc)}</div>`:''}
+        ${perfilHtml}
+        ${olfativoHtml}
+        ${usoHtml}
+        ${ocaHtml}
+      </div>
     </div>
-    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; min-width:0">
-      <div style="font-size:14px; letter-spacing:2px; text-transform:uppercase; color:#8a8378; margin-bottom:10px">${esc(p.marca||'')}</div>
-      <div style="font-size:42px; font-weight:800; color:#1a1714; margin-bottom:14px; font-family:Georgia,'Times New Roman',serif; line-height:1.1">${esc(p.nombre)}</div>
-      ${desc?`<div style="font-size:16px; color:#5a5450; line-height:1.55; margin-bottom:22px">${esc(desc)}</div>`:''}
-      <div style="font-size:13px; font-weight:700; letter-spacing:1px; color:#9a7d2e; text-transform:uppercase; margin-bottom:4px">${priceLbl}</div>
-      <div style="font-size:38px; font-weight:800; color:#1a1714">${esc(priceVal)}</div>
-      ${pts?`<div style="margin-top:12px; display:inline-block; width:fit-content; background:#ffdf7e; color:#5c3d00; font-weight:800; font-size:14px; padding:6px 14px; border-radius:999px">🎁 +${pts} pts</div>`:''}
-      ${sizesHtml?`<div style="display:flex; gap:10px; margin-top:26px; flex-wrap:wrap">${sizesHtml}</div>`:''}
-      <div style="margin-top:32px; font-size:14px; color:#8a8378">${esc(CONFIG.TIENDA_NOMBRE||'')}${CONFIG.WHATSAPP?' · WhatsApp '+esc(CONFIG.WHATSAPP):''}</div>
-    </div>
+    ${sizesHtml}
+    <div style="margin-top:30px; padding-top:18px; border-top:1px solid #ece5d6; font-size:13px; color:#8a8378">${esc(CONFIG.TIENDA_NOMBRE||'')}${CONFIG.WHATSAPP?' · WhatsApp '+esc(CONFIG.WHATSAPP):''}</div>
   </div>`;
 }
 function _shareFichaImg(p, download){

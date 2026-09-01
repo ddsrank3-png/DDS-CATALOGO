@@ -182,6 +182,7 @@ img{display:block;max-width:100%}
       <button class="tab" data-tab="consolidado">Consolidado</button>
       <button class="tab" data-tab="accesos">Accesos</button>
       <button class="tab" data-tab="ventas">Ventas</button>
+      <button class="tab" data-tab="clientes">Clientes</button>
       <button class="tab" data-tab="ajustes">Ajustes</button>
     </div>
     <button class="btn ghost" id="installBtn" style="display:none">⤓ Instalar app</button>
@@ -235,6 +236,15 @@ img{display:block;max-width:100%}
     <div id="ventasResumen"></div>
     <div id="ventasStock"></div>
     <div class="list" id="listVentas"></div>
+  </section>
+
+  <section id="tab-clientes" style="display:none">
+    <div class="bar"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem">Clientes DDS Parfums</h3></div>
+    <div class="hint" style="margin-bottom:14px">Registros hechos desde el catálogo. Aprueba y asigna un código para que el cliente pueda ver sus puntos e historial.</div>
+    <h4 style="margin:6px 0">🕐 Pendientes de aprobar</h4>
+    <div class="list" id="listClientesPend"></div>
+    <h4 style="margin:22px 0 6px">✅ Clientes aprobados</h4>
+    <div class="list" id="listClientesAprob"></div>
   </section>
 
   <section id="tab-ajustes" style="display:none">
@@ -425,6 +435,8 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   $('#tab-accesos').style.display   = t.dataset.tab==='accesos'?'block':'none';
   if(t.dataset.tab==='accesos') loadAccesos();
   $('#tab-ventas').style.display   = t.dataset.tab==='ventas'?'block':'none';
+  $('#tab-clientes').style.display = t.dataset.tab==='clientes'?'block':'none';
+  if(t.dataset.tab==='clientes') loadClientes();
   $('#tab-ajustes').style.display  = t.dataset.tab==='ajustes'?'block':'none';
 });
 
@@ -443,11 +455,62 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 async function boot(){
   const S=(window.CONFIG&&CONFIG.SECCIONES)||{};
   const on=k=>S[k]!==false;
-  const tasks=[loadNotas(), loadProductos(), loadPromos(), loadCombos(), loadVentas(), loadAjustes()];
+  const tasks=[loadNotas(), loadProductos(), loadPromos(), loadCombos(), loadVentas(), loadAjustes(), loadClientes()];
   if(on('preorden'))    tasks.push(loadPre(), loadPrePedidos());
   if(on('consolidado')) tasks.push(loadCon(), loadConPedidos(), loadGrupos());
   await Promise.all(tasks.map(p=>Promise.resolve(p).catch(e=>console.warn('carga omitida:',e&&e.message))));
   renderVentas();
+}
+
+/* ============ Clientes DDS (registro + código + puntos) ============ */
+let CLIENTES=[];
+async function loadClientes(){
+  const {data,error}=await sb.from('clientes').select('*').order('creado_en',{ascending:false});
+  if(error){ console.warn('No se pudo cargar clientes:',error.message); CLIENTES=[]; } else CLIENTES=data||[];
+  renderClientes();
+}
+function renderClientes(){
+  const pend=CLIENTES.filter(c=>c.estado==='pendiente');
+  const aprob=CLIENTES.filter(c=>c.estado==='aprobado');
+  const rech=CLIENTES.filter(c=>c.estado==='rechazado');
+  const fmtF=d=>{ try{ return new Date(d).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'}); }catch(e){ return ''; } };
+  $('#listClientesPend').innerHTML = pend.length ? pend.map(c=>`
+    <div class="row" style="align-items:center">
+      <div style="flex:1">
+        <b>${esc(c.nombre)}</b>
+        <div class="hint">📱 ${esc(c.telefono)} · ${fmtF(c.creado_en)}</div>
+      </div>
+      <button class="btn" data-aprobar="${c.id}">✅ Aprobar y asignar código</button>
+      <button class="btn ghost" data-rechazar="${c.id}">✕ Rechazar</button>
+    </div>`).join('') : '<div class="hint">No hay solicitudes pendientes.</div>';
+  $('#listClientesAprob').innerHTML = aprob.length ? aprob.map(c=>`
+    <div class="row" style="align-items:center">
+      <div style="flex:1">
+        <b>${esc(c.nombre)}</b> — <span style="font-family:monospace;font-weight:700">${esc(c.codigo||'')}</span>
+        <div class="hint">📱 ${esc(c.telefono)} · aprobado ${fmtF(c.aprobado_en)}</div>
+      </div>
+      <button class="btn ghost" data-revocar="${c.id}">Revocar</button>
+    </div>`).join('') : '<div class="hint">Todavía no hay clientes aprobados.</div>';
+  document.querySelectorAll('[data-aprobar]').forEach(b=>b.onclick=()=>aprobarCliente(b.dataset.aprobar));
+  document.querySelectorAll('[data-rechazar]').forEach(b=>b.onclick=()=>cambiarEstadoCliente(b.dataset.rechazar,'rechazado'));
+  document.querySelectorAll('[data-revocar]').forEach(b=>b.onclick=()=>{ if(confirm('¿Quitarle el acceso a este cliente? Su código dejará de funcionar.')) cambiarEstadoCliente(b.dataset.revocar,'pendiente',true); });
+}
+async function aprobarCliente(id){
+  const codigo=(prompt('Escribe el código de cliente que le vas a asignar (ej. DDS-1234):')||'').trim();
+  if(!codigo) return;
+  const dup=CLIENTES.some(c=>c.codigo && c.codigo.toLowerCase()===codigo.toLowerCase());
+  if(dup){ toast('Ese código ya está en uso, elige otro',true); return; }
+  const {error}=await sb.from('clientes').update({estado:'aprobado', codigo, aprobado_en:new Date().toISOString()}).eq('id',id);
+  if(error){ toast('Error: '+error.message,true); return; }
+  toast('Cliente aprobado con código '+codigo);
+  loadClientes();
+}
+async function cambiarEstadoCliente(id, estado, limpiarCodigo){
+  const payload={estado}; if(limpiarCodigo) payload.codigo=null;
+  const {error}=await sb.from('clientes').update(payload).eq('id',id);
+  if(error){ toast('Error: '+error.message,true); return; }
+  toast('Actualizado');
+  loadClientes();
 }
 
 async function loadAjustes(){

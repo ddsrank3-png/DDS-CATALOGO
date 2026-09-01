@@ -141,18 +141,24 @@ const CONFIG = {
   //  incremento>0 hace que el descuento por unidad crezca con la cantidad (0 = fijo).
   SELLADO_DESC: { activo:true, desde:2, por_unidad:5, incremento:0 },
 
-  // Regalo por combo: cada decant suma PUNTOS según su talla; cada "meta" puntos = 1 regalo (2ml gratis).
-  //  5 árabe 2ml=60, 4 árabe 3ml=60, 3 árabe 5ml=60, 2 árabe 10ml=60 · 4 dis 2ml, 3 dis 3ml, 2 dis 5ml, 1 dis 10ml+1 · 3 nicho 2ml, 2 nicho 3ml, 1 nicho 5ml.
-  //  Mezclando categorías/tallas los puntos se suman (un diseñador vale ~2 árabes, un nicho ~2 diseñador).
+  // Regalo por combo: cada decant suma PUNTOS según su talla; catálogo de premios con varios niveles (más puntos = mejor premio).
+  //  Mezclando categorías/tallas los puntos se suman (un diseñador vale ~más que un árabe, un nicho ~más que un diseñador).
   REGALO_COMBO: {
     activo: true,
-    ml: "2",           // talla del regalo
-    meta: 60,          // puntos por cada regalo
-    sellado_pts: 45,   // puntos que suma un perfume sellado hacia el regalo (independiente de 'meta')
+    ml: "2",           // (compatibilidad) talla de regalo por defecto si no se usan 'tiers'
+    meta: 60,          // (compatibilidad) puntos por defecto si no se usan 'tiers'
+    // Catálogo de premios: al llegar a los puntos de un nivel puedes elegir ESE premio.
+    // Si sigues sumando hasta el siguiente nivel, puedes optar por el mejor en su lugar (no se acumulan ambos).
+    tiers: [
+      { meta: 60, ml: "2", categoria: "Árabe",     label: "Decant 2ml Árabe" },
+      { meta: 90, ml: "2", categoria: "Diseñador", label: "Decant 2ml Diseñador" },
+    ],
+    // Puntos que suma un PERFUME SELLADO según su categoría (independiente de los decants). 'default' cubre categorías no listadas.
+    sellado_pts: { "Árabe": 55, "Diseñador": 80, "default": 45 },
     puntos: {
       "Árabe":     { "2":12, "3":15, "5":20, "10":30 },
-      "Diseñador": { "2":15, "3":20, "5":30, "10":48 },
-      "Nicho":     { "2":20, "3":30, "5":60, "10":60 },
+      "Diseñador": { "2":15, "3":20, "5":30, "10":40 },
+      "Nicho":     { "2":20, "3":30, "5":40, "10":50 },
     },
   },
 

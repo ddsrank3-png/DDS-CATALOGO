@@ -52,9 +52,16 @@ input{font-family:inherit}
 .stk.out{color:var(--danger)} .stk.low{color:var(--gold-2)} .stk.ok{color:var(--muted)}
 .card .stk{display:inline-block; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:3px 8px; margin-top:4px; font-weight:700}
 .card .stk.out{background:#fdecea; border-color:#f3c6c1}
-.card .stk.low{background:linear-gradient(120deg,#ff7a45,#ff3d68); border-color:transparent; color:#fff!important; animation:lowPulse 1.5s ease-in-out infinite}
+.card .stk.low{background:linear-gradient(120deg,#ff7a45,#ff3d68); border-color:transparent; color:#fff!important}
+.card .stk.low.b1{animation:lowPulseStrong 0.9s ease-in-out infinite}
+.card .stk.low.b2{animation:lowPulseStrong 1.3s ease-in-out infinite}
+.card .stk.low.b3{animation:lowPulse 1.6s ease-in-out infinite}
+.card .stk.low.b4{animation:lowPulseSoft 2.4s ease-in-out infinite}
 .card .stk.ok{background:#eafaf1; border-color:#bfe9d4; color:#0f8a4f}
+@keyframes lowPulseStrong{0%,100%{box-shadow:0 0 0 0 rgba(255,61,104,.55); transform:scale(1)}50%{box-shadow:0 0 12px 4px rgba(255,61,104,.65); transform:scale(1.05)}}
 @keyframes lowPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,61,104,.35)}50%{box-shadow:0 0 8px 2px rgba(255,61,104,.4)}}
+@keyframes lowPulseSoft{0%,100%{box-shadow:0 0 0 0 rgba(255,61,104,.22)}50%{box-shadow:0 0 5px 1px rgba(255,61,104,.24)}}
+@media(prefers-reduced-motion:reduce){ .card .stk.low.b1,.card .stk.low.b2,.card .stk.low.b3,.card .stk.low.b4{animation:none} }
 .stk.pedido,.card .stk.pedido{color:#1a5276; background:#eaf2fb; border-color:#c7dbf3}
 .pd-stock.pedido{color:#1a5276}
 .pd-size-stk.pedido{color:#1a5276; background:#eaf2fb; border-color:#c7dbf3}
@@ -152,6 +159,8 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .pinfo-ex{font-size:.84rem; padding:4px 0; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
 .pinfo-ex .ex-n{font-weight:800; color:var(--gold-deep)}
 .pinfo-ex .ex-pts{color:var(--muted-2); font-size:.76rem}
+.pinfo-ex.pinfo-tier{background:var(--panel); border:1px solid var(--gold-3); border-radius:8px; padding:8px 10px; font-weight:700}
+.pinfo-tiernote{font-size:.74rem; color:var(--muted-2); margin-top:6px; line-height:1.4}
 .pinfo-note{font-size:.78rem; color:var(--muted-2); background:var(--gold-pale); border-radius:10px; padding:9px 12px; margin-bottom:16px}
 .pinfo-cta{width:100%; background:linear-gradient(120deg,#7b2ff7,#f107a3 55%,#ff7a18); color:#fff; border:none; border-radius:12px; padding:13px; font-weight:800; font-size:.9rem; cursor:pointer}
 .share-card{position:relative; background:var(--panel); color:var(--cream); width:100%; max-width:360px; border-radius:20px; padding:24px 22px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -226,6 +235,11 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 
 .state{grid-column:1/-1; text-align:center; color:var(--muted); padding:70px 20px}
 .spinner{width:34px; height:34px; margin:0 auto 14px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--gold-2); animation:spin .8s linear infinite}
+.mc-bd{max-width:520px}
+.mc-box{background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:16px}
+.mc-h{font-weight:700; font-size:.92rem}
+.mc-pts{font-size:2rem; font-weight:800; color:var(--gold-deep); margin:6px 0}
+.add-cta.dark{background:#111!important; color:#fff!important}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* Modal producto */
@@ -1374,7 +1388,7 @@ function stockLine(p){ const s=stockDe(p); if(s==null) return '';
   const low=CONFIG.STOCK_BAJO||5;
   if(s===0) return '<span class="stk pedido">¡A pedido!</span>';
   if(s<0) return '<span class="stk out">Agotado</span>';
-  if(s<=low) return `<span class="stk low">¡Últimas ${s} unidades!</span>`;
+  if(s<=low){ const bl = s===1?'b1':(s===2?'b2':(s===3?'b3':'b4')); return `<span class="stk low ${bl}">¡Últimas ${s} unidades!</span>`; }
   return `<span class="stk ok">${s} disponibles</span>`;
 }
 
@@ -1501,6 +1515,18 @@ function setView(v, fromPop){
   else render();
 }
 
+function regaloTiers(){
+  const cfg=CONFIG.REGALO_COMBO||{};
+  if(Array.isArray(cfg.tiers)&&cfg.tiers.length) return cfg.tiers.slice().sort((a,b)=>Number(a.meta)-Number(b.meta));
+  return [{meta:Number(cfg.meta)||60, ml:cfg.ml||'2', categoria:null, label:'Decant '+(cfg.ml||'2')+'ml'}];
+}
+function _selloPtsFor(cat){
+  const cfg=CONFIG.REGALO_COMBO||{}; const sc=cfg.sellado_pts;
+  if(sc==null) return Number(cfg.meta)||60;
+  if(typeof sc==='number') return sc;
+  const v=(sc||{})[cat]; if(v!=null) return Number(v);
+  return Number(sc.default!=null?sc.default:45);
+}
 function _puntosCfg(){ return CONFIG.PUNTOS_AVISO||{}; }
 function puntosInicioBannerHTML(){
   const c=_puntosCfg(); if(c.activo===false) return '';
@@ -1517,34 +1543,42 @@ function puntosCatBannerHTML(){
 }
 function openPuntosInfo(){
   const ov=$('#puntosInfoOv'); if(!ov) return;
-  const rc=CONFIG.REGALO_COMBO||{}; const meta=Number(rc.meta)||60; const gml=rc.ml||'2';
-  const puntos=rc.puntos||{}; const cats=Object.keys(puntos);
-  // Ejemplos reales de cuántas unidades de cada categoría se necesitan (la talla más grande primero)
+  const rc=CONFIG.REGALO_COMBO||{}; const puntos=rc.puntos||{}; const cats=Object.keys(puntos);
+  const tiers=regaloTiers();
+  const presetPrecios=CONFIG.PRESET_PRESENTACIONES||{};
+  const precioRef=(cat,ml)=>{ const arr=presetPrecios[cat]; if(!Array.isArray(arr)) return null; const it=arr.find(x=>String(x.ml)===String(ml)); return it?Number(it.precio):null; };
+  // Ejemplos reales: para cada categoría, el decant más grande y cuántos hacen falta para el primer nivel
+  const meta0=tiers[0]?Number(tiers[0].meta):60;
   const ejemplos = cats.map(cat=>{
     const tallas=puntos[cat]||{}; const mls=Object.keys(tallas).map(Number).sort((a,b)=>b-a);
     if(!mls.length) return null;
     const ml=mls[0]; const pts=Number(tallas[String(ml)])||0; if(!pts) return null;
-    const n=Math.ceil(meta/pts);
-    return {cat, ml, pts, n};
+    const n=Math.ceil(meta0/pts);
+    const precio=precioRef(cat,ml);
+    return {cat, ml, pts, n, precio};
   }).filter(Boolean);
-  const selloPts = rc.sellado_pts!=null ? Number(rc.sellado_pts) : null;
   ov.style.display='flex';
   ov.innerHTML=`<div class="pinfo-card">
     <button class="share-x" id="piX">✕</button>
     <div class="pinfo-hero">🎁</div>
     <h3 class="pinfo-h">¿Cómo funcionan los puntos?</h3>
-    <p class="pinfo-lead">Cada vez que compras un decant o un perfume sellado, sumas <b>puntos</b>. Al llegar a <b>${meta} puntos</b>, te ganas un <b>decant de ${esc(mlLabel(gml))} totalmente GRATIS</b> 🎉</p>
+    <p class="pinfo-lead">Cada vez que compras un decant o un perfume sellado, sumas <b>puntos</b>. Al juntar suficientes, te ganas un <b>decant totalmente GRATIS</b> 🎉 — mientras más juntas, mejor es el premio.</p>
     <div class="pinfo-steps">
-      <div class="pinfo-step"><span class="pn">1</span><div><b>Compra decants o el sellado</b><small>Cada tamaño y categoría suma una cantidad distinta de puntos.</small></div></div>
+      <div class="pinfo-step"><span class="pn">1</span><div><b>Compra decants o el sellado</b><small>Cada tamaño y categoría suma una cantidad distinta de puntos (se ve junto al precio).</small></div></div>
       <div class="pinfo-step"><span class="pn">2</span><div><b>Súmalos automáticamente</b><small>El carrito va mostrando tus puntos acumulados en tiempo real.</small></div></div>
-      <div class="pinfo-step"><span class="pn">3</span><div><b>Llega a ${meta} pts y gana</b><small>Elige gratis un decant de ${esc(mlLabel(gml))} del perfume que quieras.</small></div></div>
+      <div class="pinfo-step"><span class="pn">3</span><div><b>Elige tu premio</b><small>Cuantos más puntos junten, mejores premios puedes elegir.</small></div></div>
     </div>
-    ${ejemplos.length?`<div class="pinfo-ejemplos">
-      <div class="pinfo-lbl">Ejemplos para llegar a ${meta} pts</div>
-      ${ejemplos.map(e=>`<div class="pinfo-ex"><span class="ex-n">${e.n}×</span> ${esc(mlLabel(String(e.ml)))} ${esc(e.cat)} <span class="ex-pts">(${e.pts} pts c/u)</span></div>`).join('')}
-      ${selloPts?`<div class="pinfo-ex"><span class="ex-n">1×</span> Perfume Sellado <span class="ex-pts">(+${selloPts} pts)</span></div>`:''}
+    ${tiers.length?`<div class="pinfo-ejemplos">
+      <div class="pinfo-lbl">🏆 Catálogo de premios</div>
+      ${tiers.map(t=>`<div class="pinfo-ex pinfo-tier"><span class="ex-n">${t.meta} pts</span> → ${esc(t.label||('Decant '+mlLabel(t.ml)))} GRATIS</div>`).join('')}
+      <div class="pinfo-tiernote">Al llegar a los puntos de un premio, puedes elegirlo. Si sigues sumando hasta el siguiente nivel, puedes optar por el premio mejor en su lugar.</div>
     </div>`:''}
-    <div class="pinfo-note">💡 Puedes mezclar perfumes y tamaños distintos: ¡todos los puntos se suman juntos!</div>
+    ${ejemplos.length?`<div class="pinfo-ejemplos">
+      <div class="pinfo-lbl">💰 Cuánto vale cada decant (ejemplos)</div>
+      ${ejemplos.map(e=>`<div class="pinfo-ex"><span class="ex-n">${esc(mlLabel(String(e.ml)))} ${esc(e.cat)}</span><span class="ex-pts">${e.precio?fmt(e.precio)+' · ':''}+${e.pts} pts c/u</span></div>`).join('')}
+      <div class="pinfo-tiernote">Ejemplo: ${ejemplos[0]?`${ejemplos[0].n} decants de ${esc(mlLabel(String(ejemplos[0].ml)))} ${esc(ejemplos[0].cat)} (${ejemplos[0].pts} pts c/u) ya te dan los ${meta0} pts del primer premio.`:''}</div>
+    </div>`:''}
+    <div class="pinfo-note">💡 Agrégalos a tu pedido o a tu combo — puedes mezclar perfumes y tamaños distintos, ¡todos los puntos se suman juntos! y así consigues tus premios gratis.</div>
     <button class="pinfo-cta" id="piGo">Empezar a sumar puntos →</button>
   </div>`;
   ov.onclick=(e)=>{ if(e.target===ov) ov.style.display='none'; };
@@ -2052,12 +2086,18 @@ function renderArmar(){
   let puntosHtml='';
   const _rc=(CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.activo!==false)?CONFIG.REGALO_COMBO:null;
   if(_rc){
-    const meta=Number(_rc.meta)||60; const pdef=_rc.puntos||{};
+    const pdef=_rc.puntos||{}; const _tiers=regaloTiers();
     let pts=0; armarSel.forEach(i=>{ const v=(pdef[i.categoria]||{})[String(i.ml)]; if(v!=null) pts+=Number(v); });
-    const gifts=Math.floor(pts/meta); const rem = pts%meta===0 ? (pts>0?0:meta) : meta-(pts%meta);
-    if(gifts>0) puntosHtml=`<div class="armar-pts-box on">🎁 ¡Ganas ${gifts} regalo${gifts>1?'s':''}! ${rem>0?`(+${rem} pts para otro)`:''}</div>`;
-    else if(pts>0) puntosHtml=`<div class="armar-pts-box">🎁 Llevas <b>${pts} pts</b> · Te faltan <b>${rem}</b> para un regalo gratis</div>`;
-    else puntosHtml=`<div class="armar-pts-box">🎁 Suma <b>${meta} pts</b> y llévate un decant de 2ml gratis</div>`;
+    const desbloq=_tiers.filter(t=>pts>=Number(t.meta));
+    const siguiente=_tiers.find(t=>pts<Number(t.meta));
+    if(desbloq.length){
+      const top=desbloq[desbloq.length-1];
+      puntosHtml=`<div class="armar-pts-box on">🎁 ¡Ya puedes elegir ${esc((top.label||'tu premio').toLowerCase())}! ${siguiente?`(+${Number(siguiente.meta)-pts} pts para ${esc(siguiente.label||'otro premio')})`:''}</div>`;
+    } else if(pts>0 && siguiente){
+      puntosHtml=`<div class="armar-pts-box">🎁 Llevas <b>${pts} pts</b> · Te faltan <b>${Number(siguiente.meta)-pts}</b> para ${esc(siguiente.label||'un premio gratis')}</div>`;
+    } else if(_tiers[0]){
+      puntosHtml=`<div class="armar-pts-box">🎁 Suma <b>${_tiers[0].meta} pts</b> y llévate ${esc((_tiers[0].label||'un decant').toLowerCase())} gratis</div>`;
+    }
   }
   const sideHtml=`<div class="armar-scrim" id="armarScrim"></div><div class="armar-side" id="armarSide">
     <div class="armar-side-top"><b>TU COMBO</b><span>${C.n} ${C.n===1?'item':'items'}</span><button class="armar-side-x" id="armarSideX" aria-label="Cerrar">✕</button></div>
@@ -2730,7 +2770,117 @@ function abrirConsulta(){
 const LOGIN_KEY = 'cuenta_'+(CONFIG.TIENDA_NOMBRE||'tienda');
 let SESION = null;
 try{ SESION = JSON.parse(localStorage.getItem(LOGIN_KEY)||'null'); }catch(e){}
-(function(){ const b=$('#loginBtn'); if(b) b.onclick=()=>{ SESION?mostrarMisPedidos():openLogin(); }; })();
+const _usaCuentasPreorden = !!(CONFIG.SECCIONES && (CONFIG.SECCIONES.preorden || CONFIG.SECCIONES.consolidado));
+(function(){ const b=$('#loginBtn');
+  if(!b) return;
+  if(_usaCuentasPreorden){ b.onclick=()=>{ SESION?mostrarMisPedidos():openLogin(); }; }
+  else { b.title='Mi cuenta '+(CONFIG.TIENDA_NOMBRE||''); b.onclick=openMiCuenta; }
+})();
+
+/* ================= MI CUENTA DDS: registro + código de cliente + puntos ================= */
+const MI_CUENTA_KEY = 'micuenta_'+(CONFIG.TIENDA_NOMBRE||'tienda');
+let MI_CUENTA = null;
+try{ MI_CUENTA = JSON.parse(localStorage.getItem(MI_CUENTA_KEY)||'null'); }catch(e){}
+window.MI_CUENTA = MI_CUENTA;
+function _guardarMiCuenta(v){ MI_CUENTA=v; window.MI_CUENTA=v; try{ if(v) localStorage.setItem(MI_CUENTA_KEY, JSON.stringify(v)); else localStorage.removeItem(MI_CUENTA_KEY); }catch(e){} }
+function openMiCuenta(){
+  if(MI_CUENTA && MI_CUENTA.codigo){ mostrarMiCuentaPanel(); return; }
+  $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
+    <div class="bd mc-bd">
+      <div class="marca">Mi cuenta</div>
+      <h2>Cliente ${esc(CONFIG.TIENDA_NOMBRE||'')}</h2>
+      <div class="genero">Regístrate para acumular puntos con tus compras y canjear premios gratis.</div>
+      <div class="mc-box">
+        <div class="mc-h">✨ Regístrate como cliente</div>
+        <div class="miniform" style="margin-top:10px"><input id="mcNombre" placeholder="Nombre completo *"></div>
+        <div class="miniform" style="margin-top:10px"><input id="mcTel" placeholder="Número de celular *" inputmode="numeric"></div>
+        <button class="add-cta" id="mcRegBtn" style="margin-top:12px">Registrarme como cliente ${esc(CONFIG.TIENDA_NOMBRE||'')}</button>
+        <div id="mcRegResult" style="margin-top:10px"></div>
+      </div>
+      <div class="mc-box" style="margin-top:16px">
+        <div class="mc-h">🔑 Ya tengo mi código de cliente</div>
+        <div class="miniform" style="margin-top:10px"><input id="mcCodigo" placeholder="Tu código (ej. DDS-1234)" autocomplete="off"></div>
+        <button class="add-cta dark" id="mcCodeBtn" style="margin-top:10px">Ingresar</button>
+        <div id="mcCodeResult" style="margin-top:10px"></div>
+      </div>
+    </div>`;
+  $('#closeSheet').onclick=closeProduct;
+  $('#mcRegBtn').onclick=_miCuentaRegistrar;
+  $('#mcCodeBtn').onclick=_miCuentaIngresarCodigo;
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+async function _miCuentaRegistrar(){
+  const nombre=($('#mcNombre').value||'').trim(), tel=($('#mcTel').value||'').trim();
+  if(!nombre||!tel){ toast('Escribe tu nombre y celular'); return; }
+  const box=$('#mcRegResult'); box.innerHTML='<div class="spinner"></div>';
+  try{
+    const { error } = await sb.from('clientes').insert({ nombre, telefono:tel, estado:'pendiente' });
+    if(error){ box.innerHTML=`<div class="genero" style="color:#c0392b">No se pudo enviar tu registro. Intenta de nuevo.</div>`; return; }
+    box.innerHTML=`<div class="genero" style="color:#0d6b32">✅ ¡Listo! Tu solicitud fue enviada. Te avisaremos por WhatsApp cuando esté aprobada y tengas tu código.</div>`;
+    $('#mcNombre').value=''; $('#mcTel').value='';
+  }catch(e){ box.innerHTML=`<div class="genero" style="color:#c0392b">No se pudo enviar tu registro.</div>`; }
+}
+async function _miCuentaIngresarCodigo(){
+  const cod=($('#mcCodigo').value||'').trim();
+  if(!cod){ toast('Escribe tu código'); return; }
+  const box=$('#mcCodeResult'); box.innerHTML='<div class="spinner"></div>';
+  try{
+    const { data, error } = await sb.rpc('cliente_por_codigo', { p_codigo:cod });
+    const row=(data&&data[0])||null;
+    if(error || !row){ box.innerHTML=`<div class="genero" style="color:#c0392b">Código no encontrado o aún no aprobado.</div>`; return; }
+    _guardarMiCuenta({ codigo:row.codigo, nombre:row.nombre, telefono:row.telefono });
+    mostrarMiCuentaPanel();
+  }catch(e){ box.innerHTML=`<div class="genero" style="color:#c0392b">Ocurrió un error. Intenta de nuevo.</div>`; }
+}
+function _cerrarMiCuenta(){ _guardarMiCuenta(null); toast('Sesión cerrada'); closeProduct(); }
+async function mostrarMiCuentaPanel(){
+  if(!MI_CUENTA || !MI_CUENTA.codigo){ return openMiCuenta(); }
+  $('#sheet').innerHTML = `<div class="hd" style="padding:22px 24px"><button class="close" id="closeSheet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button></div>
+    <div class="bd mc-bd">
+      <div class="marca">Mi cuenta</div>
+      <h2>Hola, ${esc(MI_CUENTA.nombre)} 👋</h2>
+      <div class="genero">Código: <b style="font-family:monospace">${esc(MI_CUENTA.codigo)}</b></div>
+      <div id="mcPuntosBox" class="mc-box" style="margin-top:14px"><div class="spinner"></div></div>
+      <div class="mc-h" style="margin-top:20px">🧾 Mis compras</div>
+      <div id="mcHistorial" style="margin-top:8px"><div class="spinner"></div></div>
+      <button class="np" id="mcLogout" style="margin-top:18px;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--gold-1)">Cerrar sesión</button>
+    </div>`;
+  $('#closeSheet').onclick=closeProduct;
+  $('#mcLogout').onclick=_cerrarMiCuenta;
+  $('#overlay').classList.add('open'); document.body.style.overflow='hidden';
+  try{
+    const { data, error } = await sb.rpc('cliente_historial', { p_codigo: MI_CUENTA.codigo });
+    if(error) throw error;
+    const ventas = data||[];
+    let pts=0;
+    ventas.forEach(v=>{ (v.items||[]).forEach(it=>{
+      if(it.tipo==='regalo') return;
+      if(String(it.ml||'').toLowerCase()==='sellado'){ pts += _selloPtsFor(it.categoria||(PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria)) * (it.qty||1); return; }
+      const cat = it.categoria || (PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria);
+      const pd = (CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.puntos)||{};
+      const v2 = cat ? (pd[cat]||{})[String(it.ml)] : null;
+      if(v2!=null) pts += Number(v2)*(it.qty||1);
+    }); });
+    const tiers=regaloTiers();
+    const desbloq=tiers.filter(t=>pts>=Number(t.meta));
+    const siguiente=tiers.find(t=>pts<Number(t.meta));
+    const pb=$('#mcPuntosBox');
+    pb.innerHTML = `<div class="mc-h">🎁 Tus puntos acumulados</div>
+      <div class="mc-pts">${pts} pts</div>
+      ${desbloq.length?`<div class="genero" style="color:#0d6b32">¡Ya puedes canjear ${esc((desbloq[desbloq.length-1].label||'tu premio').toLowerCase())}! Escríbenos por WhatsApp o dile al vendedor tu código.</div>`
+        : (siguiente?`<div class="genero">Te faltan <b>${Number(siguiente.meta)-pts} pts</b> para ${esc(siguiente.label||'tu próximo premio')}.</div>`:'')}`;
+    const hc=$('#mcHistorial');
+    if(!ventas.length){ hc.innerHTML='<div class="genero">Aún no registras compras con este código.</div>'; return; }
+    hc.innerHTML = ventas.map(v=>{
+      const f=new Date(v.created_at).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});
+      const items=(v.items||[]).map(it=>`${esc(it.nombre||'')} · ${esc(mlLabel(it.ml))} ×${it.qty||1}`).join(', ');
+      return `<div style="border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-weight:600"><span>${f}</span><span>${fmt(v.total)}</span></div>
+        <div class="genero" style="margin-top:3px">${items}</div>
+      </div>`;
+    }).join('');
+  }catch(e){ const pb=$('#mcPuntosBox'); if(pb) pb.innerHTML='<div class="genero">No se pudo cargar tus puntos ahora.</div>'; const hc=$('#mcHistorial'); if(hc) hc.innerHTML=''; }
+}
 
 function estadoTextoCliente(est){
   return ({pendiente:'En revisión',aprobado:'Aprobado ✅',confirmado:'Confirmado ✅',entregado:'Entregado 🎉',rechazado:'Rechazado'})[est||'pendiente'] || est;
@@ -3140,6 +3290,75 @@ function shareProducto(p){
   $('#shImg').onclick=()=>_shareFichaImg(p,false);
   $('#shImgDl').onclick=()=>_shareFichaImg(p,true);
 }
+/* Convierte cualquier "color-mix(...)" que quede en un color plano (rgb/rgba), porque el generador de imágenes no lo entiende. */
+function _toRgbArr(c){
+  c=(c||'').trim();
+  let m;
+  if(m=c.match(/^rgba?\(([^)]+)\)$/i)){
+    const nums=m[1].split(',').map(s=>parseFloat(s));
+    return [nums[0]||0, nums[1]||0, nums[2]||0, nums[3]!=null?nums[3]:1];
+  }
+  if(m=c.match(/^#([0-9a-fA-F]{3,8})$/)){
+    let h=m[1]; if(h.length===3||h.length===4) h=h.split('').map(x=>x+x).join('');
+    const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+    const a=h.length===8?parseInt(h.slice(6,8),16)/255:1;
+    return [r,g,b,a];
+  }
+  if(c==='transparent') return [0,0,0,0];
+  return null;
+}
+function _mixColorMixString(full){
+  try{
+    const inner=full.slice(full.indexOf('(')+1, full.lastIndexOf(')'));
+    const body=inner.replace(/^in\s+[\w-]+\s*,\s*/i,'');
+    // separar por comas de nivel superior (no dentro de paréntesis)
+    const parts=[]; let depth=0, cur='';
+    for(const ch of body){ if(ch==='(') depth++; if(ch===')') depth--; if(ch===',' && depth===0){ parts.push(cur); cur=''; } else cur+=ch; }
+    if(cur.trim()) parts.push(cur);
+    if(parts.length<2) return null;
+    const parseP=(s)=>{ s=s.trim(); const m=s.match(/^(.*?)(?:\s+(\d+(?:\.\d+)?)%)?$/); return { color:(m?m[1]:s).trim(), pct:(m&&m[2]!=null)?parseFloat(m[2]):null }; };
+    let c1=parseP(parts[0]), c2=parseP(parts[1]);
+    if(c1.pct==null && c2.pct==null){ c1.pct=50; c2.pct=50; }
+    else if(c1.pct==null) c1.pct=100-c2.pct;
+    else if(c2.pct==null) c2.pct=100-c1.pct;
+    const rgb1=_toRgbArr(c1.color), rgb2=_toRgbArr(c2.color);
+    if(!rgb1||!rgb2) return null;
+    const w1=c1.pct/100, w2=c2.pct/100;
+    const r=Math.round(rgb1[0]*w1+rgb2[0]*w2), g=Math.round(rgb1[1]*w1+rgb2[1]*w2), b=Math.round(rgb1[2]*w1+rgb2[2]*w2);
+    const a=(rgb1[3]!=null?rgb1[3]:1)*w1+(rgb2[3]!=null?rgb2[3]:1)*w2;
+    return a<1 ? `rgba(${r},${g},${b},${a.toFixed(3)})` : `rgb(${r},${g},${b})`;
+  }catch(e){ return null; }
+}
+function _resolveColorMixInString(str){
+  let out=''; let i=0;
+  while(i<str.length){
+    const idx=str.indexOf('color-mix(', i);
+    if(idx===-1){ out+=str.slice(i); break; }
+    out+=str.slice(i, idx);
+    const openParen=idx+'color-mix'.length;
+    let depth=0, j=openParen;
+    for(; j<str.length; j++){ if(str[j]==='(') depth++; else if(str[j]===')'){ depth--; if(depth===0) break; } }
+    const full=str.slice(idx, j+1);
+    const mixed=_mixColorMixString(full);
+    out += mixed || 'rgba(120,120,120,1)';
+    i=j+1;
+  }
+  return out;
+}
+function _sanitizeCloneColors(root){
+  const props=['backgroundColor','backgroundImage','borderTopColor','borderRightColor','borderBottomColor','borderLeftColor','boxShadow','color','outlineColor'];
+  const all=[root, ...root.querySelectorAll('*')];
+  all.forEach(el=>{
+    let cs; try{ cs=getComputedStyle(el); }catch(e){ return; }
+    props.forEach(p=>{
+      let v; try{ v=cs[p]; }catch(e){ return; }
+      if(v && v.indexOf('color-mix(')!==-1){
+        const resolved=_resolveColorMixInString(v);
+        try{ el.style[p]=resolved; }catch(e){}
+      }
+    });
+  });
+}
 function _shareFichaImg(p, download){
   const note=$('#shNote'); if(note) note.textContent='Generando imagen…';
   _loadH2C(()=>{
@@ -3158,6 +3377,7 @@ function _shareFichaImg(p, download){
     const imgs=[...clone.querySelectorAll('img')];
     imgs.forEach(im=>{ im.crossOrigin='anonymous'; const s=im.src; im.src=''; im.src=s; });
     holder.appendChild(clone); document.body.appendChild(holder);
+    _sanitizeCloneColors(clone);
     const cleanup=()=>{ try{ document.body.removeChild(holder); }catch(e){} };
     const waitImgs=Promise.all(imgs.map(im=>im.complete?Promise.resolve():new Promise(res=>{ im.onload=res; im.onerror=res; setTimeout(res,4000); })));
     waitImgs.then(()=>window.html2canvas(clone,{useCORS:true, allowTaint:false, backgroundColor:bg, scale:2, logging:false, imageTimeout:15000})).then(cv=>{
@@ -3215,7 +3435,7 @@ function openProduct(id, opts){
     const dest = (i===1) && !soldout;
     const sello = _esSellado(ml);
     const antesPr = Number(x.antes)||0;
-    const puntos = _rcpuntos ? ( sello ? Number(CONFIG.REGALO_COMBO.sellado_pts!=null?CONFIG.REGALO_COMBO.sellado_pts:CONFIG.REGALO_COMBO.meta||60) : ((_rcpuntos[p.categoria]||{})[String(ml)]) ) : null;
+    const puntos = _rcpuntos ? ( sello ? _selloPtsFor(p.categoria) : ((_rcpuntos[p.categoria]||{})[String(ml)]) ) : null;
     return `<button class="pd-size ${soldout?'soldout':''} ${sello?'pd-size-sello':''} ${extraCls||''}" ${soldout?'disabled':''} data-size="${esc(ml)}" data-price="${ef}" data-stock="${st==null?'':st}" data-may="${Number(x.precio_may)||0}">
       ${sello?'<span class="top top-sello">💎 PERFUME COMPLETO</span>':(dest?'<span class="top">MÁS VENDIDO</span>':'')}${soldout?'<span class="top" style="background:#c0392b">AGOTADO</span>':''}
       <div class="dot"></div>
@@ -3558,31 +3778,39 @@ function saveCart(){ localStorage.setItem('cart_'+CONFIG.TIENDA_NOMBRE, JSON.str
 /* Regalo por COMBO: puntos por talla; cada meta puntos = 1 regalo (2ml gratis). Mezcla = suma de puntos. */
 function regaloComboEstado(){
   const cfg=CONFIG.REGALO_COMBO||{};
-  if(cfg.activo===false) return {activo:false, gifts:0, chosen:0, porElegir:0};
+  if(cfg.activo===false) return {activo:false, pts:0, disponible:0, tiers:[], disponibles:[], siguiente:null, faltan:0};
   const puntos=cfg.puntos||{};
-  const meta=Number(cfg.meta)||60;
-  const gml=String(cfg.ml||'2');
+  const tiers=regaloTiers();
   let pts=0, nd=0;
-  const selloPts=Number(cfg.sellado_pts!=null?cfg.sellado_pts:meta);
   CART.forEach(i=>{ if(i.tipo==='regalo'||i.tipo==='addon') return;
     if(i.tipo==='combo'){ if(i.comboPts){ pts+=Number(i.comboPts)*(i.qty||1); nd+=(Number(i._comboN)||1)*(i.qty||1); } return; }
-    if(String(i.ml||'').toLowerCase()==='sellado'){ pts+=selloPts*(i.qty||1); nd+=(i.qty||1); return; }
+    if(String(i.ml||'').toLowerCase()==='sellado'){ pts+=_selloPtsFor(i.categoria)*(i.qty||1); nd+=(i.qty||1); return; }
     const v=(puntos[i.categoria]||{})[String(i.ml)]; if(v==null) return; pts+=v*(i.qty||1); nd+=(i.qty||1);
   });
-  const gifts=Math.floor((pts+1e-6)/meta);
   const chosenLines=CART.filter(i=>i.tipo==='regalo'&&i.promoId==='__comboregalo__');
-  const chosen=chosenLines.length;
-  const porElegir=Math.max(0, gifts-chosen);
-  const remaining = pts===0 ? meta : (pts%meta===0 ? 0 : meta-(pts%meta));   // puntos para el próximo regalo
+  const consumed=chosenLines.reduce((s,i)=>s+(Number(i._tierMeta)||0),0);
+  const disponible=Math.max(0, pts-consumed);
+  const disponibles=tiers.filter(t=>disponible>=Number(t.meta));
+  const siguiente=tiers.find(t=>disponible<Number(t.meta)) || null;
+  const faltan=siguiente ? (Number(siguiente.meta)-disponible) : 0;
   const avg = nd>0 ? pts/nd : 20;
-  const faltanDecants = remaining>0 ? Math.max(1, Math.ceil(remaining/(avg||20))) : 0;
-  const opciones=(PRODUCTS||[]).filter(p=>p.regalo_permitido && p.visible!==false).map(p=>({id:p.id,nombre:p.nombre,img:imgsOf(p)[0]||''}));
-  return { activo:true, gifts, chosen, porElegir, remaining, faltanDecants, opciones, elegido:chosenLines[0], gml, pts, meta };
+  const faltanDecants = faltan>0 ? Math.max(1, Math.ceil(faltan/(avg||20))) : 0;
+  return { activo:true, pts, disponible, tiers, disponibles, siguiente, faltan, faltanDecants, chosen:chosenLines.length,
+    // compat con código viejo:
+    meta: tiers[0] ? Number(tiers[0].meta) : 60, gml: tiers[0] ? tiers[0].ml : '2', remaining: faltan,
+    porElegir: disponibles.length ? 1 : 0,
+    opciones: disponibles.length ? (PRODUCTS||[]).filter(p=>p.regalo_permitido && p.visible!==false && (!disponibles[disponibles.length-1].categoria || p.categoria===disponibles[disponibles.length-1].categoria)).map(p=>({id:p.id,nombre:p.nombre,img:imgsOf(p)[0]||''})) : []
+  };
 }
-function addGiftCombo(pid){
-  const st=regaloComboEstado(); if(st.porElegir<=0){ toast('Aún no tienes un regalo por elegir'); return; }
+function _tierOpciones(tier){ return (PRODUCTS||[]).filter(p=>p.regalo_permitido && p.visible!==false && (!tier.categoria || p.categoria===tier.categoria)).map(p=>({id:p.id,nombre:p.nombre,img:imgsOf(p)[0]||''})); }
+function addGiftCombo(tierMeta, pid){
+  // Compat: si se llama con un solo argumento (versión antigua), es el id del producto y usamos el nivel más alto disponible.
+  if(pid==null){ pid=tierMeta; const st0=regaloComboEstado(); const t0=st0.disponibles[st0.disponibles.length-1]; tierMeta=t0?t0.meta:null; }
+  const st=regaloComboEstado();
+  const tier=st.tiers.find(t=>Number(t.meta)===Number(tierMeta));
+  if(!tier || st.disponible<Number(tier.meta)){ toast('Aún no tienes suficientes puntos para ese premio'); return; }
   const p=PROD_BY_ID[pid]; if(!p){ toast('Elige un perfume'); return; }
-  CART.push({ key:'regalo___combo___'+pid+'_'+Date.now(), id:pid, tipo:'regalo', promoId:'__comboregalo__', nombre:p.nombre, marca:'Regalo', img:imgsOf(p)[0]||'', ml:st.gml, precio:0, qty:1 });
+  CART.push({ key:'regalo___combo___'+pid+'_'+Date.now(), id:pid, tipo:'regalo', promoId:'__comboregalo__', nombre:p.nombre, marca:'Regalo', img:imgsOf(p)[0]||'', ml:tier.ml, precio:0, qty:1, _tierMeta:Number(tier.meta) });
   saveCart(); toast('🎁 ¡Regalo agregado!');
 }
 
@@ -3638,12 +3866,18 @@ function renderCart(){
   if(giftChanged){ localStorage.setItem('cart_'+CONFIG.TIENDA_NOMBRE, JSON.stringify(CART)); R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS); }
   GIFT_STATUS = R.regalos || [];
 
-  // Regalo por combo (puntos por talla): reconciliar a la cantidad ganada
-  const rce = regaloComboEstado();
-  if(rce.activo && rce.chosen > rce.gifts){
-    const extra = CART.filter(i=>i.tipo==='regalo'&&i.promoId==='__comboregalo__').slice(rce.gifts);
-    const setx=new Set(extra); CART=CART.filter(i=>!setx.has(i));
-    saveCart(); R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS);
+  // Regalo por combo (puntos por talla): si ya no alcanzan los puntos (p.ej. el cliente quitó productos), se quita el regalo más reciente hasta que cuadre.
+  let rce = regaloComboEstado();
+  if(rce.activo && rce.disponible<0){
+    let guard=0, removed=false;
+    while(rce.disponible<0 && guard<20){
+      const chosenLines=CART.filter(i=>i.tipo==='regalo'&&i.promoId==='__comboregalo__');
+      const last=chosenLines[chosenLines.length-1];
+      if(!last) break;
+      CART=CART.filter(i=>i!==last); removed=true;
+      rce=regaloComboEstado(); guard++;
+    }
+    if(removed){ saveCart(); R = window.PROMOS_ENGINE.computeCart(pricedCart(), PROD_BY_ID, PROMOS); }
   }
 
   const lineHtml = (i) => {
@@ -3712,20 +3946,24 @@ function renderCart(){
   const rc = regaloComboEstado();
   let comboGiftHtml='';
   if(rc.activo){
-    if(rc.porElegir>0){
-      if(rc.opciones.length){
-        comboGiftHtml=`<div class="gift-box">
-          <div class="gift-h">🎁 ¡Tienes ${rc.porElegir} regalo${rc.porElegir>1?'s':''} por elegir! Un decant de ${esc(mlLabel(rc.gml))} <b>gratis</b>${rc.porElegir>1?' (elige uno a la vez)':''}</div>
-          <div class="gift-row"><select id="comboGiftSel">${rc.opciones.map(o=>`<option value="${esc(o.id)}">${esc(o.nombre)}</option>`).join('')}</select><button id="comboGiftAdd">Agregar</button></div>
-          ${rc.remaining>0?`<div class="gift-falta">🛍️ Te faltan <b>${rc.remaining} puntos</b> para otro regalo</div>`:''}
-        </div>`;
-      } else {
-        comboGiftHtml=`<div class="upsell">🎁 ¡Ganaste ${rc.porElegir} regalo${rc.porElegir>1?'s':''}! (Admin: marca perfumes como "permitido para regalo".)</div>`;
-      }
-    } else if(rc.pts>0 && rc.remaining>0){
-      comboGiftHtml=`<div class="aviso-vibe">🎁 Llevas <b>${rc.pts} pts</b> · Te faltan <b>${rc.remaining} puntos</b> para un regalo de ${esc(mlLabel(rc.gml))} GRATIS</div>`;
-    } else if(rc.pts===0){
-      comboGiftHtml=`<div class="aviso-vibe">🎁 Suma <b>${rc.meta||60} pts</b> y llévate un decant de ${esc(mlLabel(rc.gml))} GRATIS</div>`;
+    if(rc.disponibles.length){
+      comboGiftHtml=`<div class="gift-box">
+        <div class="gift-h">🎁 ¡Tienes premio${rc.disponibles.length>1?'s':''} por elegir!</div>
+        ${rc.disponibles.map(t=>{
+          const ops=_tierOpciones(t);
+          return `<div class="gift-tier">
+            <div class="gift-tier-h">${esc(t.label||('Decant '+mlLabel(t.ml)))} <span class="gift-tier-pts">(${t.meta} pts)</span></div>
+            ${ops.length
+              ? `<div class="gift-row"><select id="comboGiftSel_${t.meta}">${ops.map(o=>`<option value="${esc(o.id)}">${esc(o.nombre)}</option>`).join('')}</select><button data-gift-tier="${t.meta}">Agregar</button></div>`
+              : `<div class="gift-empty">Admin: marca perfumes de "${esc(t.categoria||'cualquier categoría')}" como "permitido para regalo".</div>`}
+          </div>`;
+        }).join('')}
+        ${rc.faltan>0?`<div class="gift-falta">🛍️ Te faltan <b>${rc.faltan} puntos</b> para ${esc(rc.siguiente.label||'el siguiente premio')}</div>`:''}
+      </div>`;
+    } else if(rc.pts>0 && rc.faltan>0){
+      comboGiftHtml=`<div class="aviso-vibe">🎁 Llevas <b>${rc.pts} pts</b> · Te faltan <b>${rc.faltan} puntos</b> para ${esc(rc.siguiente?rc.siguiente.label:'tu premio')} GRATIS</div>`;
+    } else if(rc.pts===0 && rc.tiers[0]){
+      comboGiftHtml=`<div class="aviso-vibe">🎁 Suma <b>${rc.tiers[0].meta} pts</b> y llévate ${esc((rc.tiers[0].label||'un decant').toLowerCase())} GRATIS</div>`;
     }
   }
 
@@ -3739,7 +3977,10 @@ function renderCart(){
   $('#cartList').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{CART=CART.filter(i=>i.key!==b.dataset.rm); saveCart();});
   $('#cartList').querySelectorAll('[data-giftadd]').forEach(b=>b.onclick=()=>addGift(b.dataset.giftadd));
   const cn=$('#comboNudge'); if(cn) cn.onclick=()=>{ closeCart(); setView('armar'); window.scrollTo({top:0,behavior:'smooth'}); };
-  const cga=$('#comboGiftAdd'); if(cga) cga.onclick=()=>addGiftCombo($('#comboGiftSel').value);
+  $('#cartList').querySelectorAll('[data-gift-tier]').forEach(b=>b.onclick=()=>{
+    const meta=b.dataset.giftTier; const sel=$('#comboGiftSel_'+meta);
+    addGiftCombo(Number(meta), sel?sel.value:null);
+  });
 
   const yapeOn = payMethod==='yape' && CONFIG.YAPE_NUMERO;
   $('#cartBot').style.display='block';
@@ -3980,12 +4221,13 @@ async function coFinalizar(){
   const envTxt = c.courier==='ica'?'Cliente en Ica': (c.courier==='shalom_domicilio'?'Shalom a domicilio':'Shalom recojo en agencia');
   // Guardar venta
   try{
-    const items=R.lines.map(i=>({id:i.id,nombre:i.nombre,marca:i.marca||'',ml:i.ml,qty:i.qty,precio:i.unit,total:i.unit*i.qty,tipo:i.tipo||'normal'}));
+    const items=R.lines.map(i=>({id:i.id,nombre:i.nombre,marca:i.marca||'',categoria:i.categoria||(PROD_BY_ID[i.id]?PROD_BY_ID[i.id].categoria:null),ml:i.ml,qty:i.qty,precio:i.unit,total:i.unit*i.qty,tipo:i.tipo||'normal'}));
     await sb.from('ventas').insert({
       cliente_nombre:c.nombre||null, cliente_telefono:c.tel||null,
       cliente_direccion:(c.agencia_dir?`Ag. Shalom: ${c.agencia_dir} — ${c.dist||''}, ${c.prov||''}, ${c.dep||''}`:envTxt),
       items, subtotal:R.totalSinDesc, descuento:R.ahorro, total:total,
       metodo_pago:'yape', yape_operacion:p.op||null, estado:'nuevo',
+      cliente_codigo:(window.MI_CUENTA&&MI_CUENTA.codigo)||null,
       data:{ correo:c.correo||'', tipo_doc:c.tipoDoc||'', documento:c.doc||'', courier:c.courier, departamento:c.dep||'', provincia:c.prov||'', distrito:c.dist||'', agencia_dir:c.agencia_dir||'', empaque:emp, comprobante:p.comprobante||'' }
     });
   }catch(e){ console.warn('No se registró la venta:', e); }
@@ -4012,11 +4254,12 @@ async function checkout(R){
 
   // Registrar la venta (no bloquea el pedido si falla)
   try{
-    const items = R.lines.map(i => ({ id:i.id, nombre:i.nombre, marca:i.marca||'', ml:i.ml, qty:i.qty, precio:i.unit, total:i.lineTotal }));
+    const items = R.lines.map(i => ({ id:i.id, nombre:i.nombre, marca:i.marca||'', categoria:i.categoria||(PROD_BY_ID[i.id]?PROD_BY_ID[i.id].categoria:null), ml:i.ml, qty:i.qty, precio:i.unit, total:i.lineTotal, tipo:i.tipo||'normal' }));
     await sb.from('ventas').insert({
       cliente_nombre:nombre||null, cliente_telefono:tel||null, cliente_direccion:dir||null,
       items, subtotal:R.totalSinDesc, descuento:R.ahorro, total:R.total,
-      metodo_pago:payMethod, yape_operacion:(payMethod==='yape'?op:'')||null, estado:'nuevo'
+      metodo_pago:payMethod, yape_operacion:(payMethod==='yape'?op:'')||null, estado:'nuevo',
+      cliente_codigo: (window.MI_CUENTA&&MI_CUENTA.codigo)||null
     });
   }catch(e){ console.warn('No se pudo registrar la venta:', e); }
 

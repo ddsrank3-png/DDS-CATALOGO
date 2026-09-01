@@ -99,6 +99,10 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
 .cart-btn:hover{border-color:var(--gold-3); background:var(--panel-2)}
 .cart-btn svg{width:20px; height:20px; stroke:var(--gold-2)}
 .cart-count{position:absolute; top:-6px; right:-6px; min-width:20px; height:20px; padding:0 5px; border-radius:999px; background:var(--gold-grad); color:#0a0a0d; font-size:.72rem; font-weight:600; display:grid; place-items:center; box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.cart-pts-badge{position:absolute; bottom:-9px; left:50%; transform:translateX(-50%); white-space:nowrap; background:#ffdf7e; color:#5c3d00; font-size:.62rem; font-weight:800; padding:2px 7px; border-radius:999px; box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.cart-pts-counter{margin:0 18px 4px; padding:10px 14px; border-radius:12px; background:#fff4da; color:#5c3d00; font-size:.84rem; font-weight:600; text-align:center}
+.cart-pts-counter b{font-weight:800}
+.cart-pts-counter.unlocked{background:linear-gradient(120deg,#12833f,#1aa552); color:#fff}
 
 /* Hero */
 .hero{max-width:1200px; margin:0 auto; padding:58px 20px 22px; position:relative; display:grid; grid-template-columns:1.55fr 1fr; gap:34px; align-items:center}
@@ -1149,6 +1153,7 @@ header::after{background:var(--line); opacity:1}
     <button class="cart-btn" id="openCart" aria-label="Carrito">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M6 6h15l-1.5 9h-12z" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M6 6L5 3H3" stroke-linecap="round"/></svg>
       <span class="cart-count" id="cartCount" style="display:none">0</span>
+      <span class="cart-pts-badge" id="cartPtsBadge" style="display:none">🎁 0</span>
     </button>
   </div>
 </header>
@@ -1212,6 +1217,7 @@ header::after{background:var(--line); opacity:1}
     <h3>Tu pedido</h3>
     <button data-close-cart aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>
   </div>
+  <div id="cartPtsCounter" style="display:none"></div>
   <div class="cart-list" id="cartList"></div>
   <div class="bot" id="cartBot" style="display:none"></div>
 </div>
@@ -3469,28 +3475,47 @@ function _sanitizeCloneColors(root){
     });
   });
 }
+function _buildShareCardHTML(p){
+  const img=imgsOf(p)[0]||'';
+  const sello=precioSellado(p);
+  const desde=precioDesde(p);
+  const pres=presActivas(p).filter(x=>!_esSellado(x.ml)).slice(0,5);
+  const pts=puntosCardDe(p, !!sello);
+  const priceLbl = sello ? 'PERFUME COMPLETO' : 'DESDE';
+  const priceVal = sello ? fmt(sello.actual) : (desde!=null?fmt(desde):'Consultar');
+  const desc=String(p.descripcion||'').slice(0,230);
+  const sizesHtml = pres.map(x=>`<div style="border:1px solid #e6e0d4;border-radius:10px;padding:8px 12px;text-align:center;min-width:66px;background:#fbf9f5">
+      <div style="font-weight:700;font-size:14px;color:#1a1714;font-family:Arial,sans-serif">${esc(fmt(precioEfectivo(p,x)))}</div>
+      <div style="font-size:11px;color:#8a8378;font-family:Arial,sans-serif">${esc(mlLabel(x.ml))}</div>
+    </div>`).join('');
+  return `<div style="width:1100px; background:#ffffff; padding:44px; font-family:Arial,Helvetica,sans-serif; display:flex; gap:38px; box-sizing:border-box; color:#1a1714">
+    <div style="flex:0 0 400px; height:400px; background:#f3efe6; border-radius:16px; display:flex; align-items:center; justify-content:center; overflow:hidden">
+      ${img?`<img src="${esc(img)}" style="max-width:100%; max-height:100%; object-fit:contain" crossorigin="anonymous">`:''}
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; min-width:0">
+      <div style="font-size:14px; letter-spacing:2px; text-transform:uppercase; color:#8a8378; margin-bottom:10px">${esc(p.marca||'')}</div>
+      <div style="font-size:42px; font-weight:800; color:#1a1714; margin-bottom:14px; font-family:Georgia,'Times New Roman',serif; line-height:1.1">${esc(p.nombre)}</div>
+      ${desc?`<div style="font-size:16px; color:#5a5450; line-height:1.55; margin-bottom:22px">${esc(desc)}</div>`:''}
+      <div style="font-size:13px; font-weight:700; letter-spacing:1px; color:#9a7d2e; text-transform:uppercase; margin-bottom:4px">${priceLbl}</div>
+      <div style="font-size:38px; font-weight:800; color:#1a1714">${esc(priceVal)}</div>
+      ${pts?`<div style="margin-top:12px; display:inline-block; width:fit-content; background:#ffdf7e; color:#5c3d00; font-weight:800; font-size:14px; padding:6px 14px; border-radius:999px">🎁 +${pts} pts</div>`:''}
+      ${sizesHtml?`<div style="display:flex; gap:10px; margin-top:26px; flex-wrap:wrap">${sizesHtml}</div>`:''}
+      <div style="margin-top:32px; font-size:14px; color:#8a8378">${esc(CONFIG.TIENDA_NOMBRE||'')}${CONFIG.WHATSAPP?' · WhatsApp '+esc(CONFIG.WHATSAPP):''}</div>
+    </div>
+  </div>`;
+}
 function _shareFichaImg(p, download){
   const note=$('#shNote'); if(note) note.textContent='Generando imagen…';
   _loadH2C(()=>{
     if(!window.html2canvas){ if(note)note.textContent='No se pudo cargar el generador de imagen (revisa tu conexión).'; return; }
-    const src=document.querySelector('#sheet .pd'); if(!src){ if(note)note.textContent='Abre la ficha primero.'; return; }
     const holder=document.createElement('div');
-    const bg=getComputedStyle(document.body).backgroundColor||'#0b0f14';
-    // Dentro del viewport (top:0,left:0) y detrás de todo, para que el navegador SÍ la renderice/pinte
-    holder.style.cssText='position:fixed; left:0; top:0; width:1200px; padding:26px; background:'+bg+'; z-index:-9999; opacity:.01; pointer-events:none';
-    const clone=src.cloneNode(true);
-    clone.style.width='1148px'; clone.style.display='grid'; clone.style.gap='26px';
-    clone.style.gridTemplateColumns = clone.classList.contains('pd-nobuy') ? '1fr 1.15fr' : '1fr 1.15fr 340px';
-    clone.querySelectorAll('.pd-media,.pd-buy').forEach(el=>{ el.style.position='static'; });
-    // Quitar blur (no soportado por el generador) y forzar que las imágenes carguen con CORS
-    clone.querySelectorAll('*').forEach(el=>{ el.style.backdropFilter='none'; el.style.animation='none'; });
-    const imgs=[...clone.querySelectorAll('img')];
-    imgs.forEach(im=>{ im.crossOrigin='anonymous'; const s=im.src; im.src=''; im.src=s; });
-    holder.appendChild(clone); document.body.appendChild(holder);
-    _sanitizeCloneColors(clone);
+    holder.style.cssText='position:fixed; left:0; top:0; z-index:-9999; opacity:.01; pointer-events:none; background:#ffffff';
+    holder.innerHTML=_buildShareCardHTML(p);
+    document.body.appendChild(holder);
     const cleanup=()=>{ try{ document.body.removeChild(holder); }catch(e){} };
+    const imgs=[...holder.querySelectorAll('img')];
     const waitImgs=Promise.all(imgs.map(im=>im.complete?Promise.resolve():new Promise(res=>{ im.onload=res; im.onerror=res; setTimeout(res,4000); })));
-    waitImgs.then(()=>window.html2canvas(clone,{useCORS:true, allowTaint:false, backgroundColor:bg, scale:2, logging:false, imageTimeout:15000})).then(cv=>{
+    waitImgs.then(()=>window.html2canvas(holder.firstElementChild,{useCORS:true, allowTaint:true, backgroundColor:'#ffffff', scale:2, logging:false, imageTimeout:15000})).then(cv=>{
       cv.toBlob(async (blob)=>{
         cleanup();
         if(!blob){ if(note)note.textContent='No se pudo generar la imagen (el navegador no devolvió el archivo).'; return; }
@@ -3879,7 +3904,16 @@ function addToCart(){
   if(found) found.qty += q;
   else CART.push({ key, id:curProduct.id, nombre:curProduct.nombre, marca:curProduct.marca, categoria:curProduct.categoria, img:imgsOf(curProduct)[0], ml:selSize.size, precio:selSize.price, precio_may:selSize.may||0, qty:q });
   saveCart();
+  const rcOn = CONFIG.REGALO_COMBO && CONFIG.REGALO_COMBO.activo!==false;
+  let ptsGanados=null;
+  if(rcOn){
+    if(_esSellado(selSize.size)) ptsGanados=_selloPtsFor(curProduct.categoria)*q;
+    else { const pd=(CONFIG.REGALO_COMBO.puntos||{})[curProduct.categoria]||{}; const v=pd[String(selSize.size)]; ptsGanados = v!=null?Number(v)*q:null; }
+  }
+  const rc = rcOn ? regaloComboEstado() : null;
   if(regaloDisponible()) toast('🎁 ¡Ganaste un regalo! Elígelo en tu pedido');
+  else if(rc && rc.disponibles.length) toast(`✅ Añadido${ptsGanados?` (+${ptsGanados} pts)`:''} · 🎁 ¡Ya puedes elegir tu premio!`);
+  else if(rc && rc.pts>0 && rc.siguiente) toast(`✅ Añadido${ptsGanados?` (+${ptsGanados} pts)`:''} · Te faltan ${Number(rc.siguiente.meta)-rc.pts} pts para tu premio`);
   else toast(`Añadido: ${curProduct.nombre} (${mlLabel(selSize.size)}) x${q}`);
   closeProduct(); openCart();
 }
@@ -3953,9 +3987,30 @@ function mayorBanner(){
   const pct=Math.min(100, Math.round(u/Math.max(1,M)*100));
   return `<div class="mayor-note ${active?'on':''}">${txt}<div class="bar"><i style="width:${pct}%"></i></div></div>`;
 }
+function _actualizarContadoresPuntos(){
+  const badge=$('#cartPtsBadge'); const counter=$('#cartPtsCounter');
+  const rcOn = CONFIG.REGALO_COMBO && CONFIG.REGALO_COMBO.activo!==false;
+  if(!rcOn || !CART.length){ if(badge) badge.style.display='none'; if(counter) counter.style.display='none'; return; }
+  const rc=regaloComboEstado();
+  if(badge){
+    if(rc.pts>0){ badge.textContent='🎁 '+rc.pts; badge.style.display='block'; }
+    else badge.style.display='none';
+  }
+  if(counter){
+    if(rc.disponibles.length){ const top=rc.disponibles[rc.disponibles.length-1];
+      counter.innerHTML=`<div class="cart-pts-counter unlocked">🎁 <b>${rc.pts} pts</b> · ¡Ya puedes elegir ${esc((top.label||'tu premio').toLowerCase())}!</div>`;
+    } else if(rc.pts>0 && rc.siguiente){
+      counter.innerHTML=`<div class="cart-pts-counter">🎁 <b>${rc.pts} pts</b> · Te faltan <b>${Number(rc.siguiente.meta)-rc.pts} pts</b> para ${esc(rc.siguiente.label||'tu premio')}</div>`;
+    } else if(rc.tiers[0]){
+      counter.innerHTML=`<div class="cart-pts-counter">🎁 Suma <b>${rc.tiers[0].meta} pts</b> y consigue ${esc((rc.tiers[0].label||'un premio').toLowerCase())} gratis</div>`;
+    } else { counter.style.display='none'; return; }
+    counter.style.display='block';
+  }
+}
 function renderCart(){
   const n = CART.reduce((s,i)=>s+i.qty,0);
   const cc=$('#cartCount'); cc.textContent=n; cc.style.display=n?'grid':'none';
+  _actualizarContadoresPuntos();
 
   if(!CART.length){
     $('#cartList').innerHTML = `<div class="cart-empty"><b style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--cream)">Tu pedido está vacío</b><br>Añade tus fragancias favoritas.</div>`;

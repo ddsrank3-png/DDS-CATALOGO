@@ -53,6 +53,9 @@ input{font-family:inherit}
 .card .stk{display:inline-block; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:3px 8px; margin-top:4px; font-weight:600}
 .card .stk.out{background:#fdecea; border-color:#f3c6c1}
 .card .stk.low{background:#fdf3e3; border-color:#f0dcae}
+.stk.pedido,.card .stk.pedido{color:#1a5276; background:#eaf2fb; border-color:#c7dbf3}
+.pd-stock.pedido{color:#1a5276}
+.pd-size-stk.pedido{color:#1a5276; background:#eaf2fb; border-color:#c7dbf3}
 .card.agotado{opacity:.6} .card.agotado .imgwrap img{filter:grayscale(.6)}
 .stock-modal{display:inline-block; margin-top:8px; font-size:.82rem; padding:5px 11px; border-radius:999px; border:1px solid var(--line)}
 .stock-modal.out{color:var(--danger); border-color:var(--danger)}
@@ -1314,11 +1317,12 @@ function maxOfertaCard(p){
 function catLabel(c){ return c==='Árabe'?'Perfume Árabe':(c||''); }
 /* --- Stock --- */
 function stockDe(p){ return (p.stock===null||p.stock===undefined||p.stock==='')?null:Number(p.stock); }
-function agotado(p){ const s=stockDe(p); return s!=null && s<=0; }
+function agotado(p){ const s=stockDe(p); return s!=null && s<0; }
 function qtyEnCarrito(pid){ return CART.filter(i=>i.id===pid).reduce((s,i)=>s+i.qty,0); }
 function stockLine(p){ const s=stockDe(p); if(s==null) return '';
   const low=CONFIG.STOCK_BAJO||5;
-  if(s<=0) return '<span class="stk out">Agotado</span>';
+  if(s===0) return '<span class="stk pedido">¡A pedido!</span>';
+  if(s<0) return '<span class="stk out">Agotado</span>';
   if(s<=low) return `<span class="stk low">¡Últimas ${s} unidades!</span>`;
   return `<span class="stk ok">${s} disponibles</span>`;
 }
@@ -3116,7 +3120,7 @@ function openProduct(id, opts){
   const _stocks = pres.map(x=>x.stock).filter(v=>v!=null&&v!=='');
   const s = _stocks.length ? _stocks.reduce((a,b)=>a+Number(b),0) : stockDe(p);
   const low = CONFIG.STOCK_BAJO||5;
-  const stockHtml = s==null ? '' : (s<=0 ? '<span class="pd-stock out">Agotado</span>' : (s<=low ? `<span class="pd-stock low">¡Últimas ${s}!</span>` : `<span class="pd-stock">${s} disponibles</span>`));
+  const stockHtml = s==null ? '' : (s===0 ? '<span class="pd-stock pedido">¡A pedido!</span>' : (s<0 ? '<span class="pd-stock out">Agotado</span>' : (s<=low ? `<span class="pd-stock low">¡Últimas ${s}!</span>` : `<span class="pd-stock">${s} disponibles</span>`)));
   const tipoTxt = p.tipo==='Sellado' ? 'Perfume' : (p.tipo==='Decant' ? 'Decant' : '');
   const catChip = p.categoria ? (tipoTxt ? `${tipoTxt} ${p.categoria==='Árabe'?'Árabe':p.categoria}` : catLabel(p.categoria)) : '';
   const oca = p.ocasion||'';
@@ -3131,7 +3135,8 @@ function openProduct(id, opts){
   function _sizeBtnHTML(x,i,extraCls){
     const ef=precioEfectivo(p,x); const ml=x.ml;
     const st = (x.stock==null||x.stock==='')?null:Number(x.stock);
-    const soldout = st!=null && st<=0;
+    const pedido = st===0;
+    const soldout = st!=null && st<0;
     const low = st!=null && st>0 && st<=(CONFIG.STOCK_BAJO||5);
     const sprays = _esSellado(ml)?'' : `${Math.round(Number(ml)*18/10)*10} sprays`;
     const dest = (i===1) && !soldout;
@@ -3143,7 +3148,7 @@ function openProduct(id, opts){
       <div class="dot"></div>
       <div class="pr">${antesPr>ef?`<span class="pd-size-antes">${fmt(antesPr)}</span>`:''}${fmt(ef)}</div>
       <div class="ml">${mlLabel(ml)}${sprays?` / ${sprays}`:''}</div>
-      ${(st!=null&&!soldout)?`<div class="pd-size-stk ${low?'low':''}">${st} disponibles</div>`:''}
+      ${pedido?`<div class="pd-size-stk pedido">¡A pedido!</div>`:((st!=null&&!soldout)?`<div class="pd-size-stk ${low?'low':''}">${st} disponibles</div>`:'')}
       ${puntos?`<div class="pd-pts">🎁 +${puntos} pts</div>`:''}</button>`;
   }
   const selloPres = pres.filter(x=>_esSellado(x.ml));

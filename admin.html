@@ -191,6 +191,8 @@ img{display:block;max-width:100%}
 
   <section id="tab-productos">
     <div class="bar"><button class="btn" id="newProd">+ Nuevo producto</button></div>
+    <div class="field" style="margin-bottom:14px"><input id="prodBuscar" placeholder="🔎 Buscar por nombre, marca o categoría…"></div>
+    <div class="hint" id="prodBuscarCount" style="margin-bottom:8px"></div>
     <div class="list" id="listProd"></div>
   </section>
 
@@ -232,10 +234,11 @@ img{display:block;max-width:100%}
   </section>
 
   <section id="tab-ventas" style="display:none">
-    <div class="bar"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem">Ventas e inventario</h3><button class="btn" id="newVenta" style="margin-left:auto">+ Registrar venta</button></div>
+    <div class="bar"><h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem">Ventas</h3><button class="btn" id="newVenta" style="margin-left:auto">+ Registrar venta</button></div>
     <div id="ventasResumen"></div>
-    <div id="ventasStock"></div>
     <div class="list" id="listVentas"></div>
+    <button class="btn ghost" id="toggleStockBtn" style="margin-top:22px">▸ Ver resumen de stock</button>
+    <div id="ventasStock" style="display:none; margin-top:10px"></div>
   </section>
 
   <section id="tab-clientes" style="display:none">
@@ -643,9 +646,14 @@ function imgsOf(p){ const a=Array.isArray(p.imagenes)?p.imagenes.filter(Boolean)
 function mlLabel(ml){ return String(ml).toLowerCase()==='sellado'?'Sellado':ml+'ml'; }
 
 /* ============ PRODUCTOS ============ */
+let PROD_FILTRO='';
 function renderProductos(){
-  if(!PRODUCTOS.length){ $('#listProd').innerHTML='<div class="hint">Aún no hay productos. Crea el primero.</div>'; return; }
-  $('#listProd').innerHTML = PRODUCTOS.map(p=>{
+  if(!PRODUCTOS.length){ $('#listProd').innerHTML='<div class="hint">Aún no hay productos. Crea el primero.</div>'; $('#prodBuscarCount').textContent=''; return; }
+  const q=(PROD_FILTRO||'').trim().toLowerCase();
+  const lista = q ? PRODUCTOS.filter(p=>((p.nombre||'')+' '+(p.marca||'')+' '+(p.categoria||'')).toLowerCase().includes(q)) : PRODUCTOS;
+  const cnt=$('#prodBuscarCount'); if(cnt) cnt.textContent = q ? `${lista.length} de ${PRODUCTOS.length} productos` : `${PRODUCTOS.length} productos`;
+  if(!lista.length){ $('#listProd').innerHTML='<div class="hint">Ningún producto coincide con esa búsqueda.</div>'; return; }
+  $('#listProd').innerHTML = lista.map(p=>{
     const img=imgsOf(p)[0]; const pres=presActivas(p);
     return `<div class="item">
       <div class="th">${img?`<img src="${esc(img)}">`:esc((p.marca||p.nombre||'?')[0])}</div>
@@ -661,6 +669,7 @@ function renderProductos(){
   }).join('');
   $('#listProd').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>prodForm(b.dataset.edit));
   $('#listProd').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delProd(b.dataset.del));
+  const sb2=$('#prodBuscar'); if(sb2 && !sb2.dataset.wired){ sb2.dataset.wired='1'; sb2.value=PROD_FILTRO; sb2.oninput=()=>{ PROD_FILTRO=sb2.value; renderProductos(); }; }
 }
 
 function prodForm(id){
@@ -1357,7 +1366,7 @@ function renderVentas(){
     <div class="stat"><div class="k">Pedidos nuevos</div><div class="v">${nuevos}</div></div>
   </div>`;
 
-  // --- Stock disponible ---
+  // --- Stock disponible (colapsado por defecto) ---
   const bajo=CONFIG.STOCK_BAJO||5;
   const conStock=PRODUCTOS.filter(p=>p.stock!=null).slice().sort((a,b)=>Number(a.stock)-Number(b.stock));
   const st=$('#ventasStock');
@@ -1366,6 +1375,11 @@ function renderVentas(){
       `<div class="stockgrid">${conStock.map(p=>{ const s=Number(p.stock); const cls=s<=0?'out':(s<=bajo?'low':'ok'); return `<div class="stk-item ${cls}"><span class="nm">${esc(p.nombre)}</span><span class="qt">${s<=0?'Agotado':s}</span></div>`; }).join('')}</div>`
       : `<div class="hint">Ningún producto tiene stock definido todavía.</div>`)
       + `<div class="hint">Los productos sin stock definido no se controlan (venta ilimitada).</div>`;
+  }
+  const tsb=$('#toggleStockBtn');
+  if(tsb && !tsb.dataset.wired){
+    tsb.dataset.wired='1';
+    tsb.onclick=()=>{ const box=$('#ventasStock'); const open=box.style.display!=='none'; box.style.display=open?'none':'block'; tsb.textContent=open?'▸ Ver resumen de stock':'▾ Ocultar resumen de stock'; };
   }
 
   // --- Historial de ventas por día ---
@@ -1412,6 +1426,10 @@ function ventaForm(id){
       <div>${x.tipo==='regalo'?'GRATIS':fmtV(x.total!=null?x.total:(Number(x.precio)*Number(x.qty)))}</div>
     </div>`).join('') : '<div class="hint">Sin detalle de artículos.</div>';
 
+  const sugerido = it.filter(x=>x.tipo==='regalo').reduce((s,x)=>s+(Number(x.tierMeta)||0),0);
+  const puntosVal = (v.puntos_usados!=null && v.puntos_usados!=='') ? Number(v.puntos_usados) : sugerido;
+  const tieneRegalo = it.some(x=>x.tipo==='regalo');
+
   $('#modal').innerHTML = `
     <h3>Editar venta</h3>
     <div class="hint">Registrada: ${esc(fechaCorta(v.created_at))} · Pago: ${esc(v.metodo_pago||'—')}${v.yape_operacion?` · Op. Yape: ${esc(v.yape_operacion)}`:''}</div>
@@ -1424,12 +1442,17 @@ function ventaForm(id){
 
     <div class="field"><label>Artículos del pedido</label><div id="ventaItems">${itemsHtml}</div></div>
 
+    ${(tieneRegalo || v.cliente_codigo) ? `<div class="field"><label>🎁 Puntos que se le descuentan a este cliente${v.cliente_codigo?` (código ${esc(v.cliente_codigo)})`:''}</label>
+      <input id="vPuntosUsados" type="number" step="1" min="0" value="${puntosVal}">
+      <div class="hint">${tieneRegalo?`Sugerido según el premio elegido: <b>${sugerido} pts</b>. `:''}Ajusta este número si hace falta corregirlo (por ejemplo, en un pedido antiguo). Se descuenta de sus puntos disponibles al quedar <b>confirmado</b> o <b>entregado</b>.</div>
+    </div>`:''}
+
     <div class="grid3">
       <div class="field"><label>Subtotal</label><input id="vSub" type="number" step="0.01" value="${v.subtotal??''}"></div>
       <div class="field"><label>Descuento</label><input id="vDescu" type="number" step="0.01" value="${v.descuento??''}"></div>
       <div class="field"><label>Total</label><input id="vTotal" type="number" step="0.01" value="${v.total??''}"></div>
     </div>
-    <div class="field"><label>Estado</label><select id="vEstado">${VENTA_ESTADOS.map(e=>`<option ${estSel(v.estado,e)}>${e}</option>`).join('')}</select><div class="hint">Al marcar <b>confirmado</b> o <b>entregado</b> se descuenta el stock${(v.items||[]).some(it=>it.tipo==='regalo')?' <b>y se descuentan los puntos del premio</b> de su historial':''}. Si la pasas a <b>cancelado/nuevo</b>, el stock se devuelve.${v.stock_descontado?' <span style="color:var(--ok)">· stock ya descontado</span>':''}</div></div>
+    <div class="field"><label>Estado</label><select id="vEstado">${VENTA_ESTADOS.map(e=>`<option ${estSel(v.estado,e)}>${e}</option>`).join('')}</select><div class="hint">Al marcar <b>confirmado</b> o <b>entregado</b> se descuenta el stock${tieneRegalo?' <b>y los puntos indicados arriba</b>':''}. Si la pasas a <b>cancelado/nuevo</b>, el stock se devuelve.${v.stock_descontado?' <span style="color:var(--ok)">· stock ya descontado</span>':''}</div></div>
     <div class="field"><label>Notas internas (solo tú las ves)</label><textarea id="vInternas" rows="2">${esc(v.notas_internas||'')}</textarea></div>
 
     <div class="actions">
@@ -1457,6 +1480,7 @@ function ventaForm(id){
       estado:nuevoEstado, notas_internas:$('#vInternas').value.trim()||null,
       stock_descontado:stockDesc,
     };
+    { const pu=$('#vPuntosUsados'); if(pu) payload.puntos_usados = Number(pu.value)||0; }
     const {error}=await sb.from('ventas').update(payload).eq('id',id);
     if(error){ toast('Error: '+error.message,true); return; }
     toast('Venta actualizada ✓'+extra); closeOv(); await loadProductos(); loadVentas();
@@ -1467,15 +1491,24 @@ function ventaForm(id){
 async function cambiarEstadoVentaRapido(id, nuevoEstado){
   const v = VENTAS.find(x=>x.id===id); if(!v) return;
   const DEDUCT=['confirmado','entregado'];
+  const tieneRegalo=(v.items||[]).some(it=>it.tipo==='regalo');
+  let puntosUsados = v.puntos_usados;
+  if(DEDUCT.includes(nuevoEstado) && tieneRegalo && !Number(v.puntos_usados)){
+    const sugerido=(v.items||[]).filter(x=>x.tipo==='regalo').reduce((s,x)=>s+(Number(x.tierMeta)||0),0);
+    const resp=prompt(`Este pedido incluye un premio.\n¿Cuántos puntos se le descuentan a ${v.cliente_nombre||'este cliente'} por usarlo?`, String(sugerido||0));
+    if(resp===null) return; // canceló
+    puntosUsados = Number(resp)||0;
+  }
   let stockDesc=!!v.stock_descontado, extra='';
   try{
     if(DEDUCT.includes(nuevoEstado) && !stockDesc){ await ajustarStockDeVenta(v.items,-1); stockDesc=true; extra=' · stock descontado'; }
     else if(!DEDUCT.includes(nuevoEstado) && stockDesc){ await ajustarStockDeVenta(v.items,+1); stockDesc=false; extra=' · stock devuelto'; }
   }catch(e){ console.warn('stock', e); }
-  const {error}=await sb.from('ventas').update({estado:nuevoEstado, stock_descontado:stockDesc}).eq('id',id);
+  const payload={estado:nuevoEstado, stock_descontado:stockDesc};
+  if(puntosUsados!=null) payload.puntos_usados=puntosUsados;
+  const {error}=await sb.from('ventas').update(payload).eq('id',id);
   if(error){ toast('Error: '+error.message,true); return; }
-  const tieneRegalo=(v.items||[]).some(it=>it.tipo==='regalo');
-  toast((nuevoEstado==='confirmado'?('Venta confirmada ✓'+(tieneRegalo?' · puntos del premio descontados':'')):nuevoEstado==='cancelado'?'Venta rechazada':'Actualizada')+extra);
+  toast((nuevoEstado==='confirmado'?('Venta confirmada ✓'+(tieneRegalo?` · se descuentan ${puntosUsados||0} pts del premio`:'')):nuevoEstado==='cancelado'?'Venta rechazada':'Actualizada')+extra);
   await loadProductos(); loadVentas();
 }
 // Ajusta el stock de los productos de una venta. sign=-1 descuenta, +1 devuelve.

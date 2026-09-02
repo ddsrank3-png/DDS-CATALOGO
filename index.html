@@ -2962,14 +2962,18 @@ async function mostrarMiCuentaPanel(){
     let ganados=0, gastados=0;
     const canjes=[]; // {premio, pts, fecha}
     const confirmadas = ventas.filter(v=>v.estado==='confirmado'||v.estado==='entregado');
-    confirmadas.forEach(v=>{ (v.items||[]).forEach(it=>{
-      if(it.tipo==='regalo'){ const c=Number(it.tierMeta)||0; gastados+=c; canjes.push({premio:it.nombre||'Premio', pts:c, fecha:v.created_at}); return; }
-      if(String(it.ml||'').toLowerCase()==='sellado'){ ganados += _selloPtsFor(it.categoria||(PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria)) * (it.qty||1); return; }
-      const cat = it.categoria || (PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria);
-      const pd = (CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.puntos)||{};
-      const v2 = cat ? (pd[cat]||{})[String(it.ml)] : null;
-      if(v2!=null) ganados += Number(v2)*(it.qty||1);
-    }); });
+    confirmadas.forEach(v=>{
+      const usados=Number(v.puntos_usados)||0;
+      if(usados>0){ gastados+=usados; const reg=(v.items||[]).find(it=>it.tipo==='regalo'); canjes.push({premio:(reg&&reg.nombre)||'Premio', pts:usados, fecha:v.created_at}); }
+      (v.items||[]).forEach(it=>{
+        if(it.tipo==='regalo') return; // el descuento ya se contó arriba desde v.puntos_usados
+        if(String(it.ml||'').toLowerCase()==='sellado'){ ganados += _selloPtsFor(it.categoria||(PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria)) * (it.qty||1); return; }
+        const cat = it.categoria || (PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria);
+        const pd = (CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.puntos)||{};
+        const v2 = cat ? (pd[cat]||{})[String(it.ml)] : null;
+        if(v2!=null) ganados += Number(v2)*(it.qty||1);
+      });
+    });
     const pts=Math.max(0, ganados-gastados);
     const tiers=regaloTiers();
     const desbloq=tiers.filter(t=>pts>=Number(t.meta));
@@ -4518,11 +4522,12 @@ async function _guardarVenta(R){
   const nombre=(cliente.nombre||'').trim(), tel=(cliente.tel||'').trim();
   const {envioTipo, emp, total}=_empaqueDe(R);
   const items=_itemsParaVenta(R);
+  const puntosUsados = items.filter(i=>i.tipo==='regalo').reduce((s,i)=>s+(Number(i.tierMeta)||0),0);
   await sb.from('ventas').insert({
     cliente_nombre:nombre||null, cliente_telefono:tel||null,
     cliente_direccion: envioTipo==='shalom' ? 'Envío Shalom' : 'Cliente en Ica',
     items, subtotal:R.totalSinDesc, descuento:R.ahorro, total,
-    metodo_pago:'coordinar', estado:'nuevo',
+    metodo_pago:'coordinar', estado:'nuevo', puntos_usados:puntosUsados,
     cliente_codigo:(window.MI_CUENTA&&MI_CUENTA.codigo)||null,
     data:{ envio:envioTipo, empaque:emp }
   });

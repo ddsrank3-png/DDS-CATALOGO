@@ -1387,9 +1387,11 @@ function renderVentas(){
           <div class="sub">${horaCorta(v.created_at)} · ${n} art. · ${fmtV(v.total)}${v.cliente_telefono?` · ${esc(v.cliente_telefono)}`:''}</div>
         </div>
         <div class="acts">
-          <button class="iconbtn" data-print="${v.id}">🖨️</button>
-          <button class="iconbtn" data-edit="${v.id}">✏️</button>
-          <button class="iconbtn" data-del="${v.id}">🗑️</button>
+          ${(est!=='confirmado'&&est!=='entregado')?`<button class="iconbtn" data-confirm="${v.id}" title="Confirmar">✅</button>`:''}
+          ${est!=='cancelado'?`<button class="iconbtn" data-reject="${v.id}" title="Rechazar">✕</button>`:''}
+          <button class="iconbtn" data-edit="${v.id}" title="Editar">✏️</button>
+          <button class="iconbtn" data-print="${v.id}" title="Imprimir">🖨️</button>
+          <button class="iconbtn" data-del="${v.id}" title="Eliminar">🗑️</button>
         </div>
       </div>`;
     }).join('');
@@ -1398,6 +1400,8 @@ function renderVentas(){
   $('#listVentas').querySelectorAll('[data-print]').forEach(b=>b.onclick=()=>imprimirVenta(b.dataset.print));
   $('#listVentas').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>ventaForm(b.dataset.edit));
   $('#listVentas').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delVenta(b.dataset.del));
+  $('#listVentas').querySelectorAll('[data-confirm]').forEach(b=>b.onclick=()=>cambiarEstadoVentaRapido(b.dataset.confirm,'confirmado'));
+  $('#listVentas').querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>{ if(confirm('¿Rechazar este pedido? El stock reservado se devolverá.')) cambiarEstadoVentaRapido(b.dataset.reject,'cancelado'); });
 }
 function ventaForm(id){
   const v=VENTAS.find(x=>x.id===id); if(!v) return;
@@ -1460,6 +1464,20 @@ function ventaForm(id){
   openOv();
 }
 
+async function cambiarEstadoVentaRapido(id, nuevoEstado){
+  const v = VENTAS.find(x=>x.id===id); if(!v) return;
+  const DEDUCT=['confirmado','entregado'];
+  let stockDesc=!!v.stock_descontado, extra='';
+  try{
+    if(DEDUCT.includes(nuevoEstado) && !stockDesc){ await ajustarStockDeVenta(v.items,-1); stockDesc=true; extra=' · stock descontado'; }
+    else if(!DEDUCT.includes(nuevoEstado) && stockDesc){ await ajustarStockDeVenta(v.items,+1); stockDesc=false; extra=' · stock devuelto'; }
+  }catch(e){ console.warn('stock', e); }
+  const {error}=await sb.from('ventas').update({estado:nuevoEstado, stock_descontado:stockDesc}).eq('id',id);
+  if(error){ toast('Error: '+error.message,true); return; }
+  const tieneRegalo=(v.items||[]).some(it=>it.tipo==='regalo');
+  toast((nuevoEstado==='confirmado'?('Venta confirmada ✓'+(tieneRegalo?' · puntos del premio descontados':'')):nuevoEstado==='cancelado'?'Venta rechazada':'Actualizada')+extra);
+  await loadProductos(); loadVentas();
+}
 // Ajusta el stock de los productos de una venta. sign=-1 descuenta, +1 devuelve.
 async function ajustarStockDeVenta(items, sign){
   const map={};

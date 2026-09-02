@@ -2959,32 +2959,38 @@ async function mostrarMiCuentaPanel(){
     const { data, error } = await sb.rpc('cliente_historial', { p_codigo: MI_CUENTA.codigo });
     if(error) throw error;
     const ventas = data||[];
-    let pts=0;
+    let ganados=0, gastados=0;
+    const canjes=[]; // {premio, pts, fecha}
     const confirmadas = ventas.filter(v=>v.estado==='confirmado'||v.estado==='entregado');
     confirmadas.forEach(v=>{ (v.items||[]).forEach(it=>{
-      if(it.tipo==='regalo'){ pts -= Number(it.tierMeta)||0; return; }
-      if(String(it.ml||'').toLowerCase()==='sellado'){ pts += _selloPtsFor(it.categoria||(PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria)) * (it.qty||1); return; }
+      if(it.tipo==='regalo'){ const c=Number(it.tierMeta)||0; gastados+=c; canjes.push({premio:it.nombre||'Premio', pts:c, fecha:v.created_at}); return; }
+      if(String(it.ml||'').toLowerCase()==='sellado'){ ganados += _selloPtsFor(it.categoria||(PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria)) * (it.qty||1); return; }
       const cat = it.categoria || (PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria);
       const pd = (CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.puntos)||{};
       const v2 = cat ? (pd[cat]||{})[String(it.ml)] : null;
-      if(v2!=null) pts += Number(v2)*(it.qty||1);
+      if(v2!=null) ganados += Number(v2)*(it.qty||1);
     }); });
-    pts=Math.max(0,pts);
+    const pts=Math.max(0, ganados-gastados);
     const tiers=regaloTiers();
     const desbloq=tiers.filter(t=>pts>=Number(t.meta));
     const siguiente=tiers.find(t=>pts<Number(t.meta));
+    canjes.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
     const pb=$('#mcPuntosBox');
-    pb.innerHTML = `<div class="mc-h">🎁 Tus puntos acumulados</div>
+    pb.innerHTML = `<div class="mc-h">🎁 Tus puntos disponibles</div>
       <div class="mc-pts">${pts} pts</div>
       ${desbloq.length?`<div class="genero" style="color:#0d6b32">¡Ya puedes canjear ${esc((desbloq[desbloq.length-1].label||'tu premio').toLowerCase())}! Escríbenos por WhatsApp o dile al vendedor tu código.</div>`
         : (siguiente?`<div class="genero">Te faltan <b>${Number(siguiente.meta)-pts} pts</b> para ${esc(siguiente.label||'tu próximo premio')}.</div>`:'')}
-      <div class="genero" style="margin-top:6px;color:var(--muted-2)">Los puntos se suman cuando la tienda confirma tu pedido.</div>`;
+      ${canjes.length?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
+        <div class="genero" style="font-weight:700;margin-bottom:4px">Premios ya canjeados</div>
+        ${canjes.map(c=>{ const f=new Date(c.fecha).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'}); return `<div class="genero" style="margin-top:2px">✅ Usaste <b>${c.pts} pts</b> en ${esc(c.premio)} — ${f}</div>`; }).join('')}
+      </div>`:''}
+      <div class="genero" style="margin-top:8px;color:var(--muted-2)">Ganaste ${ganados} pts en total${gastados>0?`, usaste ${gastados} pts en premios`:''}. Te quedan <b>${pts} pts</b> disponibles para tu próxima compra.</div>`;
     const hc=$('#mcHistorial');
     if(!ventas.length){ hc.innerHTML='<div class="genero">Aún no registras compras con este código.</div>'; return; }
     const estLbl={nuevo:'⏳ Pendiente de confirmar', confirmado:'✅ Confirmado', entregado:'📦 Entregado', cancelado:'✕ Cancelado'};
     hc.innerHTML = ventas.map(v=>{
       const f=new Date(v.created_at).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});
-      const items=(v.items||[]).map(it=>`${esc(it.nombre||'')} · ${esc(mlLabel(it.ml))} ×${it.qty||1}`).join(', ');
+      const items=(v.items||[]).map(it=>`${it.tipo==='regalo'?'🎁 ':''}${esc(it.nombre||'')} · ${esc(mlLabel(it.ml))} ×${it.qty||1}`).join(', ');
       return `<div style="border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;font-weight:600"><span>${f}</span><span>${fmt(v.total)}</span></div>
         <div class="genero" style="margin-top:3px">${items}</div>

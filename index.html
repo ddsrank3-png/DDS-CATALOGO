@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Catálogo — Decants de Perfumes</title>
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.webmanifest">
@@ -27,7 +27,8 @@
   --radius:12px; --radius-lg:18px; --shadow:0 18px 50px rgba(20,20,25,.14);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth; -webkit-text-size-adjust:100%; text-size-adjust:100%}
+html,body{font-size:16px}
 body{background:var(--bg);
   color:var(--cream); font-family:'Jost',system-ui,sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased;}
 img{display:block; max-width:100%}
@@ -1669,6 +1670,12 @@ function asesorScore(p,ans){
   let score=0,max=0; const hit=(kws)=>kws&&kws.some(k=>blob.includes(_norm(k)));
   const famP = Array.isArray(p.familia)&&p.familia.length ? p.familia.map(_norm) : null;
   const estP = Array.isArray(p.estilo)&&p.estilo.length ? p.estilo.map(_norm) : null;
+  // Género: si piden Hombre/Mujer específico, un perfume Unisex recibe menos puntaje que uno del género exacto
+  if(ans.genero==='Hombre' || ans.genero==='Mujer'){
+    max+=2.5;
+    if(p.genero===ans.genero) score+=2.5;
+    else if(p.genero==='Unisex') score+=1.3;
+  }
   // Ocasión (texto)
   if(ans.ocasion&&ans.ocasion.length) ans.ocasion.forEach(i=>{const o=ASESOR_Q[1].opts[i]; if(!o)return; max+=2; if(!o.kw.length||hit(o.kw))score+=2;});
   // Momento: usa campo estructurado si existe
@@ -2157,7 +2164,7 @@ function renderArmar(){
     <div class="armar-side-top"><b>TU COMBO</b><span>${C.n} ${C.n===1?'item':'items'}</span><button class="armar-side-x" id="armarSideX" aria-label="Cerrar">✕</button></div>
     ${envioHtml}
     ${puntosHtml}
-    ${C.n?`<div class="armar-seguir" id="armarSeguir">👉 Toca aquí o fuera del panel para seguir agregando perfumes</div>`:''}
+    ${C.n?`<div class="armar-seguir" id="armarSeguir">👉 Seguir agregando al combo</div>`:''}
     <div class="armar-items">${itemsHtml}</div>
     <div class="armar-side-bot">
       <div class="armar-row"><span>Precio sin descuento</span><span>${fmt(C.subtotal)}</span></div>
@@ -2197,7 +2204,6 @@ function renderArmar(){
   { const sc=$('#armarScrim'); if(sc) sc.onclick=closeSide; }
   { const sg=$('#armarSeguir'); if(sg) sg.onclick=(e)=>{ e.stopPropagation(); closeSide(); }; }
   { const vf=$('#armarVerFab'); if(vf){ vf.style.display = (window.innerWidth<=900 && C.n>0)?'block':'none'; vf.onclick=openSide; } }
-  if(window._armarJustAdded && window.innerWidth<=900){ window._armarJustAdded=false; openSide(); }
 }
 
 function armarToggle(id){
@@ -2213,7 +2219,6 @@ function armarToggle(id){
     if(pres) precio=Number(pres.precio);
     if(precio==null){ toast('Ese perfume no tiene decants a la venta',true); return; }
     armarSel.push({ key, id:p.id, nombre:p.nombre, categoria:p.categoria, ml:armarMl, precio });
-    window._armarJustAdded=true;
   }
   renderArmar();
 }

@@ -1379,11 +1379,11 @@ function renderVentas(){
     const totalDia=arr.reduce((s,v)=>s+Number(v.total||0),0);
     html+=`<div class="dayhead"><span>${esc(fechaDia(arr[0].created_at))}</span><span>${arr.length} venta${arr.length!==1?'s':''} · ${fmtV(totalDia)}</span></div>`;
     html+=arr.map(v=>{
-      const it=v.items||[]; const n=it.reduce((s,x)=>s+(+x.qty||0),0); const est=v.estado||'nuevo';
+      const it=v.items||[]; const n=it.reduce((s,x)=>s+(+x.qty||0),0); const est=v.estado||'nuevo'; const tieneRegalo=it.some(x=>x.tipo==='regalo');
       return `<div class="item">
         <div class="th">🧾</div>
         <div class="info">
-          <div class="n">${esc(v.cliente_nombre||'Sin nombre')} <span class="tg ${est==='cancelado'?'off':''}">${esc(est)}</span></div>
+          <div class="n">${esc(v.cliente_nombre||'Sin nombre')} <span class="tg ${est==='cancelado'?'off':''}">${esc(est)}</span>${tieneRegalo?' <span class="tg" style="background:#ffdf7e;color:#5c3d00">🎁 premio</span>':''}</div>
           <div class="sub">${horaCorta(v.created_at)} · ${n} art. · ${fmtV(v.total)}${v.cliente_telefono?` · ${esc(v.cliente_telefono)}`:''}</div>
         </div>
         <div class="acts">
@@ -1403,9 +1403,9 @@ function ventaForm(id){
   const v=VENTAS.find(x=>x.id===id); if(!v) return;
   const it=v.items||[];
   const itemsHtml = it.length ? it.map(x=>`<div class="pres-row" style="grid-template-columns:1fr auto auto">
-      <div>${esc(x.nombre||'')}${x.marca?` <span style="color:var(--muted)">· ${esc(x.marca)}</span>`:''} <span style="color:var(--gold-3)">(${esc(String(x.ml))})</span></div>
+      <div>${x.tipo==='regalo'?'🎁 ':''}${esc(x.nombre||'')}${x.marca?` <span style="color:var(--muted)">· ${esc(x.marca)}</span>`:''} <span style="color:var(--gold-3)">(${esc(String(x.ml))})</span>${x.tipo==='regalo'?` <span style="color:var(--ok)">· premio${x.tierMeta?` (-${x.tierMeta} pts)`:''}</span>`:''}</div>
       <div style="color:var(--muted)">x${esc(String(x.qty))}</div>
-      <div>${fmtV(x.total!=null?x.total:(Number(x.precio)*Number(x.qty)))}</div>
+      <div>${x.tipo==='regalo'?'GRATIS':fmtV(x.total!=null?x.total:(Number(x.precio)*Number(x.qty)))}</div>
     </div>`).join('') : '<div class="hint">Sin detalle de artículos.</div>';
 
   $('#modal').innerHTML = `
@@ -1425,7 +1425,7 @@ function ventaForm(id){
       <div class="field"><label>Descuento</label><input id="vDescu" type="number" step="0.01" value="${v.descuento??''}"></div>
       <div class="field"><label>Total</label><input id="vTotal" type="number" step="0.01" value="${v.total??''}"></div>
     </div>
-    <div class="field"><label>Estado</label><select id="vEstado">${VENTA_ESTADOS.map(e=>`<option ${estSel(v.estado,e)}>${e}</option>`).join('')}</select><div class="hint">Al marcar <b>confirmado</b> o <b>entregado</b> se descuenta el stock. Si la pasas a <b>cancelado/nuevo</b>, el stock se devuelve.${v.stock_descontado?' <span style="color:var(--ok)">· stock ya descontado</span>':''}</div></div>
+    <div class="field"><label>Estado</label><select id="vEstado">${VENTA_ESTADOS.map(e=>`<option ${estSel(v.estado,e)}>${e}</option>`).join('')}</select><div class="hint">Al marcar <b>confirmado</b> o <b>entregado</b> se descuenta el stock${(v.items||[]).some(it=>it.tipo==='regalo')?' <b>y se descuentan los puntos del premio</b> de su historial':''}. Si la pasas a <b>cancelado/nuevo</b>, el stock se devuelve.${v.stock_descontado?' <span style="color:var(--ok)">· stock ya descontado</span>':''}</div></div>
     <div class="field"><label>Notas internas (solo tú las ves)</label><textarea id="vInternas" rows="2">${esc(v.notas_internas||'')}</textarea></div>
 
     <div class="actions">

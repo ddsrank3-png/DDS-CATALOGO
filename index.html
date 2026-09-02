@@ -443,8 +443,14 @@ header::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1
   .asesor2-q{order:2; overflow-y:auto; padding:16px 16px 26px; justify-content:flex-start}
   .a2-qh.big{font-size:1.3rem}
 }
-.drawer{position:fixed; top:0; right:0; height:100%; width:100%; max-width:420px; z-index:140; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border-left:1px solid var(--line); transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column}
+.drawer{position:fixed; top:0; right:0; height:100%; width:100%; max-width:420px; z-index:140; background:linear-gradient(180deg,var(--panel),var(--bg-2)); border-left:1px solid var(--line); transform:translateX(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1), max-width .28s ease; display:flex; flex-direction:column}
 .drawer.open{transform:none}
+.drawer.drawer-full{max-width:100%}
+.drawer.drawer-full .cart-list{max-width:640px; margin:0 auto; width:100%}
+.drawer.drawer-full .bot{max-width:640px; margin:0 auto; width:100%}
+.cart-continue{width:100%; background:#111; color:#fff; border:none; border-radius:12px; padding:14px; font-weight:800; font-size:.92rem; cursor:pointer; margin:4px 0 14px}
+.cart-back{display:flex; align-items:center; gap:6px; background:transparent; border:none; color:var(--muted); font-size:.84rem; font-weight:600; cursor:pointer; padding:0 0 12px}
+.cart-back:hover{color:var(--cream)}
 .drawer .top{display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--line-soft)}
 .drawer .top h3{font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:600}
 .drawer .top button svg{width:20px; height:20px; stroke:var(--cream)}
@@ -1219,6 +1225,7 @@ header::after{background:var(--line); opacity:1}
   </div>
   <div id="cartPtsCounter" style="display:none"></div>
   <div class="cart-list" id="cartList"></div>
+  <div id="cartContinueWrap" style="padding:0 18px"></div>
   <div class="bot" id="cartBot" style="display:none"></div>
 </div>
 
@@ -1315,6 +1322,7 @@ let CART = JSON.parse(localStorage.getItem('cart_'+CONFIG.TIENDA_NOMBRE) || '[]'
 let payMethod='coordinar';
 let cliente={nombre:'',tel:'',dir:''};
 let cartCliMin=false;
+let cartFullMode=false;
 const MAYOR_MIN = Number(CONFIG.MAYOR_MIN)||0;   // 0 = no hay precio por mayor
 
 /* --- Precio por mayor (minorista/mayorista automático por cantidad) --- */
@@ -2952,14 +2960,16 @@ async function mostrarMiCuentaPanel(){
     if(error) throw error;
     const ventas = data||[];
     let pts=0;
-    ventas.forEach(v=>{ (v.items||[]).forEach(it=>{
-      if(it.tipo==='regalo') return;
+    const confirmadas = ventas.filter(v=>v.estado==='confirmado'||v.estado==='entregado');
+    confirmadas.forEach(v=>{ (v.items||[]).forEach(it=>{
+      if(it.tipo==='regalo'){ pts -= Number(it.tierMeta)||0; return; }
       if(String(it.ml||'').toLowerCase()==='sellado'){ pts += _selloPtsFor(it.categoria||(PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria)) * (it.qty||1); return; }
       const cat = it.categoria || (PROD_BY_ID[it.id]&&PROD_BY_ID[it.id].categoria);
       const pd = (CONFIG.REGALO_COMBO&&CONFIG.REGALO_COMBO.puntos)||{};
       const v2 = cat ? (pd[cat]||{})[String(it.ml)] : null;
       if(v2!=null) pts += Number(v2)*(it.qty||1);
     }); });
+    pts=Math.max(0,pts);
     const tiers=regaloTiers();
     const desbloq=tiers.filter(t=>pts>=Number(t.meta));
     const siguiente=tiers.find(t=>pts<Number(t.meta));
@@ -2967,15 +2977,18 @@ async function mostrarMiCuentaPanel(){
     pb.innerHTML = `<div class="mc-h">🎁 Tus puntos acumulados</div>
       <div class="mc-pts">${pts} pts</div>
       ${desbloq.length?`<div class="genero" style="color:#0d6b32">¡Ya puedes canjear ${esc((desbloq[desbloq.length-1].label||'tu premio').toLowerCase())}! Escríbenos por WhatsApp o dile al vendedor tu código.</div>`
-        : (siguiente?`<div class="genero">Te faltan <b>${Number(siguiente.meta)-pts} pts</b> para ${esc(siguiente.label||'tu próximo premio')}.</div>`:'')}`;
+        : (siguiente?`<div class="genero">Te faltan <b>${Number(siguiente.meta)-pts} pts</b> para ${esc(siguiente.label||'tu próximo premio')}.</div>`:'')}
+      <div class="genero" style="margin-top:6px;color:var(--muted-2)">Los puntos se suman cuando la tienda confirma tu pedido.</div>`;
     const hc=$('#mcHistorial');
     if(!ventas.length){ hc.innerHTML='<div class="genero">Aún no registras compras con este código.</div>'; return; }
+    const estLbl={nuevo:'⏳ Pendiente de confirmar', confirmado:'✅ Confirmado', entregado:'📦 Entregado', cancelado:'✕ Cancelado'};
     hc.innerHTML = ventas.map(v=>{
       const f=new Date(v.created_at).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});
       const items=(v.items||[]).map(it=>`${esc(it.nombre||'')} · ${esc(mlLabel(it.ml))} ×${it.qty||1}`).join(', ');
       return `<div style="border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;font-weight:600"><span>${f}</span><span>${fmt(v.total)}</span></div>
         <div class="genero" style="margin-top:3px">${items}</div>
+        <div class="genero" style="margin-top:3px;font-size:.76rem">${esc(estLbl[v.estado]||v.estado||'')}</div>
       </div>`;
     }).join('');
   }catch(e){ const pb=$('#mcPuntosBox'); if(pb) pb.innerHTML='<div class="genero">No se pudo cargar tus puntos ahora.</div>'; const hc=$('#mcHistorial'); if(hc) hc.innerHTML=''; }
@@ -4203,7 +4216,6 @@ function renderCart(){
     addGiftCombo(Number(meta), sel?sel.value:null);
   });
 
-  const yapeOn = payMethod==='yape' && CONFIG.YAPE_NUMERO;
   $('#cartBot').style.display='block';
   const empCfg=CONFIG.EMPAQUE||{activo:true,monto:5,gratis_desde:200};
   const envioTipo = cliente.envio || 'ica';
@@ -4211,8 +4223,18 @@ function renderCart(){
   const empMonto = Number(empCfg.monto||5);
   const emp = (empCfg.activo!==false && envioTipo==='shalom' && R.total < gratisDesde) ? empMonto : 0;
   const totalFinal = R.total + emp;
+
+  // Drawer: modo compacto (mientras eligen productos) vs pantalla completa (al ir a finalizar)
+  const drawerEl=$('#drawer'); if(drawerEl) drawerEl.classList.toggle('drawer-full', cartFullMode);
+  const contWrap=$('#cartContinueWrap');
+  if(contWrap){
+    contWrap.innerHTML = cartFullMode ? '' : `<button class="cart-continue" id="cartContinueBtn">Continuar con mi pedido →</button>`;
+    const cb=$('#cartContinueBtn'); if(cb) cb.onclick=()=>{ cartFullMode=true; renderCart(); };
+  }
+
   $('#cartBot').innerHTML = `
-    <button class="cart-toggle-cli" id="toggleCliBox">${cartCliMin?'▸ Mostrar datos de entrega y pago':'▾ Ocultar datos de entrega y pago'}</button>
+    ${cartFullMode?`<button class="cart-back" id="cartBackBtn">← Seguir agregando productos</button>`:''}
+    <button class="cart-toggle-cli" id="toggleCliBox">${cartCliMin?'▸ Mostrar datos de entrega':'▾ Ocultar datos de entrega'}</button>
     <div id="cliBoxWrap" style="display:${cartCliMin?'none':'block'}">
     <div class="cliente-box">
       <div class="cliente-t">¿Cómo lo recibes?</div>
@@ -4224,32 +4246,28 @@ function renderCart(){
         ? `<div class="aviso-envio">📦 Empaque para envío: <b>${fmt(emp)}</b> · Te faltan <b>${fmt(gratisDesde-R.total)}</b> para empaque gratis</div>`
         : `<div class="aviso-envio free">📦 ¡Empaque gratis! (pedido de ${fmt(gratisDesde)} o más)</div>`) : ''}
     </div>
-    <div class="cliente-box">
+    ${MI_CUENTA ? `<div class="cliente-box"><div class="cliente-t">Comprando como</div><div style="font-weight:700">${esc(MI_CUENTA.nombre)} <span style="font-weight:400;color:var(--muted-2);font-size:.8rem">(${esc(MI_CUENTA.codigo)})</span></div></div>`
+      : `<div class="cliente-box">
       <div class="cliente-t">Para tu pedido</div>
-      <input id="cNombre" placeholder="Tu nombre" value="${esc(cliente.nombre||'')}">
-    </div>
-    ${CONFIG.YAPE_NUMERO ? `<div class="pay-toggle">
-      <button class="${payMethod==='yape'?'on':''}" data-pay="yape">Pagar con Yape</button>
-      <button class="${payMethod==='coordinar'?'on coord':''}" data-pay="coordinar">Coordinar pago</button>
-    </div>`:''}
-    ${yapeOn ? `<div class="yape-box">Yape a <b>${esc(CONFIG.YAPE_NUMERO)}</b>${CONFIG.YAPE_NOMBRE?` (<b>${esc(CONFIG.YAPE_NOMBRE)}</b>)`:''} y pega el N° de operación:
-      <input id="yapeOp" placeholder="N° de operación" inputmode="numeric"></div>`:''}
+      <input id="cNombre" placeholder="Nombre completo" value="${esc(cliente.nombre||'')}" style="margin-bottom:8px">
+      <input id="cTelefono" placeholder="Número de celular" value="${esc(cliente.tel||'')}" inputmode="numeric">
+    </div>`}
     </div>
     ${R.ahorro>0?`<div class="tot"><span class="k">Subtotal</span><span class="tach">${fmt(R.totalSinDesc)}</span></div>`:''}
     ${emp>0?`<div class="tot"><span class="k">Empaquetado</span><span class="v">${fmt(emp)}</span></div>`:''}
     <div class="tot big"><span class="k">Total</span><span class="v">${fmt(totalFinal)}</span></div>
     ${R.ahorro>0?`<div class="ahorro">Ahorras ${fmt(R.ahorro)} 🎉</div>`:''}
-    <button class="wa" id="waCheckout"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.9-1.4A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.1-.2 0-.4.1-.5l.4-.5c.1-.1.1-.3 0-.4l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.7.7-.9 1.6-.6 2.6.5 1.6 1.6 3 3.2 3.9 2 1.1 3.3 1 4.2.9.6-.1 1.4-.6 1.6-1.2.2-.5.2-1 .1-1.1z"/></svg>Pedir por WhatsApp</button>
-    <button class="co-open" id="finalizarBtn">🧾 Finalizar compra (envío + pago)</button>`;
+    <button class="np" id="registrarBtn" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid #111;background:var(--panel);color:var(--cream);font-weight:800;font-size:.9rem;cursor:pointer;margin-bottom:10px">📝 Registrar pedido</button>
+    <button class="wa" id="waCheckout"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.9-1.4A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.1-.2 0-.4.1-.5l.4-.5c.1-.1.1-.3 0-.4l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.7.7-.9 1.6-.6 2.6.5 1.6 1.6 3 3.2 3.9 2 1.1 3.3 1 4.2.9.6-.1 1.4-.6 1.6-1.2.2-.5.2-1 .1-1.1z"/></svg>Finalizar compra por WhatsApp</button>`;
 
+  { const bb=$('#cartBackBtn'); if(bb) bb.onclick=()=>{ cartFullMode=false; renderCart(); }; }
   { const tb=$('#toggleCliBox'); if(tb) tb.onclick=()=>{ cartCliMin=!cartCliMin; renderCart(); }; }
   $('#cartBot').querySelectorAll('[data-envio]').forEach(b=>b.onclick=()=>{ cliente.envio=b.dataset.envio; saveCart&&saveCart(); renderCart(); });
 
-  $('#cartBot').querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{ payMethod=b.dataset.pay; renderCart(); });
-  const cmap={cNombre:'nombre'};
+  const cmap={cNombre:'nombre', cTelefono:'tel'};
   Object.keys(cmap).forEach(idc=>{ const el=document.getElementById(idc); if(el) el.oninput=()=>{ cliente[cmap[idc]]=el.value; }; });
   $('#waCheckout').onclick = () => checkout(R);
-  { const fb=$('#finalizarBtn'); if(fb) fb.onclick=()=>openCheckout(R); }
+  { const rb=$('#registrarBtn'); if(rb) rb.onclick=()=>registrarPedido(R); }
 }
 function chgQty(key,d){ const i=CART.find(x=>x.key===key); if(!i)return;
   if(d>0){ const p=PROD_BY_ID[i.id]; const s=p?stockDe(p):null; if(s!=null && qtyEnCarrito(i.id)>=s){ toast('No hay más stock disponible'); return; } }
@@ -4476,22 +4494,56 @@ async function coFinalizar(){
   toast('✅ ¡Pedido enviado!');
   closeCheckout();
 }
+function _itemsParaVenta(R){
+  return R.lines.map(i=>{
+    const base={ id:i.id, nombre:i.nombre, marca:i.marca||'', categoria:i.categoria||(PROD_BY_ID[i.id]?PROD_BY_ID[i.id].categoria:null), ml:i.ml, qty:i.qty, precio:i.unit, total:i.lineTotal, tipo:i.tipo||'normal' };
+    if(i.tipo==='regalo' && i._tierMeta) base.tierMeta=Number(i._tierMeta);
+    return base;
+  });
+}
+function _empaqueDe(R){
+  const empCfg=CONFIG.EMPAQUE||{activo:true,monto:5,gratis_desde:200};
+  const envioTipo=cliente.envio||'ica';
+  const gratisDesde=Number(empCfg.gratis_desde||(CONFIG.COMBO_ARMA&&CONFIG.COMBO_ARMA.envio_gratis_desde)||200);
+  const emp=(empCfg.activo!==false && envioTipo==='shalom' && R.total<gratisDesde)?Number(empCfg.monto||5):0;
+  return { envioTipo, emp, total:R.total+emp };
+}
+async function _guardarVenta(R){
+  const nombre=(cliente.nombre||'').trim(), tel=(cliente.tel||'').trim();
+  const {envioTipo, emp, total}=_empaqueDe(R);
+  const items=_itemsParaVenta(R);
+  await sb.from('ventas').insert({
+    cliente_nombre:nombre||null, cliente_telefono:tel||null,
+    cliente_direccion: envioTipo==='shalom' ? 'Envío Shalom' : 'Cliente en Ica',
+    items, subtotal:R.totalSinDesc, descuento:R.ahorro, total,
+    metodo_pago:'coordinar', estado:'nuevo',
+    cliente_codigo:(window.MI_CUENTA&&MI_CUENTA.codigo)||null,
+    data:{ envio:envioTipo, empaque:emp }
+  });
+}
+async function registrarPedido(R){
+  if(!CART.length){ toast('Tu pedido está vacío'); return; }
+  const nombre=(cliente.nombre||'').trim(), tel=(cliente.tel||'').trim();
+  if(!nombre||!tel){ toast('Escribe tu nombre y celular',true); return; }
+  const btn=$('#registrarBtn'); if(btn){ btn.disabled=true; btn.textContent='Registrando…'; }
+  try{
+    await _guardarVenta(R);
+    CART=[]; saveCart(); cartFullMode=false;
+    toast('✅ ¡Pedido registrado! Te confirmaremos pronto.');
+    closeCart();
+  }catch(e){
+    console.warn('No se pudo registrar el pedido:', e);
+    toast('No se pudo registrar el pedido. Intenta de nuevo.',true);
+    if(btn){ btn.disabled=false; btn.textContent='📝 Registrar pedido'; }
+  }
+}
 async function checkout(R){
   if(!CART.length){ toast('Tu pedido está vacío'); return; }
-  const nombre=(cliente.nombre||'').trim(), tel=(cliente.tel||'').trim(), dir=(cliente.dir||'').trim();
-  const op = ($('#yapeOp')?.value||'').trim();
+  const nombre=(cliente.nombre||'').trim(), tel=(cliente.tel||'').trim();
   const enc = s => encodeURIComponent(s);
 
   // Registrar la venta (no bloquea el pedido si falla)
-  try{
-    const items = R.lines.map(i => ({ id:i.id, nombre:i.nombre, marca:i.marca||'', categoria:i.categoria||(PROD_BY_ID[i.id]?PROD_BY_ID[i.id].categoria:null), ml:i.ml, qty:i.qty, precio:i.unit, total:i.lineTotal, tipo:i.tipo||'normal' }));
-    await sb.from('ventas').insert({
-      cliente_nombre:nombre||null, cliente_telefono:tel||null, cliente_direccion:dir||null,
-      items, subtotal:R.totalSinDesc, descuento:R.ahorro, total:R.total,
-      metodo_pago:payMethod, yape_operacion:(payMethod==='yape'?op:'')||null, estado:'nuevo',
-      cliente_codigo: (window.MI_CUENTA&&MI_CUENTA.codigo)||null
-    });
-  }catch(e){ console.warn('No se pudo registrar la venta:', e); }
+  try{ await _guardarVenta(R); }catch(e){ console.warn('No se pudo registrar la venta:', e); }
 
   // Armar mensaje de WhatsApp
   let msg = `¡Hola ${enc(CONFIG.TIENDA_NOMBRE)}! Quiero hacer este pedido:%0A%0A`;
@@ -4500,20 +4552,12 @@ async function checkout(R){
     else msg += `• ${enc(i.nombre)} (${enc(i.marca||'')}) — ${enc(mlLabel(i.ml))} x${i.qty} = ${enc(fmt(i.unit*i.qty))}%0A`;
   });
   if(R.ahorro>0) msg += `%0A🎉 Ahorro: ${enc(fmt(R.ahorro))}`;
-  // Entrega y empaque
-  const empCfg=CONFIG.EMPAQUE||{activo:true,monto:5,gratis_desde:200};
-  const envioTipo=cliente.envio||'ica';
-  const gratisDesde=Number(empCfg.gratis_desde|| (CONFIG.COMBO_ARMA&&CONFIG.COMBO_ARMA.envio_gratis_desde) || 200);
-  const emp=(empCfg.activo!==false && envioTipo==='shalom' && R.total<gratisDesde)?Number(empCfg.monto||5):0;
-  const totalFinal=R.total+emp;
+  const {envioTipo, emp, total:totalFinal}=_empaqueDe(R);
   msg += `%0A%0A📦 Entrega: ${envioTipo==='shalom'?'Envío Shalom':'Cliente en Ica'}`;
   if(emp>0) msg += `%0AEmpaquetado: ${enc(fmt(emp))}`;
   msg += `%0A*Total: ${enc(fmt(totalFinal))}*`;
-  if(nombre||tel||dir){
-    msg += `%0A%0A👤 *Mis datos:*%0A${nombre?`Nombre: ${enc(nombre)}%0A`:''}${tel?`Teléfono: ${enc(tel)}%0A`:''}${dir?`Dirección: ${enc(dir)}`:''}`;
-  }
-  if(payMethod==='yape' && CONFIG.YAPE_NUMERO){
-    msg += `%0A%0A💜 Pago por *Yape* a ${enc(CONFIG.YAPE_NUMERO)}${op?`%0AN° de operación: ${enc(op)}`:''}`;
+  if(nombre||tel){
+    msg += `%0A%0A👤 *Mis datos:*%0A${nombre?`Nombre: ${enc(nombre)}%0A`:''}${tel?`Teléfono: ${enc(tel)}`:''}`;
   }
   window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${msg}`, '_blank');
 }
